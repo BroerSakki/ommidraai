@@ -1,0 +1,4 @@
+.venv
+__pycoche__
+.pytest_cache
+.git
