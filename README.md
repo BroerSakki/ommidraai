@@ -6,7 +6,12 @@ lorem ipsum
 
 ## Setup
 1. Set up docker on your system
-2. Run from the project root:
+2. Create the environment variables:
+```bash
+cp backend/.env.example backend/.env
+```
+5. (Optional) Change any values in .env
+4. Set up the container
 ```bash
 docker compose build
 ```
