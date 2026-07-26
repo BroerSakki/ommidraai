@@ -33,6 +33,6 @@ def verify_password(password: str, hashed: str) -> bool:
 # ---
 def create_access_token(data: dict, expiration_time_minutes: int = EXPIRATION_TIME) -> str:
     payload = data.copy()
-    payload["exp"] = datetime.now(UTC) + timedelta(minutes=expires_minutes)
+    payload["exp"] = datetime.now(UTC) + timedelta(minutes=EXPIRATION_TIME)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 # ---
