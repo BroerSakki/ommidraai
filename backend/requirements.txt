@@ -6,6 +6,7 @@ psycopg[binary]
 alembic
 
 pwdlib
+pwdlib[argon2]
 
 python-jose[cryptography]
 
