@@ -1,6 +1,6 @@
 # Imports
 # ---
-from datatime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, UTC
 from jose import jwt
 from pwdlib import PasswordHash
 # ---
