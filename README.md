@@ -6,87 +6,79 @@ lorem ipsum
 
 ## Setup
 1. Set up docker on your system
-2. Create the environment variables:
+2. Create the environment variables (Open Docker Desktop on Windows):
 ```bash
 cp backend/.env.example backend/.env
 ```
-5. (Optional) Change any values in .env
-4. Set up the container
+4. (Optional) Change any values in .env
+5. Set up the container
 ```bash
 docker compose build
 ```
+6. Run the container (See Development or Production)
+7. Set up database:
+```bash
+docker compose exec backend alembic upgrade head
+```
 
 ## Development
-Run from project root:
-1. Build First:
+Build First:
 ```bash
-docker compose \
-    -f docker-compose.yml \
-    -f docker-compose.dev.yml \
-    up --build
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
-2. Without rebuilding:
+Without rebuilding:
 ```bash
-docker compose \
-    -f docker-compose.yml \
-    -f docker-compose.dev.yml \
-    up
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
-3. Run in the background:
+Run in the background:
 ```bash
-docker compose \
-    -f docker-compose.yml \
-    -f docker-compose.dev.yml \
-    up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
-4. Rebuild single services:
+Rebuild only backend
 ```bash
 docker compose build backend
 ```
-or
+Rebuild only frontend
 ```bash
 docker compose build frontend
 ```
-5. Stop containers
+Stop containers
 ```bash
 docker compose down
 ```
 
 ## Production
-Run from project root:
-1. Start production stack:
+Start production stack:
+```bash
+docker compose up
+```
+Start production stack in background:
 ```bash
 docker compose up -d
 ```
-2. Stop the production stack:
+Stop the production stack:
 ```bash
 docker compose down
 ```
 
 ## Database (Alembic)
-Run from project root:
-1. Create a new migration:
+Create a new migration:
 ```bash
-docker compose exec backend \
-    alembic revision --autogenerate -m "<migration-description>"
+docker compose exec backend alembic revision --autogenerate -m "<migration-description>"
 ```
-2. Apply all pending migrations:
+Apply all pending migrations:
 ```bash
-docker compose exec backend \
-    alembic upgrade head
+docker compose exec backend alembic upgrade head
 ```
-3. Rollback the latest migration:
+Rollback the latest migration:
 ```bash
-docker compose exec backend \
-    alembic downgrade -1
+docker compose exec backend alembic downgrade -1
 ```
-4. Show the current migration:
+Show the current migration:
 ```bash
-docker compose exec backend \
-    alembic current
+docker compose exec backend alembic current
 ```
-5. Show migration history
+Show migration history
 ```bash
-docker compose exec backend \
-    alembic history
+docker compose exec backend alembic history
 ```
