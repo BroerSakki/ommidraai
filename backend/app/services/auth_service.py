@@ -19,8 +19,11 @@ def register(db: Session, user: UserCreate):
         email=user.email,
         password_hash=hashed
     )
-    db.add(new_user)
-    db.commit()
+    try:
+        db.add(new_user)
+        db.commit()
+    except:
+        raise HTTPException(status_code=400, detail="Email already in use")
     db.refresh(new_user)
     return new_user
 # ---
