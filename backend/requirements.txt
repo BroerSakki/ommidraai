@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 
 sqlalchemy
+geoalchemy2
 psycopg[binary]
 alembic
 

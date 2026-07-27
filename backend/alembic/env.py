@@ -12,6 +12,7 @@ import os
 # Model Imports
 # ---
 from app.models.user import User
+from app.models.location import Location
 # ---
 
 # Setup Config
