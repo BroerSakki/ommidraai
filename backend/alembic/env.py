@@ -11,7 +11,7 @@ import os
 
 # Model Imports
 # ---
-from app.models.user import User
+from app.models.user import User, User_Location
 from app.models.location import Location
 # ---
 
