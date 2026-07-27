@@ -2,12 +2,25 @@ services:
   backend:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-    volumes:
-      - ./backend:/app
+    develop:
+      watch:
+        - path: ./backend
+          action: sync
+          target: /app
+          ignore:
+            - backend/__pycache__/
+            - backend/.pytest_cache/
+            - backend/.venv/
 
   frontend:
     command: npm run dev
 
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    develop:
+      watch:
+        - path: ./frontend
+          action: sync
+          target: /app
+          ignore:
+            - frontend/node_modules/
+            - frontend/.next/
+            - frontend/dist/
