@@ -8,7 +8,8 @@ from app.database import get_db
 
 # Model Imports
 # ---
-from app.models.user import User, User_Location
+from app.models.user import User
+from app.models.user_location import User_Location
 from app.models.location import Location
 from app.models.group import Group
 # ---
