@@ -10,16 +10,29 @@ from app.database import Base
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(unique=True)
-    email: Mapped[str] = mapped_column(unique=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True
+    )
+    username: Mapped[str] = mapped_column(
+        unique=True
+    )
+    email: Mapped[str] = mapped_column(
+        unique=True
+    )
     password_hash: Mapped[str]
 
 class User_Location(Base):
     __tablename__ = "user_locations"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False
+    )
     location_id: Mapped[int] = mapped_column(
-        ForeignKey("locations.id")
+        ForeignKey("locations.id"),
+        nullable=False
     )
 # ---
