@@ -19,6 +19,10 @@ class User(Base):
     email: Mapped[str] = mapped_column(
         unique=True
     )
+    default_location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id"),
+        nullable=True
+    )
     password_hash: Mapped[str]
 
 class User_Location(Base):
