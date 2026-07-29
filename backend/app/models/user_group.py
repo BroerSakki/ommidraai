@@ -10,7 +10,7 @@ from app.database import Base
 class User_Group(Base):
     __tablename__ = "user_groups"
 
-    id: Mapped[int] = mapped_column(
+    user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
         primary_key=True
     )
