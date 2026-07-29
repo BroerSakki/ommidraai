@@ -18,7 +18,7 @@ from app.models.group import Group
 # ---
 router = APIRouter(
     prefix="/tables",
-    tags=["Developer - Tables"]
+    tags=["Dev - Tables"]
 )
 # ---
 

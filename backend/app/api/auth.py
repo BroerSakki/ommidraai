@@ -34,10 +34,3 @@ def login(
 ):
     return auth_service.login(db=db, credentials=credentials)
 # ---
-
-# Current User
-# ---
-@router.get("/me")
-def me():
-    pass
-# ---
