@@ -1,70 +1,82 @@
-import React from 'react'
 
-const Home = () => {
+
+export default function Home() {
   return (
-    <>
+    <main>
       <header>
-        <h1>Home</h1>
+        <nav class="flex justify-center space-x-4">
+          <a href="/dashboard" class="font-bol rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+            Home
+          </a>
+          <a href="/team" class="font-bol rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+            Team
+          </a>
+          <a href="/projects" class="font-bol rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+            Projects
+          </a>
+          <a href="/reports" class="font-bol rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+            Reports
+          </a>
+        </nav>
       </header>
 
       <section className="group-card">
-        <div id="admin">
-          <h2>My Group</h2>
-          <form id="mygroup-form">
-            <label>
-              New Group Names
-            </label>
+        <div class="box-border size-60 border-4 p-4">
+          <div id="admin">
+            <h2>MyGroup</h2>
 
-            <input>
-              id="add-groupname"
-              type="text"
-              required
-              placeholder="Groep Name?"
-            </input>
+            <form id="admin-form">
+              <label htmlFor="add-groupname">New Group Names</label>
 
-            <button>
-              Add Group
-            </button>
-          </form>
+              <input
+                id="add-groupname"
+                type="text"
+                required
+                placeholder="Group Name?"
+              />
+
+              <button class="btn-primary">Add Group</button>
+            </form>
+          </div>
         </div>
-        <div id="mygrouo-list" className="group-grid"></div>
-        <p id="my-empty-group" classname="empty-group">
+        <br />
+        <br />
+        <br />
+        
+
+        <div id="admin-group-list" className="group-grid"></div>
+
+        <p id="admin-empty-group" className="empty-group">
           No Groups Found
         </p>
       </section>
-      /* ------------ */
+
       <section className="group-card">
         <div id="member">
           <h2>Joined Group</h2>
-          <form id="mygroup-form">
-            <label>
-              Groups joined
-            </label>
 
-            <input>
+          <form id="member-form">
+            <label htmlFor="join-groupname">Groups Joined</label>
+
+            <input
               id="join-groupname"
               type="text"
               required
-              placeholder="Fined-Groep-Name?"
-            </input>
+              placeholder="Find Group Name?"
+            />
 
-            <button>
-              Add Group
-            </button>
+            <button class="btn-primary">Add Group</button>
           </form>
         </div>
-        <div id="mygrouo-list" className="group-grid"></div>
-        <p id="my-empty-group" classname="empty-group">
+
+        <div id="member-group-list" className="group-grid"></div>
+
+        <p id="member-empty-group" className="empty-group">
           No Groups Found
         </p>
       </section>
 
-
-      <footer>
-        
-      </footer>
-    </>
-  )
+      <footer></footer>
+    </main>
+  );
 }
-
-export default Home
