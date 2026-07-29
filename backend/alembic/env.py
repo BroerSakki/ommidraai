@@ -16,6 +16,7 @@ from app.models.user_location import User_Location
 from app.models.location import Location
 from app.models.group import Group
 from app.models.user_group import User_Group
+from app.models.invite import Invite
 # ---
 
 # Setup Config
