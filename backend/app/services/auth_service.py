@@ -5,7 +5,7 @@ from app.schemas.user import UserCreate
 from app.models.location import Location
 from app.schemas.location import LocationCreate
 from app.schemas.auth import LoginRequest, Token
-from app.database import get_db
+from app.services.locations_service import add_location
 from app.security import hash_password, verify_password, create_access_token
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -17,20 +17,14 @@ from fastapi import Depends, HTTPException
 # ---
 def register(db: Session, user: UserCreate, location: LocationCreate):
     try:
-        insert_stmt = insert(Location).values(latitude=location.latitude, longitude=location.longitude)
-
-        upsert_stmt = insert_stmt.on_conflict_do_update(
-            constraint='uq_lat_lon',
-            set_={'latitude': location.latitude}  
-        ).returning(Location.id)
-
-        db.execute(upsert_stmt)
+        default_location_id = add_location(db=db, location=location)
 
         hashed = hash_password(user.password)
         new_user = User(
             username=user.usename,
             email=user.email,
-            password_hash=hashed
+            password_hash=hashed,
+            default_location_id=default_location_id,
         )
 
         db.add(new_user)
