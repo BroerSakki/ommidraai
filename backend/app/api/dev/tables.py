@@ -30,7 +30,7 @@ def get_users(db: Session = Depends(get_db)):
     users = result.scalars().all()
     return users
 
-@router.get("/user_locations")
+@router.get("/user/locations")
 def get_user_locations(db: Session = Depends(get_db)):
     result = db.execute(select(User_Location))
     user_locations = result.scalars().all()
