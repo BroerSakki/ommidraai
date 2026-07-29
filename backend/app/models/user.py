@@ -24,19 +24,4 @@ class User(Base):
         nullable=True
     )
     password_hash: Mapped[str]
-
-class User_Location(Base):
-    __tablename__ = "user_locations"
-
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
-        nullable=False
-    )
-    location_id: Mapped[int] = mapped_column(
-        ForeignKey("locations.id"),
-        nullable=False
-    )
 # ---
