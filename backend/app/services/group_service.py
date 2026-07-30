@@ -26,7 +26,7 @@ def get_current_user_groups(db: Session):
 
 # New Group Service
 # ---
-def add_group(db: Session, group: GroupCreate):
+def create_group(db: Session, group: GroupCreate):
     # Check if user is logged in
     try:
         # Add Group
