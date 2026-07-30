@@ -42,6 +42,7 @@ def create_group(
 ):
     return group_service.create_group(
         db=db,
-        group=group
+        group=group,
+        current_user=current_user
     )
 # ---
