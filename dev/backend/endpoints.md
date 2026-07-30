@@ -16,6 +16,8 @@
 
 - [x]  /groups – GET
 
+- [x] /groups/invites - GET
+
 - [x] /groups – POST
 
 - [ ] /groups/{group_id} – GET  # Moeilik, implimenteer eers algoritme
@@ -24,7 +26,7 @@
 
 - [ ] /groups/{group_id} – DELETE
 
-- [ ] /groups/{group_id}/invite – POST
+- [x] /groups/{group_id}/invite – POST
 
 - [ ] /groups/{group_id}/{user_id} – DELETE
 
