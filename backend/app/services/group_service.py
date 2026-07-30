@@ -1,49 +1,74 @@
-# Imports
+# Import External Libraries
+# ---
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import select
+from fastapi import HTTPException, Depends
+# ---
+
+# Import Local Libbraries
+# ---
+from app.security import get_current_user
+# ---
+
+# Import Schemas
+# ---
+from app.schemas.user_roles import UserRole
+from app.schemas.group import GroupCreate
+from app.schemas.location import LocationCreate
+# ---
+
+# Import Models
 # ---
 from app.models.group import Group
-from app.schemas.group import GroupCreate
+from app.models.user import User
 from app.models.user_group import User_Group
-from app.schemas.location import LocationCreate
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from fastapi import HTTPException
 # ---
 
 # Get current user groups
 # ---
-def get_current_user_groups(db: Session):
-    # Check if user is logged in
-    current_user_id = 1 # Replace this with working function
-    
+def get_current_user_groups(db: Session, current_user: User = Depends(get_current_user)): 
     # Go get from user_group all group_ids that current user_id is in
     return db.scalars(
         select(User_Group)
         .where(
-            User_Group.user_id == current_user_id
+            User_Group.user_id == current_user.id
         )
     ).all()
 # ---
 
 # New Group Service
 # ---
-def create_group(db: Session, group: GroupCreate):
-    # Check if user is logged in
+def create_group(
+    db: Session,
+    group: GroupCreate,
+    current_user: User
+):
     try:
         # Add Group
         new_group = Group(
             name=group.name,
         )
         db.add(new_group)
+        db.flush()
 
         # Add User to Group
+        new_user_group = User_Group(
+            user_id = current_user.id,
+            group_id = new_group.id,
+            role = UserRole.admin,
+        )
+
         # Do user group insert
+        db.add(new_user_group)
 
         db.commit()
-    except:
+    except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Unable to create group")
     finally:
         db.refresh(new_group)
+        db.refresh(new_user_group)
     return new_group
 # ---
 
