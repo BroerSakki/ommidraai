@@ -63,7 +63,7 @@ def create_group(
 
 # Add Location
 # ---
-@router.post("{group_id}/locations/add")
+@router.post("/{group_id}/locations/add")
 def add_location(
     group_id: int,
     location: LocationCreate,
