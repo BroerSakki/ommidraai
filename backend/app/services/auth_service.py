@@ -11,7 +11,13 @@ from fastapi import Depends, HTTPException
 from app.models.user import User
 from app.models.location import Location
 from app.services.locations_service import add_location
-from app.security import hash_password, verify_password, create_access_token
+from app.security import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+    verify_refresh_token
+)
 
 # ---
 
@@ -77,9 +83,42 @@ def login(
             detail="Invalid username or password",
         )
 
-    return create_access_token(
-        {"sub": str(user.id)}
-    )# ---
+    access_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "type": "access",
+        }
+    )
+
+    refresh_token = create_refresh_token(
+        data={
+            "sub": str(user.id),
+            "type": "refresh",
+        }
+    )
+
+    return access_token, refresh_token
+# ---
+
+# Refresh Access Token
+# ---
+def refresh(
+    refresh_token: str,
+) -> str:
+
+    user_id = verify_refresh_token(
+        refresh_token
+    )
+
+    access_token = create_access_token(
+        {
+            "sub": str(user_id),
+            "type": "access",
+        }
+    )
+
+    return access_token
+# ---
 
 # Get User
 # ---
