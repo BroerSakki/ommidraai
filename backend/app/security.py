@@ -18,6 +18,7 @@ password_hash = PasswordHash.recommended()
 SECRET_KEY = "test-thingymadoodle"
 ALGORITHM = "HS256"
 EXPIRATION_TIME = 60
+OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl="auth/login")
 # ---
 
 # Hash
