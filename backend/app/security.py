@@ -1,7 +1,6 @@
 # Import External Libraries
 # ---
 from datetime import datetime, timedelta, UTC
-from jose import jwt
 from pwdlib import PasswordHash
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -24,7 +23,8 @@ password_hash = PasswordHash.recommended()
 # ---
 SECRET_KEY = "test-thingymadoodle"
 ALGORITHM = "HS256"
-EXPIRATION_TIME = 60
+ACCESS_TOKEN_LIFETIME = timedelta(minutes=15)
+REFRESH_TOKEN_LIFETIME = timedelta(days=30)
 ACCESS_COOKIE_NAME = "access_token"
 REFRESH_COOKIE_NAME = "refresh_token"
 # ---
@@ -41,14 +41,40 @@ def verify_password(password: str, hashed: str) -> bool:
     return password_hash.verify(password, hashed)
 # ---
 
-# Token Methods
+# Token Creation
 # ---
-def create_access_token(data: dict, expiration_time_minutes: int = EXPIRATION_TIME) -> str:
+def create_token(
+        data: dict,
+        expires_delta: timedelta
+    ) -> str:
     payload = data.copy()
-    payload["exp"] = datetime.now(UTC) + timedelta(minutes=expiration_time_minutes)
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    payload["exp"] = (
+        datetime.now(UTC)
+        + expires_delta
+    )
+    
+    return jwt.encode(
+        payload,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
 
-def decode_access_token(token: str) -> int:
+def create_access_token(data):
+    return create_token(
+        data=data,
+        expires_delta=ACCESS_TOKEN_LIFETIME,
+    )
+
+def create_refresh_token(data):
+    return create_token(
+        data=data,
+        expires_delta=REFRESH_TOKEN_LIFETIME,
+    )
+# ---
+
+# Token Verification
+# ---
+def decode_token(token: str) -> dict:
     try:
         payload = jwt.decode(
             token,
@@ -56,21 +82,37 @@ def decode_access_token(token: str) -> int:
             algorithms=[ALGORITHM],
         )
 
-        user_id = payload.get("sub")
-
-        if user_id is None:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid token",
-            )
-
-        return int(user_id)
+        return payload
 
     except JWTError:
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired token",
         )
+
+def verify_access_token(token: str) -> int:
+
+    payload = decode_token(token)
+
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid access token",
+        )
+
+    return int(payload["sub"])
+
+def verify_refresh_token(token: str) -> int:
+
+    payload = decode_token(token)
+
+    if payload.get("type") != "refresh":
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid refresh token",
+        )
+
+    return int(payload["sub"])
 # ---
 
 # Current User
@@ -88,7 +130,7 @@ def get_current_user(
             detail="Not authenticated",
         )
 
-    user_id = decode_access_token(token)
+    user_id = verify_access_token(token)
 
     user = auth_service.get_user_by_id(
         db=db,

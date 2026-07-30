@@ -1,6 +1,6 @@
 # Import External Libraries
 # ---
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Request, HTTPException
 from sqlalchemy.orm import Session
 # ---
 
@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.services import auth_service
 from app.database import engine, get_db
-from app.security import get_current_user, ACCESS_COOKIE_NAME
+from app.security import get_current_user, ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME
 # ---
 
 # Import Schemas
@@ -30,7 +30,11 @@ router = APIRouter(
 # Register
 # ---
 @router.post("/register", status_code=201)
-def register(user: UserCreate, location: LocationCreate, db: Session = Depends(get_db)):
+def register(
+    user: UserCreate,
+    location: LocationCreate,
+    db: Session = Depends(get_db)
+):
     return auth_service.register(db=db, user=user, location=location)
 # ---
 
@@ -44,21 +48,29 @@ def login(
 ):
     # Create Access Token
     # ---
-    access_token = auth_service.login(
+    access_token, refresh_token = auth_service.login(
         db=db,
         credentials=credentials,
     )
     # ---
 
-    # Set Cookie
+    # Set Cookies
     # ---
     response.set_cookie(
         key=ACCESS_COOKIE_NAME,
         value=access_token,
         httponly=True,
-        secure=False, # Production: True
+        secure=False,
         samesite="lax",
         max_age=60 * 15,
+    )
+
+    response.set_cookie(
+        key=REFRESH_COOKIE_NAME,
+        value=refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
     )
     # ---
 
@@ -67,13 +79,55 @@ def login(
     }
 # ---
 
+# Refresh Access
+# ---
+@router.post("/refresh")
+def refresh(
+    request: Request,
+    response: Response,
+):
+    refresh_token = request.cookies.get(
+        REFRESH_COOKIE_NAME
+    )
+
+    if refresh_token is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated",
+        )
+
+    access_token = auth_service.refresh(
+        refresh_token
+    )
+
+    response.set_cookie(
+        key=ACCESS_COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=900,
+    )
+
+    return {
+        "message": "Token refreshed",
+    }
+# ---
+
 # Logout
 # ---
 @router.post("/logout")
-def logout(response: Response):
+def logout(
+    response: Response
+):
     response.delete_cookie(
         key=ACCESS_COOKIE_NAME,
-        secure=False, # Production: True
+        secure=False,
+        samesite="lax",
+    )
+    response.delete_cookie(
+        key=REFRESH_COOKIE_NAME,
+        secure=False,
         samesite="lax",
     )
 
