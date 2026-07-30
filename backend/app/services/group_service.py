@@ -6,6 +6,11 @@ from sqlalchemy import select
 from fastapi import HTTPException, Depends
 # ---
 
+# Import Local Libraries
+# ---
+from app.services.locations_service import add_location
+# ---
+
 # Import Schemas
 # ---
 from app.schemas.user_roles import UserRole
@@ -18,6 +23,7 @@ from app.schemas.location import LocationCreate
 from app.models.group import Group
 from app.models.user import User
 from app.models.user_group import User_Group
+from app.models.group_location import Group_Location
 # ---
 
 # Get current user groups
@@ -61,12 +67,15 @@ def create_group(
         db.add(new_user_group)
 
         db.commit()
-    except SQLAlchemyError:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Unable to create group")
-    finally:
+
         db.refresh(new_group)
         db.refresh(new_user_group)
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to create group"
+        )
     return new_group
 # ---
 
@@ -83,13 +92,49 @@ def get_group_data():
 
 # Add location to group
 # ---
-def add_group_location(db: Session, location: LocationCreate):
-    # Check if user is logged in
-    
-	# Verify that user is admin on the group
-    
+def add_group_location(
+    db: Session,
+    location: LocationCreate,
+    current_user: User,
+    group_id: int
+):
+    user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == current_user.id,
+        )
+    )
+
+    # Verify that user is admin on the group
+    if user_group.role != UserRole.admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied"
+        )
 	# Add location to group
-    return True
+    location_id = add_location(
+        db=db,
+        location=location
+    )
+    try:
+        new_group_location = Group_Location(
+            group_id = user_group.group_id,
+            location_id = location_id,
+        )
+
+        db.add(new_group_location)
+        db.commit()
+        db.refresh(new_group_location)
+       
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Could not add a location to the group"
+        )
+
+    return new_group_location
 # ---
 
 # Delete location from group

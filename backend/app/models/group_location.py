@@ -19,5 +19,7 @@ class Group_Location(Base):
         primary_key=True,
         nullable=False
     )
-    ranking: Mapped[int]
+    ranking: Mapped[int] = mapped_column(
+        nullable=True,
+    )
 # ---
