@@ -6,11 +6,6 @@ from sqlalchemy import select
 from fastapi import HTTPException, Depends
 # ---
 
-# Import Local Libbraries
-# ---
-from app.security import get_current_user
-# ---
-
 # Import Schemas
 # ---
 from app.schemas.user_roles import UserRole
@@ -27,7 +22,10 @@ from app.models.user_group import User_Group
 
 # Get current user groups
 # ---
-def get_current_user_groups(db: Session, current_user: User = Depends(get_current_user)): 
+def get_current_user_groups(
+    db: Session,
+    current_user: User
+): 
     # Go get from user_group all group_ids that current user_id is in
     return db.scalars(
         select(User_Group)
