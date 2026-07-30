@@ -1,7 +1,6 @@
 # Import External Libraries
 # ---
-from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 # ---
 
@@ -10,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.services import auth_service
 from app.database import engine, get_db
-from app.security import get_current_user, OAUTH2_SCHEME
+from app.security import get_current_user, ACCESS_COOKIE_NAME
 # ---
 
 # Import Schemas
@@ -37,18 +36,47 @@ def register(user: UserCreate, location: LocationCreate, db: Session = Depends(g
 
 # Login
 # ---
-@router.post("/login", response_model=Token)
+@router.post("/login")
 def login(
+    response: Response,
     credentials: LoginRequest,
     db: Session = Depends(get_db)
 ):
-    return auth_service.login(db=db, credentials=credentials)
+    # Create Access Token
+    # ---
+    access_token = auth_service.login(
+        db=db,
+        credentials=credentials,
+    )
+    # ---
+
+    # Set Cookie
+    # ---
+    response.set_cookie(
+        key=ACCESS_COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=False, # Production: True
+        samesite="lax",
+        max_age=60 * 15,
+    )
+    # ---
+
+    return {
+        "message": "Login successful"
+    }
 # ---
 
 # Logout
 # ---
 @router.post("/logout")
-def logout():
+def logout(response: Response):
+    response.delete_cookie(
+        key=ACCESS_COOKIE_NAME,
+        secure=False, # Production: True
+        samesite="lax",
+    )
+
     return {
         "message": "Logged out"
     }

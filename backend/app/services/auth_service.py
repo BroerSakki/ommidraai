@@ -18,7 +18,7 @@ from app.security import hash_password, verify_password, create_access_token
 # Import Schemas
 # ---
 from app.schemas.location import LocationCreate
-from app.schemas.auth import LoginRequest, Token
+from app.schemas.auth import LoginRequest
 from app.schemas.user import UserCreate
 # ---
 
@@ -38,9 +38,12 @@ def register(db: Session, user: UserCreate, location: LocationCreate):
 
         db.add(new_user)
         db.commit()
-    except:
+    except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Email already in use")
+        raise HTTPException(
+            status_code=400,
+            detail="Email already in use",
+        )
     finally:
         db.refresh(new_user)
     return new_user
@@ -48,20 +51,35 @@ def register(db: Session, user: UserCreate, location: LocationCreate):
 
 # Login
 # ---
-def login(db: Session, credentials: LoginRequest):
-    stmt = select(User).where(User.username == credentials.username)
+def login(
+    db: Session,
+    credentials: LoginRequest,
+) -> str:
+
+    stmt = select(User).where(
+        User.username == credentials.username
+    )
+
     user = db.scalar(stmt)
-    if not verify_password(credentials.password, user.password_hash):
-        raise HTTPException(status_code=403, detail="Invalid username or password")
-    token = create_access_token(
-        {
-            "sub": str(user.id)
-        }
-    )
-    return Token(
-        access_token=token
-    )
-# ---
+
+    if user is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid username or password",
+        )
+
+    if not verify_password(
+        credentials.password,
+        user.password_hash,
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid username or password",
+        )
+
+    return create_access_token(
+        {"sub": str(user.id)}
+    )# ---
 
 # Get User
 # ---
