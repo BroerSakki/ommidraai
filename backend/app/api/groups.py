@@ -22,6 +22,7 @@ from app.models.user import User
 # Import Schemas
 # ---
 from app.schemas.group import GroupCreate
+from app.schemas.location import LocationCreate
 # ---
 
 # Router Setup
@@ -57,5 +58,22 @@ def create_group(
         db=db,
         group=group,
         current_user=current_user
+    )
+# ---
+
+# Add Location
+# ---
+@router.post("{group_id}/locations/add")
+def add_location(
+    group_id: int,
+    location: LocationCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return group_service.add_group_location(
+        db=db,
+        location=location,
+        current_user=current_user,
+        group_id=group_id,
     )
 # ---
