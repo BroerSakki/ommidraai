@@ -1,16 +1,25 @@
-# Imports
+# Import External Libraries
 # ---
-from app.models.user import User
-from app.schemas.user import UserCreate
-from app.models.location import Location
-from app.schemas.location import LocationCreate
-from app.schemas.auth import LoginRequest, Token
-from app.services.locations_service import add_location
-from app.security import hash_password, verify_password, create_access_token
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from fastapi import Depends, HTTPException
+# ---
+
+# Import Local Libraries
+# ---
+from app.models.user import User
+from app.models.location import Location
+from app.services.locations_service import add_location
+from app.security import hash_password, verify_password, create_access_token
+
+# ---
+
+# Import Schemas
+# ---
+from app.schemas.location import LocationCreate
+from app.schemas.auth import LoginRequest, Token
+from app.schemas.user import UserCreate
 # ---
 
 # Register Service
@@ -51,5 +60,16 @@ def login(db: Session, credentials: LoginRequest):
     )
     return Token(
         access_token=token
+    )
+# ---
+
+# Get User
+# ---
+def get_user_by_id(
+    db: Session,
+    user_id: int,
+) -> User | None:
+    return db.scalar(
+        select(User).where(User.id == user_id)
     )
 # ---

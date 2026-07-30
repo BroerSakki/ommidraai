@@ -10,12 +10,12 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.services import auth_service
 from app.database import engine, get_db
-from app.security import get_current_user_id, OAUTH2_SCHEME
+from app.security import get_current_user, OAUTH2_SCHEME
 # ---
 
 # Import Schemas
 # ---
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserResponse
 from app.schemas.auth import LoginRequest, Token
 from app.schemas.location import LocationCreate
 # ---
@@ -49,7 +49,9 @@ def login(
 
 # Current User
 # ---
-@router.get("/me")
-def me(token: str = Depends(OAUTH2_SCHEME)):
-    return get_current_user_id(token=token)
+@router.get("/me", response_model=UserResponse)
+def me(
+    current_user: User = Depends(get_current_user),
+):
+    return current_user
 # ---
