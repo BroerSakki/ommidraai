@@ -18,7 +18,7 @@
 
 - [x] /groups – POST
 
-- [ ] /groups/{group_id} – GET
+- [ ] /groups/{group_id} – GET  # Moeilik, implimenteer eers algoritme
 
 - [ ] /groups/{group_id} – PUT
 
