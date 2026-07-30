@@ -45,7 +45,14 @@ def login(
     return auth_service.login(db=db, credentials=credentials)
 # ---
 
-
+# Logout
+# ---
+@router.post("/logout")
+def logout():
+    return {
+        "message": "Logged out"
+    }
+# ---
 
 # Current User
 # ---
