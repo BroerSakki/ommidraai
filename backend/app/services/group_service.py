@@ -16,6 +16,7 @@ from app.services.locations_service import add_location
 from app.schemas.user_roles import UserRole
 from app.schemas.group import GroupCreate
 from app.schemas.location import LocationCreate
+from app.schemas.invite import InviteCreate
 # ---
 
 # Import Models
@@ -24,6 +25,7 @@ from app.models.group import Group
 from app.models.user import User
 from app.models.user_group import User_Group
 from app.models.group_location import Group_Location
+from app.models.invite import Invite
 # ---
 
 # Get current user groups
@@ -81,12 +83,15 @@ def create_group(
 
 # Get needed data of a specific group for frontend
 # ---
-def get_group_data():
+def get_group_data(db: Session, group: Group):
     # Check if user is logged in
     
     # Verify that user is apart of that group
     
     # Return group data
+    # Get users
+
+    # Get Locations
     return True
 # ---
 
@@ -148,15 +153,92 @@ def delete_group_location():
     return True
 # ---
 
+# Get current user groups
+# ---
+def get_current_user_invites(
+    db: Session,
+    current_user: User,
+): 
+    # Go get from user_group all group_ids that current user_id is in
+    return db.scalars(
+        select(Invite)
+        .where(
+            Invite.user_id == current_user.id
+        )
+    ).all()
+# ---
+
 # Create invite
 # ---
-def create_invite():
-    # Check if user is logged in
-    
+def create_invite(
+    db: Session,
+    current_user: User,
+    group_id: int,
+    username: str,
+    role: UserRole
+):
+    user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == current_user.id,
+        )
+    )
+
     # Verify that user is admin on the group
-    
+    if user_group.role != UserRole.admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied"
+        )
+
+    # Get invitee user details
+    invitee_user: User = db.scalar(
+        select(User)
+        .where(
+            User.username == username
+        )
+    )
+
+    if invitee_user == None:
+        raise HTTPException(
+            status_code=400,
+            detail="User does not exist"
+        )
+
+    invitee_user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == invitee_user.id
+		)
+	)
+
+    if invitee_user_group != None:
+        raise HTTPException(
+            status_code=400,
+            detail="User already in group"
+        )
+
     # Create invite in invite table
-    return True
+    try:
+        new_invite = Invite(
+            user_id=invitee_user.id,
+            group_id=group_id,
+            role=role
+        )
+
+        db.add(new_invite)
+        db.commit()
+        db.refresh(new_invite)
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Invite could not be created"
+		)
+    
+    return new_invite
 # ---
 
 # Add user to group
