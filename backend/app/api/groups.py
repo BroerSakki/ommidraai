@@ -21,6 +21,7 @@ from app.models.user import User
 
 # Import Schemas
 # ---
+from app.schemas import invite
 from app.schemas.group import GroupCreate
 from app.schemas.location import LocationCreate
 from app.schemas.user_roles import UserRole
@@ -47,31 +48,6 @@ def get_user_groups(
     )
 # ---
 
-# Get User Invites
-# ---
-@router.get("/invites")
-def get_user_invites(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    return group_service.get_current_user_invites(
-        db=db,
-        current_user=current_user
-	)
-# ---
-
-# Get Pending Invites
-# ---
-@router.get("/invites/pending")
-def get_user_pending_invites(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    return group_service.get_pending_invites(
-        db=db,
-        current_user=current_user,
-    )
-# ---
 
 # Create Group
 # ---
@@ -85,25 +61,6 @@ def create_group(
         db=db,
         group=group,
         current_user=current_user
-    )
-# ---
-
-# Invite User
-# ---
-@router.post("/{group_id}/invite")
-def invite_user(
-    group_id: int,
-    username: str,
-    role: UserRole,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    return group_service.create_invite(
-        db=db,
-        current_user=current_user,
-        group_id=group_id,
-        username=username,
-        role=role
     )
 # ---
 
