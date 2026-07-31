@@ -8,6 +8,7 @@ from app.schemas.user_roles import UserRole
 # ---
 class InviteCreate(BaseModel):
     user_id: int
+    origin_id: int
     group_id: int
     role: UserRole
 # ---

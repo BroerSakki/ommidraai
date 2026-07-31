@@ -60,6 +60,19 @@ def get_user_invites(
 	)
 # ---
 
+# Get Pending Invites
+# ---
+@router.get("/invites/pending")
+def get_user_pending_invites(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return group_service.get_pending_invites(
+        db=db,
+        current_user=current_user,
+    )
+# ---
+
 # Create Group
 # ---
 @router.post("/")

@@ -206,6 +206,12 @@ def create_invite(
             detail="User does not exist"
         )
 
+    if invitee_user.id == current_user.id:
+        raise HTTPException(
+            status_code=400,
+            detail="You canot invite yourself",
+        )
+
     invitee_user_group: User_Group = db.scalar(
         select(User_Group)
         .where(
@@ -224,6 +230,7 @@ def create_invite(
     try:
         new_invite = Invite(
             user_id=invitee_user.id,
+            origin_id=current_user.id,
             group_id=group_id,
             role=role
         )
@@ -239,6 +246,21 @@ def create_invite(
 		)
     
     return new_invite
+# ---
+
+# See Pending Invites
+# ---
+def get_pending_invites(
+    db: Session,
+    current_user: User
+):
+    # Go get from user_group all group_ids that current user_id is in
+    return db.scalars(
+        select(Invite)
+        .where(
+            Invite.origin_id == current_user.id
+        )
+    ).all()
 # ---
 
 # Add user to group
