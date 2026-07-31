@@ -10,6 +10,7 @@ from app.database import engine
 from app.api.auth import router as auth_router
 from app.api.locations import router as location_router
 from app.api.groups import router as group_router
+from app.api.invite import router as invite_router
 from app.api.dev.dev import router as dev_database_router
 # ---
 
@@ -26,6 +27,7 @@ def root():
 # ---
 app.include_router(auth_router)
 app.include_router(group_router)
+app.include_router(invite_router)
 app.include_router(location_router)
 app.include_router(dev_database_router)
 # ---
