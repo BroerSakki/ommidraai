@@ -111,8 +111,10 @@ def add_group_location(
         )
     )
 
-    # Verify that user is admin on the group
-    if user_group.role != UserRole.admin:
+    # Verify Permissions
+    if not user_roles.can_manage_locations(
+        role=user_group.role
+    ):
         raise HTTPException(
             status_code=403,
             detail="Permission denied"
@@ -144,29 +146,74 @@ def add_group_location(
 
 # Delete location from group
 # ---
-def delete_group_location():
-    # Check if user is logged in
-    
-	# Verify that user is admin on the group
-    
+def remove_group_location(
+    db: Session,
+    current_user: User,
+    location_id: int,
+    group_id: int,
+):
+	# Find User Group
+    # ---
+    user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == current_user.id,
+        )
+    )
+    if user_group is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Group could not be found",
+        )
+    # ---
+
+    # Verify Permissions
+    # ---
+    if not user_roles.can_manage_locations(
+        role=user_group.role
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail=f" Role \"{user_group.role}\" cannot manage locations"
+        )
+    # ---
+
+    # Find Group Location
+    # ---
+    group_location: Group_Location = db.scalar(
+        select(Group_Location)
+        .where(
+            Group_Location.group_id == group_id,
+            Group_Location.location_id == location_id,
+        )
+    )
+    if group_location is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Location cannot be found in group"
+        )
+    # ---
+
 	# Delete location from group
-    return True
+    # ---
+    try:
+        db.delete(group_location)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Could not remove location from the group"
+        )
+    # ---
+
+    return {"message": f"Location with id {location_id} was removed from the group"}
 # ---
 
 # Add user to group
 # ---
-def add_group_user():
-    # Check if user is logged in
-    
-    # Check if user_id exists in invite table
-    
-    # Add user to user_group and remove from invite
-    return True
-# ---
-
-# Add user to group
-# ---
-def delete_group_user():
+def remove_group_user():
     # Check if user is logged in
     
     # Check if current user is admin on the group

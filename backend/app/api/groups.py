@@ -66,7 +66,7 @@ def create_group(
 
 # Add Location
 # ---
-@router.post("/{group_id}/locations/add")
+@router.post("/{group_id}/location/add")
 def add_location(
     group_id: int,
     location: LocationCreate,
@@ -77,6 +77,23 @@ def add_location(
         db=db,
         location=location,
         current_user=current_user,
+        group_id=group_id,
+    )
+# ---
+
+# Remove Location
+# ---
+@router.delete("/{group_id}/location/delete")
+def remove_location(
+    group_id: int,
+    location_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return group_service.remove_group_location(
+        db=db,
+        current_user=current_user,
+        location_id=location_id,
         group_id=group_id,
     )
 # ---
