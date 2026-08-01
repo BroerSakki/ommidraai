@@ -19,6 +19,7 @@ from app.models.user_location import User_Location
 from app.models.invite import Invite
 from app.models.user_group import User_Group
 from app.models.user_location import User_Location
+from app.models.group_location import Group_Location
 # ---
 
 # Constants
@@ -27,6 +28,7 @@ TABLES = {
     "users": User,
     "locations": Location,
     "groups": Group,
+    "group_locations": Group_Location,
     "user_locations": User_Location,
     "invites": Invite,
     "user_groups": User_Group,
