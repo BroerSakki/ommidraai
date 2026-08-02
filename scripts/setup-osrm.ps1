@@ -59,19 +59,25 @@ docker run --rm `
     -v "${dataDir}:/data" `
     -v "${processedDir}:/processed" `
     osrm/osrm-backend:latest `
-    sh -lc "cd /processed && osrm-extract -p /opt/car.lua /data/$fileName"
+    sh -lc "cd /data && osrm-extract -p /opt/car.lua /data/$fileName"
+
+Get-ChildItem -LiteralPath $dataDir -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -like "$mapStem.osrm*" } |
+    ForEach-Object {
+        Move-Item -LiteralPath $_.FullName -Destination $processedDir -Force
+    }
 
 Write-Host 'Step C: partitioning graph with osrm-partition'
 docker run --rm `
     -v "${processedDir}:/processed" `
     osrm/osrm-backend:latest `
-    osrm-partition "/processed/$mapStem.osrm"
+    sh -lc "cd /processed && osrm-partition $mapStem"
 
 Write-Host 'Step D: customizing graph for MLD with osrm-customize'
 docker run --rm `
     -v "${processedDir}:/processed" `
     osrm/osrm-backend:latest `
-    osrm-customize "/processed/$mapStem.osrm"
+    sh -lc "cd /processed && osrm-customize $mapStem"
 
 Write-Host 'OSRM processing completed successfully.'
 Write-Host "Processed files are available in $processedDir"

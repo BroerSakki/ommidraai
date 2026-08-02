@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
 
     command: >
-      osrm-routed --algorithm mld /osrm/processed
+      sh -lc "cd /osrm/processed && osrm-routed --algorithm mld berlin-latest"
 
     volumes:
       - ./osrm/processed:/osrm/processed:ro

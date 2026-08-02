@@ -110,25 +110,41 @@ Show migration history
 docker compose exec backend alembic history
 ```
 
-# OSRM Setup
+# OSRM
 
-## Create the local OSRM folders
-From the project root, create the two static folders that hold the raw extract and generated routing files:
+## Add map data
+### Linux
+Run this command from the project root to download the map data:
 ```bash
-mkdir -p ./osrm/data ./osrm/processed
+bash ./scripts/setup-osrm.sh "https://download.geofabrik.de/africa/south-africa-latest.osm.pbf"
 ```
 
-## Setup
-### Setup for Linux
-If you are using Git Bash or another Unix-like shell on Windows, the equivalent Linux-style command is:
-```bash
-bash ./scripts/setup-osrm.sh "https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf"
-```
-Replace the url with the desired map data city
+Replace the url with the desired map data city url
 
-### Setup for Windows
-From the project root, run the fully Windows-compatible setup script:
+Then add the map to docker-compose.yml like:
+```yaml
+  osrm-south-africa:
+    image: osrm/osrm-backend:latest
+    command: >
+      sh -lc "cd /osrm/processed && osrm-routed --algorithm mld south-africa-latest"
+    volumes:
+      - ./osrm/processed:/osrm/processed:ro
+```
+
+### Windows
+Run this command from the project root to download the map data:
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-osrm.ps1 -Url "https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-osrm.ps1 -Url "https://download.geofabrik.de/africa/south-africa-latest.osm.pbf"
 ```
+
 Replace the url with the desired map data city
+
+Then add the map to docker-compose.yml like:
+```yaml
+  osrm-south-africa:
+    image: osrm/osrm-backend:latest
+    command: >
+      sh -lc "cd /osrm/processed && osrm-routed --algorithm mld south-africa-latest"
+    volumes:
+      - ./osrm/processed:/osrm/processed:ro
+```

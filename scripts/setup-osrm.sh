@@ -50,19 +50,25 @@ docker run --rm \
   -v "$DATA_DIR:/data" \
   -v "$PROCESSED_DIR:/processed" \
   osrm/osrm-backend:latest \
-  sh -lc "cd /processed && osrm-extract -p /opt/car.lua /data/$FILE_NAME"
+  sh -lc "cd /data && osrm-extract -p /opt/car.lua /data/$FILE_NAME"
+
+for source_file in "$DATA_DIR/$MAP_STEM.osrm"*; do
+  if [[ -e "$source_file" ]]; then
+    mv "$source_file" "$PROCESSED_DIR/"
+  fi
+done
 
 echo "Step C: partitioning graph with osrm-partition"
 docker run --rm \
   -v "$PROCESSED_DIR:/processed" \
   osrm/osrm-backend:latest \
-  osrm-partition "/processed/$MAP_STEM.osrm"
+  sh -lc "cd /processed && osrm-partition $MAP_STEM"
 
 echo "Step D: customizing graph for MLD with osrm-customize"
 docker run --rm \
   -v "$PROCESSED_DIR:/processed" \
   osrm/osrm-backend:latest \
-  osrm-customize "/processed/$MAP_STEM.osrm"
+  sh -lc "cd /processed && osrm-customize $MAP_STEM"
 
 echo "OSRM processing completed successfully."
 echo "Processed files are available in $PROCESSED_DIR"
