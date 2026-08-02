@@ -9,6 +9,7 @@ services:
 
     depends_on:
       - db
+      - osrm
 
   frontend:
     build: ./frontend
@@ -20,6 +21,20 @@ services:
 
     depends_on:
       - backend
+
+  osrm:
+    image: osrm/osrm-backend:latest
+
+    restart: unless-stopped
+
+    command: >
+      osrm-routed --algorithm mld /osrm/processed
+
+    volumes:
+      - ./osrm/processed:/osrm/processed:ro
+
+    networks:
+      - default
 
   db:
     image: postgres:17

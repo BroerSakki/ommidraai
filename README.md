@@ -109,3 +109,26 @@ Show migration history
 ```bash
 docker compose exec backend alembic history
 ```
+
+# OSRM Setup
+
+## Create the local OSRM folders
+From the project root, create the two static folders that hold the raw extract and generated routing files:
+```bash
+mkdir -p ./osrm/data ./osrm/processed
+```
+
+## Setup
+### Setup for Linux
+If you are using Git Bash or another Unix-like shell on Windows, the equivalent Linux-style command is:
+```bash
+bash ./scripts/setup-osrm.sh "https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf"
+```
+Replace the url with the desired map data city
+
+### Setup for Windows
+From the project root, run the fully Windows-compatible setup script:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-osrm.ps1 -Url "https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf"
+```
+Replace the url with the desired map data city
