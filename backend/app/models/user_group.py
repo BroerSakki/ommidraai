@@ -19,4 +19,11 @@ class User_Group(Base):
         primary_key=True
     )
     role: Mapped[str]
+    car_capacity: Mapped[int] = mapped_column(
+        default=0
+    )
+    is_passenger: Mapped[bool] = mapped_column(
+        default=False,
+        nullable=False
+    )
 # ---

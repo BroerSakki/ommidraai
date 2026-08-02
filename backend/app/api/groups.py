@@ -97,3 +97,19 @@ def remove_location(
         group_id=group_id,
     )
 # ---
+
+@router.put("/{group_id}/user_properties")
+def update_user_properties(
+    group_id: int,
+    car_capacity: int,
+    is_passenger: bool,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return group_service.update_user_group_data(
+        db=db,
+        current_user=current_user,
+        group_id=group_id,
+        car_capacity=car_capacity,
+        is_passenger=is_passenger
+	)
