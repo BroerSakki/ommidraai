@@ -109,3 +109,42 @@ Show migration history
 ```bash
 docker compose exec backend alembic history
 ```
+
+# OSRM
+
+## Add map data
+### Linux
+Run this command from the project root to download the map data:
+```bash
+bash ./scripts/setup-osrm.sh "https://download.geofabrik.de/africa/south-africa-latest.osm.pbf"
+```
+
+Replace the url with the desired map data city url
+
+Then add the map to docker-compose.yml like:
+```yaml
+  osrm-south-africa:
+    image: osrm/osrm-backend:latest
+    command: >
+      sh -lc "cd /osrm/processed && osrm-routed --algorithm mld south-africa-latest"
+    volumes:
+      - ./osrm/processed:/osrm/processed:ro
+```
+
+### Windows
+Run this command from the project root to download the map data:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-osrm.ps1 -Url "https://download.geofabrik.de/africa/south-africa-latest.osm.pbf"
+```
+
+Replace the url with the desired map data city
+
+Then add the map to docker-compose.yml like:
+```yaml
+  osrm-south-africa:
+    image: osrm/osrm-backend:latest
+    command: >
+      sh -lc "cd /osrm/processed && osrm-routed --algorithm mld south-africa-latest"
+    volumes:
+      - ./osrm/processed:/osrm/processed:ro
+```
