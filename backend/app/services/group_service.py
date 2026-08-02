@@ -2,7 +2,7 @@
 # ---
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import select
+from sqlalchemy import select, update
 from fastapi import HTTPException, Depends
 # ---
 
@@ -221,3 +221,24 @@ def remove_group_user():
     # Remove user from table
     return True
 # ---
+
+def update_user_group_data(
+    db: Session,
+    current_user: User,
+    group_id: int,
+    car_capacity: int,
+    is_passenger: bool
+):
+    try:
+        db.execute(
+            update(User_Group)
+            .where(User_Group.user_id == current_user, User_Group.group_id == group_id)
+            .values(car_capacity=car_capacity, is_passenger=is_passenger)
+        )
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Couldn't update user_group data"
+        )
