@@ -44,7 +44,7 @@ def get_user_pending_invites(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return group_service.get_pending_invites(
+    return invite_service.get_pending_invites(
         db=db,
         current_user=current_user,
     )
@@ -75,7 +75,7 @@ def invite_user(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return group_service.create_invite(
+    return invite_service.create_invite(
         db=db,
         current_user=current_user,
         group_id=group_id,
