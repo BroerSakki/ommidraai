@@ -212,7 +212,7 @@ def add_group_location(
 def remove_group_location(
     db: Session,
     current_user: User,
-    location_id: int,
+    location_name: str,
     group_id: int,
 ):
 	# Find User Group
@@ -248,7 +248,7 @@ def remove_group_location(
         select(Group_Location)
         .where(
             Group_Location.group_id == group_id,
-            Group_Location.location_id == location_id,
+            Group_Location.display_name == location_name,
         )
     )
     if group_location is None:
@@ -271,7 +271,7 @@ def remove_group_location(
         )
     # ---
 
-    return {"message": f"Location with id {location_id} was removed from the group"}
+    return {"message": f"Location '{location_name}' was removed from the group"}
 # ---
 
 # Add user to group

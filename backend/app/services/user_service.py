@@ -85,3 +85,42 @@ def add_user_location(
         db.refresh(new_user_location)
     return new_user_location
 # ---
+
+# Remove User Location
+# ---
+def remove_user_location(
+    db: Session,
+    current_user: User,
+    location_name: str,
+):
+    # Find Location
+    # ---
+    user_location: User_Location = db.scalar(
+        select(User_Location)
+        .where(
+            User_Location.user_id == current_user.id,
+            User_Location.name == location_name,
+        )
+    )
+    if user_location is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Location cannot be found"
+        )
+    # ---
+
+	# Delete location
+    # ---
+    try:
+        db.delete(user_location)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Could not remove location"
+        )
+    # ---
+
+    return {"message": f"Location '{location_name}' was removed"}
+# ---
