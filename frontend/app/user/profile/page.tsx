@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { ProfileHeader } from "@/app/user/components/Profile/profile-header";
-import { ProfileInfo } from "@/app/user/components/Profile/profile-info";
-import { SavedLocations } from "@/app/user/components/Profile/saved-locations";
+import { ProfileHeader } from "@/app/user/components/profile/profile-header";
+import { ProfileInfo } from "@/app/user/components/profile/profile-info";
+import { SavedLocations } from "@/app/user/components/profile/saved-locations";
 
 export const metadata: Metadata = {
     title: "Profile",
