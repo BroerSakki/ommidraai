@@ -16,3 +16,4 @@ pydantic[email]
 
 python-dotenv
 requests
+asyncio
