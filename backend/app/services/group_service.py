@@ -2,13 +2,14 @@
 # ---
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import select, update
+from sqlalchemy import select, update, exists
 from fastapi import HTTPException, Depends
 # ---
 
 # Import Local Libraries
 # ---
 from app.services.locations_service import add_location
+from app.algorithms.algoritm import evaluate_destinations_with_osrm
 # ---
 
 # Import Schemas
@@ -26,6 +27,7 @@ from app.models.user import User
 from app.models.user_group import User_Group
 from app.models.group_location import Group_Location
 from app.models.invite import Invite
+from app.models.location import Location
 # ---
 
 # Get current user groups
@@ -97,16 +99,63 @@ def create_group(
 
 # Get needed data of a specific group for frontend
 # ---
-def get_group_data(db: Session, group: Group):
-    # Check if user is logged in
-    
-    # Verify that user is apart of that group
-    
-    # Return group data
-    # Get users
+def get_group_data(
+    db: Session,
+    current_user: User,
+    group_id: int
+):
+    is_member = db.scalar(
+        select(exists().where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == current_user.id
+        ))
+    )
 
-    # Get Locations
-    return True
+    if not is_member:
+        raise HTTPException(
+            status_code=400,
+            detail="User not in group"
+        )
+    
+    users_data = db.execute(
+        select(User.username, User_Group.is_passenger, User_Group.car_capacity, Location.longitude, Location.latitude)
+        .join(User_Group, User.id == User_Group.user_id)
+        .join(Location, Location.id == User.default_location_id) # Assume default location_id is the users location for now
+        .where(User_Group.group_id == group_id)
+    ).all()
+
+    coords = db.execute(
+        select(Location.id, Location.longitude, Location.latitude)
+        .join(Group_Location, Location.id == Group_Location.location_id)
+        .where(Group_Location.group_id == group_id)
+    ).all()
+
+    usernames = []
+    starts_data = {}
+    starts_capacities = {}
+    passengers_data = {}
+    destinations_data = {}
+
+    for username, is_passenger, car_capacity, longtitude, latitude in users_data:
+        usernames.append(username)
+        if is_passenger:
+            passengers_data[username] = (longtitude, latitude)
+        else:
+            starts_data[username] = (longtitude, latitude)
+            starts_capacities[username] = car_capacity
+
+    for id, longtitude, latitude in coords:
+        destinations_data[id] = (longtitude, latitude)
+
+    routing_data = []
+    if starts_data and destinations_data:
+        routing_data = evaluate_destinations_with_osrm(starts_data=starts_data, starting_capacities=starts_capacities, passengers_data=passengers_data, destinations_data=destinations_data)
+
+    return {
+        "usernames": usernames,
+        "destinations": destinations_data,
+        "algorithm": routing_data
+	}
 # ---
 
 # Add location to group

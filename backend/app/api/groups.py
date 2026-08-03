@@ -64,6 +64,21 @@ def create_group(
     )
 # ---
 
+# Get Group Data
+# ---
+@router.get("/{group_id}")
+def get_group_data(
+    group_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return group_service.get_group_data(
+        db=db,
+        group_id=group_id,
+        current_user=current_user
+	)
+# ---
+
 # Add Location
 # ---
 @router.post("/{group_id}/location/add")
