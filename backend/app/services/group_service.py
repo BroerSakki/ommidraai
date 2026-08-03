@@ -51,6 +51,19 @@ def create_group(
     current_user: User
 ):
     try:
+        # Check if group exists
+        group_check = db.scalar(
+            select(Group)
+            .where(
+                Group.name == group.name,
+            )
+        )
+        if group_check is not None:
+            raise HTTPException(
+                status_code=400,
+                detail="Group name already in use"
+            )
+
         # Add Group
         new_group = Group(
             name=group.name,
@@ -62,6 +75,7 @@ def create_group(
         new_user_group = User_Group(
             user_id = current_user.id,
             group_id = new_group.id,
+            location_id = current_user.default_location_id,
             role = user_roles.UserRole.creator,
         )
 
