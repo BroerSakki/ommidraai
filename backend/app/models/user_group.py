@@ -18,6 +18,10 @@ class User_Group(Base):
         ForeignKey("groups.id"),
         primary_key=True
     )
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id"),
+        nullable=False
+    )
     role: Mapped[str]
     car_capacity: Mapped[int] = mapped_column(
         default=0

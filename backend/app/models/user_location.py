@@ -21,4 +21,8 @@ class User_Location(Base):
         ForeignKey("locations.id"),
         nullable=False
     )
+    name: Mapped[str] = mapped_column(
+        unique=True,
+        nullable=False
+    )
 # ---
