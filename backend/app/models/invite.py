@@ -16,7 +16,6 @@ class Invite(Base):
     )
     origin_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
-        primary_key=True,
         nullable=False
     )
     group_id: Mapped[int] = mapped_column(

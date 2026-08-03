@@ -2,7 +2,7 @@
 # ---
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import select
+from sqlalchemy import select, update
 from fastapi import HTTPException, Depends
 # ---
 
@@ -13,10 +13,10 @@ from app.services.locations_service import add_location
 
 # Import Schemas
 # ---
-from app.schemas.user_roles import UserRole
+from app.schemas import user_roles
 from app.schemas.group import GroupCreate
 from app.schemas.location import LocationCreate
-from app.schemas.invite import InviteCreate
+from app.schemas import invite
 # ---
 
 # Import Models
@@ -62,7 +62,7 @@ def create_group(
         new_user_group = User_Group(
             user_id = current_user.id,
             group_id = new_group.id,
-            role = UserRole.admin,
+            role = user_roles.UserRole.creator,
         )
 
         # Do user group insert
@@ -111,8 +111,10 @@ def add_group_location(
         )
     )
 
-    # Verify that user is admin on the group
-    if user_group.role != UserRole.admin:
+    # Verify Permissions
+    if not user_roles.can_manage_locations(
+        role=user_group.role
+    ):
         raise HTTPException(
             status_code=403,
             detail="Permission denied"
@@ -144,39 +146,14 @@ def add_group_location(
 
 # Delete location from group
 # ---
-def delete_group_location():
-    # Check if user is logged in
-    
-	# Verify that user is admin on the group
-    
-	# Delete location from group
-    return True
-# ---
-
-# Get current user groups
-# ---
-def get_current_user_invites(
+def remove_group_location(
     db: Session,
     current_user: User,
-): 
-    # Go get from user_group all group_ids that current user_id is in
-    return db.scalars(
-        select(Invite)
-        .where(
-            Invite.user_id == current_user.id
-        )
-    ).all()
-# ---
-
-# Create invite
-# ---
-def create_invite(
-    db: Session,
-    current_user: User,
+    location_id: int,
     group_id: int,
-    username: str,
-    role: UserRole
 ):
+	# Find User Group
+    # ---
     user_group: User_Group = db.scalar(
         select(User_Group)
         .where(
@@ -184,99 +161,59 @@ def create_invite(
             User_Group.user_id == current_user.id,
         )
     )
+    if user_group is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Group could not be found",
+        )
+    # ---
 
-    # Verify that user is admin on the group
-    if user_group.role != UserRole.admin:
+    # Verify Permissions
+    # ---
+    if not user_roles.can_manage_locations(
+        role=user_group.role
+    ):
         raise HTTPException(
             status_code=403,
-            detail="Permission denied"
+            detail=f" Role \"{user_group.role}\" cannot manage locations"
         )
+    # ---
 
-    # Get invitee user details
-    invitee_user: User = db.scalar(
-        select(User)
+    # Find Group Location
+    # ---
+    group_location: Group_Location = db.scalar(
+        select(Group_Location)
         .where(
-            User.username == username
+            Group_Location.group_id == group_id,
+            Group_Location.location_id == location_id,
         )
     )
-
-    if invitee_user == None:
+    if group_location is None:
         raise HTTPException(
-            status_code=400,
-            detail="User does not exist"
+            status_code=404,
+            detail="Location cannot be found in group"
         )
+    # ---
 
-    if invitee_user.id == current_user.id:
-        raise HTTPException(
-            status_code=400,
-            detail="You canot invite yourself",
-        )
-
-    invitee_user_group: User_Group = db.scalar(
-        select(User_Group)
-        .where(
-            User_Group.group_id == group_id,
-            User_Group.user_id == invitee_user.id
-		)
-	)
-
-    if invitee_user_group != None:
-        raise HTTPException(
-            status_code=400,
-            detail="User already in group"
-        )
-
-    # Create invite in invite table
+	# Delete location from group
+    # ---
     try:
-        new_invite = Invite(
-            user_id=invitee_user.id,
-            origin_id=current_user.id,
-            group_id=group_id,
-            role=role
-        )
-
-        db.add(new_invite)
+        db.delete(group_location)
         db.commit()
-        db.refresh(new_invite)
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(
             status_code=400,
-            detail="Invite could not be created"
-		)
-    
-    return new_invite
-# ---
-
-# See Pending Invites
-# ---
-def get_pending_invites(
-    db: Session,
-    current_user: User
-):
-    # Go get from user_group all group_ids that current user_id is in
-    return db.scalars(
-        select(Invite)
-        .where(
-            Invite.origin_id == current_user.id
+            detail="Could not remove location from the group"
         )
-    ).all()
+    # ---
+
+    return {"message": f"Location with id {location_id} was removed from the group"}
 # ---
 
 # Add user to group
 # ---
-def add_group_user():
-    # Check if user is logged in
-    
-    # Check if user_id exists in invite table
-    
-    # Add user to user_group and remove from invite
-    return True
-# ---
-
-# Add user to group
-# ---
-def delete_group_user():
+def remove_group_user():
     # Check if user is logged in
     
     # Check if current user is admin on the group
@@ -284,3 +221,24 @@ def delete_group_user():
     # Remove user from table
     return True
 # ---
+
+def update_user_group_data(
+    db: Session,
+    current_user: User,
+    group_id: int,
+    car_capacity: int,
+    is_passenger: bool
+):
+    try:
+        db.execute(
+            update(User_Group)
+            .where(User_Group.user_id == current_user, User_Group.group_id == group_id)
+            .values(car_capacity=car_capacity, is_passenger=is_passenger)
+        )
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Couldn't update user_group data"
+        )

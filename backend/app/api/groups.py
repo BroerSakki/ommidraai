@@ -21,6 +21,7 @@ from app.models.user import User
 
 # Import Schemas
 # ---
+from app.schemas import invite
 from app.schemas.group import GroupCreate
 from app.schemas.location import LocationCreate
 from app.schemas.user_roles import UserRole
@@ -47,31 +48,6 @@ def get_user_groups(
     )
 # ---
 
-# Get User Invites
-# ---
-@router.get("/invites")
-def get_user_invites(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    return group_service.get_current_user_invites(
-        db=db,
-        current_user=current_user
-	)
-# ---
-
-# Get Pending Invites
-# ---
-@router.get("/invites/pending")
-def get_user_pending_invites(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    return group_service.get_pending_invites(
-        db=db,
-        current_user=current_user,
-    )
-# ---
 
 # Create Group
 # ---
@@ -88,28 +64,9 @@ def create_group(
     )
 # ---
 
-# Invite User
-# ---
-@router.post("/{group_id}/invite")
-def invite_user(
-    group_id: int,
-    username: str,
-    role: UserRole,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    return group_service.create_invite(
-        db=db,
-        current_user=current_user,
-        group_id=group_id,
-        username=username,
-        role=role
-    )
-# ---
-
 # Add Location
 # ---
-@router.post("/{group_id}/locations/add")
+@router.post("/{group_id}/location/add")
 def add_location(
     group_id: int,
     location: LocationCreate,
@@ -123,3 +80,36 @@ def add_location(
         group_id=group_id,
     )
 # ---
+
+# Remove Location
+# ---
+@router.delete("/{group_id}/location/delete")
+def remove_location(
+    group_id: int,
+    location_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return group_service.remove_group_location(
+        db=db,
+        current_user=current_user,
+        location_id=location_id,
+        group_id=group_id,
+    )
+# ---
+
+@router.put("/{group_id}/user_properties")
+def update_user_properties(
+    group_id: int,
+    car_capacity: int,
+    is_passenger: bool,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return group_service.update_user_group_data(
+        db=db,
+        current_user=current_user,
+        group_id=group_id,
+        car_capacity=car_capacity,
+        is_passenger=is_passenger
+	)

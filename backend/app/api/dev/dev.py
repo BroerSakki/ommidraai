@@ -1,9 +1,19 @@
 # Imports
 # ---
 from fastapi import APIRouter
-from app.api.dev.tables import router as table_router
+from app.api.dev.tables import router as tables_router
+from app.api.dev.osrm import router as osrm_router
 # ---
 
-router = APIRouter(prefix="/dev")
+# Router Setup
+# ---
+router = APIRouter(
+    prefix="/dev"
+)
+# ---
 
-router.include_router(table_router)
+# Add Routers
+# ---
+router.include_router(tables_router)
+router.include_router(osrm_router)
+# ---

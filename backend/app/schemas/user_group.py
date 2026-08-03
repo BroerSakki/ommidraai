@@ -10,4 +10,6 @@ class UserGroupCreate(BaseModel):
     user_id: int
     group_id: int
     role: UserRole
+    car_capacity: int
+    is_passenger: bool
 # ---
