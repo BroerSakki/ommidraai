@@ -51,7 +51,7 @@ def get_user_groups(
 
 # Create Group
 # ---
-@router.post("/")
+@router.post("/create")
 def create_group(
     group: GroupCreate,
     current_user: User = Depends(get_current_user),
@@ -113,7 +113,9 @@ def remove_location(
     )
 # ---
 
-@router.put("/{group_id}/user_properties")
+# Edit User Properties
+# ---
+@router.put("/{group_id}/user/properties")
 def update_user_properties(
     group_id: int,
     car_capacity: int,
@@ -128,3 +130,4 @@ def update_user_properties(
         car_capacity=car_capacity,
         is_passenger=is_passenger
 	)
+# ---

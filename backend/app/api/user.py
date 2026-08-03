@@ -47,7 +47,7 @@ def get_current_user_locations(
 
 # Add Current User Location
 # ---
-@router.post("/locations")
+@router.post("/locations/add")
 def add_user_location(
     user_location: UserLocationCreate,
     db: Session = Depends(get_db),
