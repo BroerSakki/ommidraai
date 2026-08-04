@@ -153,6 +153,7 @@ def accept_invite(
     db: Session,
     current_user: User,
     group_id: int,
+    location_id: int | None = None,
 ):
     invite = db.scalar(
         select(Invite)
@@ -166,14 +167,24 @@ def accept_invite(
             status_code=404,
             detail="Invite not found",
         )
-    new_user_group = User_Group(
-        user_id=current_user.id,
-        group_id=group_id,
-        role=invite.role,
-    )
-    db.add(new_user_group)
-    db.delete(invite)
-    db.commit()
+    try:
+        if location_id is None:
+            location_id = current_user.default_location_id
+        new_user_group = User_Group(
+            user_id=current_user.id,
+            group_id=group_id,
+            location_id=location_id,
+            role=invite.role,
+        )
+        db.add(new_user_group)
+        db.delete(invite)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Invite was not accepted"
+        )
 
     return {"message": f"Joined group as {new_user_group.role}"}
 # ---
@@ -197,8 +208,15 @@ def decline_invite(
             status_code=404,
             detail="Invite not found",
         )
-    db.delete(invite)
-    db.commit()
+    try:
+        db.delete(invite)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="The invite was not declined"
+        )
 
     return {"message": f"Declined invitation"}
 # ---
