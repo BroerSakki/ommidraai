@@ -2,10 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { GroupCard } from "./group-card";
+import { useRouter } from "next/navigation";
 
 export function MyGroups() {
   const [groups, setGroups] = useState<string[]>([]);
   const [name, setName] = useState("");
+  const router = useRouter();
 
   function addGroup(e: FormEvent) {
     e.preventDefault();
@@ -52,12 +54,16 @@ export function MyGroups() {
           No groups yet.
         </p>
       ) : (
-        <div className="mt-6 grid gap-4">
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {groups.map((group, index) => (
             <GroupCard
               key={index}
               name={group}
               actionLabel="Delete"
+              actionVariant="danger"
+              onOpen={() =>
+                router.push(`/group/${encodeURIComponent(group)}`)
+              }
               onAction={() => removeGroup(index)}
             />
           ))}

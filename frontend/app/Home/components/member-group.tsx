@@ -2,10 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { GroupCard } from "./group-card";
+import { useRouter } from "next/navigation";
 
 export function MemberGroups() {
   const [groups, setGroups] = useState<string[]>([]);
   const [name, setName] = useState("");
+  const router = useRouter();
 
   function joinGroup(e: FormEvent) {
     e.preventDefault();
@@ -52,13 +54,14 @@ export function MemberGroups() {
           You haven't joined any groups yet.
         </p>
       ) : (
-        <div className="mt-6 grid gap-4">
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {groups.map((group, index) => (
             <GroupCard
               key={index}
               name={group}
               actionLabel="Leave"
               actionVariant="warning"
+              onOpen={() => router.push(`/group/${encodeURIComponent(group)}`)}
               onAction={() => leaveGroup(index)}
             />
           ))}
