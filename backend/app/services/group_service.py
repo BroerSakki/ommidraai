@@ -167,9 +167,9 @@ def get_group_destinations(
     group_locations = db.scalars(
         select(Group_Location)
         .where(
-            Group_Location.group_id == group_id
+            Group_Location.group_id == group_id,
         )
-    )
+    ).all()
     if group_locations is None:
         raise HTTPException(
             status_code=400,
@@ -180,7 +180,24 @@ def get_group_destinations(
 
 # Search Group Locations
 # ---
-
+def search_group_destinations(
+    db: Session,
+    group_id: int,
+    display_name: str,
+):
+    group_locations = db.scalars(
+        select(Group_Location)
+        .where(
+            Group_Location.group_id == group_id,
+            Group_Location.display_name == display_name,
+        )
+    ).all()
+    if group_locations is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Group has no destinations"
+        )
+    return group_locations
 # ---
 
 # Add location to group
