@@ -124,3 +124,30 @@ def remove_user_location(
 
     return {"message": f"Location '{location_name}' was removed"}
 # ---
+
+# Update Current User Default Location
+# ---
+def update_user_default_location(
+    db: Session,
+    current_user: User,
+    name: str,
+):
+    user_location: User_Location = db.scalar(
+        select(User_Location)
+        .where(
+            User_Location.user_id == current_user.id,
+            User_Location.name == name,
+        )
+    )
+
+    if user_location is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User has no saved locations",
+        )
+
+    current_user.default_location_id = user_location.location_id
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+# ---

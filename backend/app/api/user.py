@@ -74,3 +74,18 @@ def remove_user_location(
         location_name=location_name,
     )
 # ---
+
+# Edit User Location
+# ---
+@router.put("/location/edit")
+def update_user_default_location(
+    name: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return user_service.update_user_default_location(
+        db=db,
+        current_user=current_user,
+        name=name,
+    )
+# ---
