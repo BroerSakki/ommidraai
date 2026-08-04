@@ -26,6 +26,7 @@ from app.models.group import Group
 from app.models.user import User
 from app.models.user_group import User_Group
 from app.models.group_location import Group_Location
+from app.models.user_location import User_Location
 from app.models.invite import Invite
 from app.models.location import Location
 # ---
@@ -340,18 +341,29 @@ def update_user_group_data(
     current_user: User,
     group_id: int,
     car_capacity: int,
-    is_passenger: bool
+    is_passenger: bool,
 ):
     try:
-        db.execute(
-            update(User_Group)
-            .where(User_Group.user_id == current_user, User_Group.group_id == group_id)
-            .values(car_capacity=car_capacity, is_passenger=is_passenger)
+        user_group: User_Group = db.scalar(
+            select(User_Group)
+            .where(
+                User_Group.group_id == group_id,
+                User_Group.user_id == current_user.id,
+            )
         )
+        if user_group is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"User {current_user.username} not found in group",
+            )
+        user_group.is_passenger = is_passenger
+        user_group.car_capacity = car_capacity
         db.commit()
+        db.refresh(user_group)
+        return user_group
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(
             status_code=400,
-            detail="Couldn't update user_group data"
+            detail="Couldn't update user_group data",
         )
