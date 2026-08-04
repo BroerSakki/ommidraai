@@ -79,12 +79,27 @@ def get_group_data(
 	)
 # ---
 
+# Get Group Destinations
+# ---
+@router.get("/{group_id}/locations")
+def get_group_destinations(
+    group_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return group_service.get_group_destinations(
+        db=db,
+        group_id=group_id,
+    )
+# ---
+
 # Add Location
 # ---
 @router.post("/{group_id}/location/add")
 def add_location(
     group_id: int,
     location: LocationCreate,
+    display_name: str = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -93,6 +108,7 @@ def add_location(
         location=location,
         current_user=current_user,
         group_id=group_id,
+        display_name=display_name,
     )
 # ---
 
