@@ -160,6 +160,6 @@ def update_user_properties(
         current_user=current_user,
         group_id=group_id,
         car_capacity=car_capacity,
-        is_passenger=is_passenger
+        is_passenger=is_passenger,
 	)
 # ---
