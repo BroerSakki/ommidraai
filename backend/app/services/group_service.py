@@ -158,14 +158,46 @@ def get_group_data(
 	}
 # ---
 
+# Get All Group Locations
+# ---
+def get_group_destinations(
+    db: Session,
+    group_id: int,
+):
+    group_locations = db.scalars(
+        select(Group_Location)
+        .where(
+            Group_Location.group_id == group_id
+        )
+    )
+    if group_locations is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Group has no destinations"
+        )
+    return group_locations
+# ---
+
+# Search Group Locations
+# ---
+
+# ---
+
 # Add location to group
 # ---
 def add_group_location(
     db: Session,
     location: LocationCreate,
     current_user: User,
-    group_id: int
+    group_id: int,
+    display_name: str,
 ):
+    if display_name is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Display Name required"
+        )
+
     user_group: User_Group = db.scalar(
         select(User_Group)
         .where(
@@ -191,6 +223,7 @@ def add_group_location(
         new_group_location = Group_Location(
             group_id = user_group.group_id,
             location_id = location_id,
+            display_name = display_name,
         )
 
         db.add(new_group_location)

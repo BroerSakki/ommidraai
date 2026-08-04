@@ -1,6 +1,6 @@
 # Imports
 # ---
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 # ---
@@ -9,9 +9,7 @@ from app.database import Base
 # ---
 class Group_Location(Base):
     __tablename__ = "group_locations"
-    __table_args__ = (
-        UniqueConstraint("group_id", "display_name"),
-    )
+
     group_id: Mapped[int] = mapped_column(
         ForeignKey("groups.id"),
         primary_key=True,
