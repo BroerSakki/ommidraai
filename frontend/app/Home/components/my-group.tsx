@@ -1,28 +1,15 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { GroupCard } from "./group-card";
 import { useRouter } from "next/navigation";
+import { GroupCard } from "./group-card";
 
-export function MyGroups() {
-  const [groups, setGroups] = useState<string[]>([]);
-  const [name, setName] = useState("");
+type MyGroupsProps = {
+  groups: string[];
+  onDelete: (index: number) => void;
+};
+
+export function MyGroups({ groups, onDelete }: MyGroupsProps) {
   const router = useRouter();
-
-  function addGroup(e: FormEvent) {
-    e.preventDefault();
-
-    const trimmed = name.trim();
-
-    if (!trimmed) return;
-
-    setGroups([...groups, trimmed]);
-    setName("");
-  }
-
-  function removeGroup(index: number) {
-    setGroups(groups.filter((_, i) => i !== index));
-  }
 
   return (
     <section className="mb-10 rounded-xl border p-6 shadow-sm">
@@ -30,23 +17,6 @@ export function MyGroups() {
         <h2 className="text-xl font-semibold">
           My Groups
         </h2>
-
-        <form onSubmit={addGroup} className="flex gap-2">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="New group name"
-            className="rounded border px-3 py-2"
-          />
-
-          <button
-            type="submit"
-            className="rounded bg-green-600 px-4 py-2 text-white"
-          >
-            Add Group
-          </button>
-        </form>
       </div>
 
       {groups.length === 0 ? (
@@ -54,7 +24,7 @@ export function MyGroups() {
           No groups yet.
         </p>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {groups.map((group, index) => (
             <GroupCard
               key={index}
@@ -64,7 +34,7 @@ export function MyGroups() {
               onOpen={() =>
                 router.push(`/group/${encodeURIComponent(group)}`)
               }
-              onAction={() => removeGroup(index)}
+              onAction={() => onDelete(index)}
             />
           ))}
         </div>
