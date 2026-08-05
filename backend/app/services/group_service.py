@@ -126,7 +126,7 @@ def get_group_data(
     ).all()
 
     coords = db.execute(
-        select(Location.id, Location.longitude, Location.latitude)
+        select(Group_Location.display_name, Location.longitude, Location.latitude)
         .join(Group_Location, Location.id == Group_Location.location_id)
         .where(Group_Location.group_id == group_id)
     ).all()
@@ -140,13 +140,13 @@ def get_group_data(
     for username, is_passenger, car_capacity, longtitude, latitude in users_data:
         usernames.append(username)
         if is_passenger:
-            passengers_data[username] = (longtitude, latitude)
+            passengers_data[username] = (latitude, longtitude)
         else:
-            starts_data[username] = (longtitude, latitude)
+            starts_data[username] = (latitude, longtitude)
             starts_capacities[username] = car_capacity
 
-    for id, longtitude, latitude in coords:
-        destinations_data[id] = (longtitude, latitude)
+    for display_name, longtitude, latitude in coords:
+        destinations_data[display_name] = (latitude, longtitude)
 
     routing_data = []
     if starts_data and destinations_data:
