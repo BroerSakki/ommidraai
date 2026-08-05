@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import Image from "next/image"
 import logo from "./Image/ommidraai-mark.png"
+import Link from "next/link"
 
 export default function Login() {
   const [username, setUsername] = useState("")
@@ -67,12 +68,17 @@ export default function Login() {
             >
               Sign In
             </button>
-            <button
-              type="button"
-              className="rounded-3xl border border-brand-mid bg-brand-mid/20 px-4 py-3 text-base font-semibold text-brand-dark transition hover:bg-brand-mid/30"
+            <Link
+              href="/register"
+              className="rounded-3xl border border-brand-mid bg-brand-mid/20 px-4 py-3 text-center font-semibold text-brand-dark transition hover:bg-brand-mid/30"
             >
-              Register
-            </button>
+              <button
+                type="button"
+                className="text-center" 
+              >
+                Register
+              </button>
+            </Link>
           </div>
 
           
