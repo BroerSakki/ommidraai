@@ -25,7 +25,7 @@ def query_osrm_table(all_coords, source_indices, dest_indices, osrm_host="osrm:5
 def evaluate_destinations_with_osrm(starts_data, starting_capacities, passengers_data, destinations_data, osrm_host="osrm:5000"):
     """
     Computes optimal destination rankings by minimizing maximum individual distance.
-	starts_data = {'S1': ({longtitude}, {latitude}), ...}
+	starts_data = {'S1': ({latitude}, {longtitude}), ...}
     Accepts starting_capacities as a dictionary: { 'S1': 1, 'S2': 2 }
     """
     start_nodes = list(starts_data.keys())
