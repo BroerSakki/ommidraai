@@ -136,21 +136,26 @@ def get_group_data(
     starts_capacities = {}
     passengers_data = {}
     destinations_data = {}
+    passenger_count = 0
 
     for username, is_passenger, car_capacity, longtitude, latitude in users_data:
         usernames.append(username)
         if is_passenger:
             passengers_data[username] = (latitude, longtitude)
+            passenger_count += 1
         else:
             starts_data[username] = (latitude, longtitude)
             starts_capacities[username] = car_capacity
+            passenger_count -= car_capacity
 
     for display_name, longtitude, latitude in coords:
         destinations_data[display_name] = (latitude, longtitude)
 
     routing_data = []
-    if starts_data and destinations_data:
+    if starts_data and destinations_data and (passenger_count <= 0):
         routing_data = evaluate_destinations_with_osrm(starts_data=starts_data, starting_capacities=starts_capacities, passengers_data=passengers_data, destinations_data=destinations_data)
+    else:
+        routing_data = "Input data for routing not valid"
 
     return {
         "usernames": usernames,
