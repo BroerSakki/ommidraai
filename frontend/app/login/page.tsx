@@ -19,7 +19,7 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        const response = await fetch(`/api/backend/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password }),
@@ -28,14 +28,18 @@ export default function Login() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'Something went wrong');
+            throw new Error(data.detail || 'Something went wrong');
         }
 
         router.refresh();
 
-        router.push('/home');
-    } catch (err: any) {
-        setError(err.message);
+        router.push('/Home');
+    } catch (err) {
+        if (err instanceof Error) {
+            setError(err.message);
+        } else {
+            setError("An unexpected error occured: " + err);
+        }
     } finally {
         setLoading(false);
     }
@@ -58,7 +62,7 @@ export default function Login() {
           <p className="mt-2 text-sm text-slate-600">Enter your username and password to continue.</p>
         </div>
 
-        {error && <p className="bg-red-50">{error}</p>}
+        {error && <p className="text-red-600">{error}</p>}
 
         <form onSubmit={handleLogin} className="flex flex-col gap-6">
           <label className="block">
