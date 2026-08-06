@@ -5,15 +5,41 @@ import { useState } from "react"
 import Image from "next/image"
 import logo from "./Image/ommidraai-mark.png"
 import Link from "next/link"
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+  const router = useRouter();
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    console.log("[v0] Login submitted:", { username })
-  }
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Something went wrong');
+        }
+
+        router.refresh();
+
+        router.push('/home');
+    } catch (err: any) {
+        setError(err.message);
+    } finally {
+        setLoading(false);
+    }
+  };
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-dark via-brand-mid to-brand-light px-4 py-10">
@@ -32,7 +58,9 @@ export default function Login() {
           <p className="mt-2 text-sm text-slate-600">Enter your username and password to continue.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        {error && <p className="bg-red-50">{error}</p>}
+
+        <form onSubmit={handleLogin} className="flex flex-col gap-6">
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-brand-dark">Username</span>
             <input
@@ -64,9 +92,10 @@ export default function Login() {
           <div className="grid gap-4 sm:grid-cols-2">
             <button
               type="submit"
+              disabled={loading}
               className="rounded-3xl bg-brand-dark px-4 py-3 text-base font-semibold text-white transition hover:bg-[#312a51]"
             >
-              Sign In
+              {loading ? 'Logging in...' : 'Sign In'}
             </button>
             <Link
               href="/register"
