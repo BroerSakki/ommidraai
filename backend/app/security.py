@@ -2,7 +2,7 @@
 # ---
 from datetime import datetime, timedelta, UTC
 from pwdlib import PasswordHash
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Request, Cookie, Header
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 # ---
@@ -119,10 +119,18 @@ def verify_refresh_token(token: str) -> int:
 # ---
 def get_current_user(
     request: Request,
+    authorization: str | None = Header(None),
+    access_token: str | None = Cookie(None, alias=ACCESS_COOKIE_NAME),
     db: Session = Depends(get_db),
 ) -> User:
 
-    token = request.cookies.get(ACCESS_COOKIE_NAME)
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+    elif access_token:
+        token = access_token
+    else:
+        token = request.cookies.get(ACCESS_COOKIE_NAME)
 
     if token is None:
         raise HTTPException(
