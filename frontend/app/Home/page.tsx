@@ -9,6 +9,8 @@ export default function HomePage() {
   const [myGroups, setMyGroups] = useState<string[]>([]);
   const [memberGroups, setMemberGroups] = useState<string[]>([]);
 
+  const [groupName, setGroupName] = useState("");
+
   function addGroup() {
     const name = prompt("Enter a new group name:");
 
@@ -17,20 +19,11 @@ export default function HomePage() {
     setMyGroups((prev) => [...prev, name.trim()]);
   }
 
-  function joinGroup() {
-    const name = prompt("Enter a group to join:");
-
-    if (!name?.trim()) return;
-
-    setMemberGroups((prev) => [...prev, name.trim()]);
-  }
-
   return (
     <main className="min-h-screen bg-gray-100 py-8 pb-28">
       <div className="relative z-10 mx-auto max-w-6xl rounded-3xl bg-white p-10 shadow-2xl">
         <PageHeader />
 
-        {/* My Groups */}
         <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-md">
           <MyGroups
             groups={myGroups}
@@ -40,7 +33,6 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Member Groups */}
         <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-md">
           <MemberGroups
             groups={memberGroups}
@@ -51,8 +43,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Sticky Action Buttons */}
-      {/* Bottom Buttons */}
       <div className="fixed bottom-8 left-1/2 z-[9999] w-full max-w-6xl -translate-x-1/2 px-10">
         <div className="flex justify-end gap-4">
           <button
@@ -62,13 +52,7 @@ export default function HomePage() {
             + Add Group
           </button>
 
-          <button
-            type="button"
-            onClick={joinGroup}
-            className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:bg-blue-700 active:scale-95"
-          >
-            Join Group
-          </button>
+          
         </div>
       </div>
     </main>
