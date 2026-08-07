@@ -11,12 +11,12 @@ class Group_Location(Base):
     __tablename__ = "group_locations"
 
     group_id: Mapped[int] = mapped_column(
-        ForeignKey("groups.id"),
+        ForeignKey("groups.id", ondelete="CASCADE"),
         primary_key=True,
         nullable=False
     )
     location_id: Mapped[int] = mapped_column(
-        ForeignKey("locations.id"),
+        ForeignKey("locations.id", ondelete="CASCADE"),
         primary_key=True,
         nullable=False
     )

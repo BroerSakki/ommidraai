@@ -14,11 +14,11 @@ class User_Location(Base):
         primary_key=True
     )
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False
     )
     location_id: Mapped[int] = mapped_column(
-        ForeignKey("locations.id"),
+        ForeignKey("locations.id", ondelete="CASCADE"),
         nullable=False
     )
     name: Mapped[str] = mapped_column(
