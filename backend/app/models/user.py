@@ -20,7 +20,7 @@ class User(Base):
         unique=True
     )
     default_location_id: Mapped[int] = mapped_column(
-        ForeignKey("locations.id"),
+        ForeignKey("locations.id", ondelete="CASCADE"),
         nullable=True
     )
     password_hash: Mapped[str]

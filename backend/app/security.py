@@ -120,15 +120,12 @@ def verify_refresh_token(token: str) -> int:
 def get_current_user(
     request: Request,
     authorization: str | None = Header(None),
-    access_token: str | None = Cookie(None, alias=ACCESS_COOKIE_NAME),
     db: Session = Depends(get_db),
 ) -> User:
 
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
-    elif access_token:
-        token = access_token
     else:
         token = request.cookies.get(ACCESS_COOKIE_NAME)
 

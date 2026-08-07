@@ -10,16 +10,16 @@ from app.database import Base
 class Invite(Base):
     __tablename__ = "invites"
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
         nullable=False
     )
     origin_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False
     )
     group_id: Mapped[int] = mapped_column(
-        ForeignKey("groups.id"),
+        ForeignKey("groups.id", ondelete="CASCADE"),
         primary_key=True,
         nullable=False
     )

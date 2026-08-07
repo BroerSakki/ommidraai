@@ -11,15 +11,15 @@ class User_Group(Base):
     __tablename__ = "user_groups"
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True
     )
     group_id: Mapped[int] = mapped_column(
-        ForeignKey("groups.id"),
+        ForeignKey("groups.id", ondelete="CASCADE"),
         primary_key=True
     )
     location_id: Mapped[int] = mapped_column(
-        ForeignKey("locations.id"),
+        ForeignKey("locations.id", ondelete="CASCADE"),
         nullable=False
     )
     role: Mapped[str]

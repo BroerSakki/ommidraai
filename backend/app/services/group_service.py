@@ -98,6 +98,61 @@ def create_group(
     return new_group
 # ---
 
+# Delete group
+# ---
+def delete_group(
+    db: Session,
+    group_id: int,
+    current_user: User
+):
+    group: Group = db.scalar(
+        select(Group)
+        .where(
+            Group.id == group_id,
+        )
+    )
+
+    if group is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Group doesn't exist",
+        )
+	
+    user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == current_user.id,
+        )
+    )
+
+    if user_group is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not apart of the group",
+        )
+
+    if not user_roles.can_delete_group(
+        role=user_group.role
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail=f" Role \"{user_group.role}\" cannot delete this group"
+        )
+
+    try:
+        db.delete(group)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Could not delete group"
+        )
+
+    return {"message": f"Group '{group.name}' was deleted"}
+# ---
+
 # Get needed data of a specific group for frontend
 # ---
 def get_group_data(

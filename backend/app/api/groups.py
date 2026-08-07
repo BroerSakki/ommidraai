@@ -64,6 +64,21 @@ def create_group(
     )
 # ---
 
+# Delete Group
+# ---
+@router.delete("/{group_id}")
+def delete_group(
+    group_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return group_service.delete_group(
+        db=db,
+        group_id=group_id,
+        current_user=current_user
+    )
+# ---
+
 # Get Group Data
 # ---
 @router.get("/{group_id}")
@@ -133,14 +148,14 @@ def add_location(
 @router.delete("/{group_id}/location/delete")
 def remove_location(
     group_id: int,
-    location_id: int,
+    display_name: str = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     return group_service.remove_group_location(
         db=db,
         current_user=current_user,
-        location_id=location_id,
+        location_name=display_name,
         group_id=group_id,
     )
 # ---
