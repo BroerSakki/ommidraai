@@ -174,14 +174,14 @@ def get_group_data(
         )
     
     users_data = db.execute(
-        select(User.username, User_Group.is_passenger, User_Group.car_capacity, Location.longitude, Location.latitude)
+        select(User, User_Group, Location)
         .join(User_Group, User.id == User_Group.user_id)
         .join(Location, Location.id == User.default_location_id) # Assume default location_id is the users location for now
         .where(User_Group.group_id == group_id)
     ).all()
 
     coords = db.execute(
-        select(Group_Location.display_name, Location.longitude, Location.latitude)
+        select(Group_Location, Location)
         .join(Group_Location, Location.id == Group_Location.location_id)
         .where(Group_Location.group_id == group_id)
     ).all()
@@ -193,18 +193,18 @@ def get_group_data(
     destinations_data = {}
     passenger_count = 0
 
-    for username, is_passenger, car_capacity, longtitude, latitude in users_data:
-        usernames.append(username)
-        if is_passenger:
-            passengers_data[username] = (latitude, longtitude)
+    for user, user_group, location in users_data:
+        usernames.append(user.username)
+        if user_group.is_passenger:
+            passengers_data[user.username] = (location.latitude, location.longitude)
             passenger_count += 1
         else:
-            starts_data[username] = (latitude, longtitude)
-            starts_capacities[username] = car_capacity
-            passenger_count -= car_capacity
+            starts_data[user.username] = (location.latitude, location.longitude)
+            starts_capacities[user.username] = user_group.car_capacity
+            passenger_count -= user_group.car_capacity
 
-    for display_name, longtitude, latitude in coords:
-        destinations_data[display_name] = (latitude, longtitude)
+    for group_location, location in coords:
+        destinations_data[group_location.display_name] = (location.latitude, location.longitude)
 
     routing_data = []
     if starts_data and destinations_data and (passenger_count <= 0):
@@ -213,8 +213,21 @@ def get_group_data(
         routing_data = "Input data for routing not valid"
 
     return {
-        "usernames": usernames,
-        "destinations": destinations_data,
+        "users": [
+            {
+                "user": {"username": u.username, "email": u.email},
+                "user_group": {"is_passenger": ug.is_passenger, "car_capacity": ug.car_capacity},
+                "location": {"latitude": loc.latitude, "longitude": loc.longitude}
+            }
+            for u, ug, loc in users_data
+        ],
+        "destinations": [
+            {
+                "group_location": {"display_name": gl.display_name},
+                "location": {"latitude": loc.latitude, "longitude": loc.longitude}
+            }
+            for gl, loc in coords
+        ],
         "algorithm": routing_data
 	}
 # ---
@@ -387,13 +400,72 @@ def remove_group_location(
 
 # Add user to group
 # ---
-def remove_group_user():
-    # Check if user is logged in
+def remove_group_user(
+    db: Session,
+    current_user: User,
+    group_id: int,
+    username: str,
+):
+    user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == current_user.id,
+        )
+    )
+    if user_group is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"User {current_user.username} not found in group",
+        )
+
+    user: User = db.scalar(
+        select(User)
+        .where(
+            User.username == username,
+        )
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"User {username} doen't exist",
+        )
+
+    target_user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == user.id,
+		)
+	)
+
+    if target_user_group is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"User {username} not found in group",
+        )
+
+    if not user_roles.can_manage_user(
+        actor=user_group.role,
+        target=target_user_group.role
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail=f" Role \"{user_group.role}\" cannot remove \"{username}\""
+        )
+
+    try:
+        db.delete(user)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Could not remove user from the group"
+        )
     
-    # Check if current user is admin on the group
-    
-    # Remove user from table
-    return True
+    return {"message": f"User '{username}' was removed from the group"}
 # ---
 
 def update_user_group_data(
