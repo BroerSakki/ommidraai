@@ -387,13 +387,72 @@ def remove_group_location(
 
 # Add user to group
 # ---
-def remove_group_user():
-    # Check if user is logged in
+def remove_group_user(
+    db: Session,
+    current_user: User,
+    group_id: int,
+    username: str,
+):
+    user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == current_user.id,
+        )
+    )
+    if user_group is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"User {current_user.username} not found in group",
+        )
+
+    user: User = db.scalar(
+        select(User)
+        .where(
+            User.username == username,
+        )
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"User {username} doen't exist",
+        )
+
+    target_user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == user.id,
+		)
+	)
+
+    if target_user_group is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"User {username} not found in group",
+        )
+
+    if not user_roles.can_manage_user(
+        actor=user_group.role,
+        target=target_user_group.role
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail=f" Role \"{user_group.role}\" cannot remove \"{username}\""
+        )
+
+    try:
+        db.delete(user)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Could not remove user from the group"
+        )
     
-    # Check if current user is admin on the group
-    
-    # Remove user from table
-    return True
+    return {"message": f"User '{username}' was removed from the group"}
 # ---
 
 def update_user_group_data(

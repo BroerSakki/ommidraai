@@ -178,3 +178,20 @@ def update_user_properties(
         is_passenger=is_passenger,
 	)
 # ---
+
+# Remove user
+# ---
+@router.delete("/{group_id}/user/remove")
+def remove_user(
+    group_id: int,
+    username: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return group_service.remove_group_user(
+        db=db,
+        current_user=current_user,
+        group_id=group_id,
+        username=username,
+	)
+# ---
