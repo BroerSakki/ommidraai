@@ -43,7 +43,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL(LOGIN_PATH, request.url))
     }
 
-    return NextResponse.rewrite(new URL('/Home', request.url))
+    return NextResponse.rewrite(new URL(HOME_PATH, request.url))
   }
 
   if (pathname === '/login' && authenticated) {
