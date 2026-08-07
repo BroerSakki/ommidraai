@@ -33,7 +33,7 @@ export default function Login() {
 
         router.refresh();
 
-        router.push('/Home');
+        router.push('/home');
     } catch (err) {
         if (err instanceof Error) {
             setError(err.message);
