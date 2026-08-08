@@ -1,3 +1,5 @@
+import { LocationMap } from "./location-map";
+
 export function SavedLocations() {
     return (
         <section className="mt-12">
@@ -13,25 +15,11 @@ export function SavedLocations() {
             bg-[#eef5f1]
             border-2
             border-[#b6cfc6]
-            h-80
             p-6
         "
             >
 
-                <button
-                    className="
-                        absolute
-                        bottom-4
-                        right-4
-                        bg-black
-                        text-white
-                        px-8
-                        py-3
-                        rounded
-                    "
-                >
-                    Add
-                </button>
+                <LocationMap />
 
             </div>
 
