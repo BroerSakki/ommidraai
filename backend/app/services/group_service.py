@@ -10,6 +10,7 @@ from fastapi import HTTPException, Depends
 # ---
 from app.services.user_service import get_user_by_name
 from app.services.locations_service import add_location
+from app.services.database.groups_table import get_group
 from app.algorithms.algoritm import evaluate_destinations_with_osrm
 # ---
 
@@ -192,6 +193,29 @@ def delete_group(
 
     return {"message": f"Group '{group.name}' was deleted"}
 # ---
+
+def get_group_name(
+    db: Session,
+    current_user: User,
+    group_id: int
+):
+    is_member = db.scalar(
+        select(exists().where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == current_user.id
+        ))
+    )
+
+    if not is_member:
+        raise HTTPException(
+            status_code=400,
+            detail="User not in group"
+        )
+
+    return get_group(
+        db=db,
+        group_id=group_id
+    ).name
 
 # Get needed data of a specific group for frontend
 # ---
