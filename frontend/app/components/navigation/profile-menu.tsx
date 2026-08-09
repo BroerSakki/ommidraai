@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 
 export function ProfileMenu() {
     const [open, setOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -26,6 +28,27 @@ export function ProfileMenu() {
             );
         };
     }, []);
+
+    const handleLogout = async () => {
+        try {
+            const response = await fetch(`/api/backend/auth/logout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'Something went wrong');
+            }
+
+            router.refresh();
+
+            router.push('/login');
+        } catch (err) {
+            alert(err);
+        }
+    };
 
     return (
         <div
@@ -101,6 +124,7 @@ export function ProfileMenu() {
                             text-red-600
                             hover:bg-red-50
                         "
+                        onClick={handleLogout}
                     >
                         Logout
                     </button>
