@@ -133,7 +133,7 @@ def create_group(
         # Create Group
         # ---
         new_group: Group = Group(
-            group_name= group_name
+            name= group_name
         )
         # ---
 
