@@ -1,6 +1,33 @@
+"use client";
+
 import { ProfileMenu } from "@/app/components/navigation/profile-menu";
+import { useState } from "react"
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const [groupName, setGroupName] = useState("")
+  const router = useRouter();
+
+  const createGroup = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const response = await fetch('/api/backend/groups/' + groupName + '/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Something went wrong');
+      }
+
+      router.refresh();
+    } catch (err) {
+      alert(err)
+    }
+  };
+
   return (
       <main className="min-h-screen bg-gradient-to-b from-[#b6cfc6] to-white py-10">
 
@@ -55,6 +82,7 @@ export default function Home() {
               <form
                   id="add-group-form"
                   className="mb-8 flex flex-col gap-4 sm:flex-row"
+                  onSubmit={createGroup}
               >
 
                 <label
@@ -69,6 +97,7 @@ export default function Home() {
                     type="text"
                     required
                     placeholder="New group name"
+                    onChange={(e) => setGroupName(e.target.value)}
                     className="flex-1 rounded-xl border-2 border-[#b6cfc6] px-4 py-3 outline-none transition focus:border-[#3d3461]"
                 />
 
