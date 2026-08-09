@@ -1,6 +1,6 @@
 # Imports
 # ---
-from app.schemas.user_role import UserRole
+from app.schemas.user_roles import UserRole
 from pydantic import BaseModel
 # ---
 # Classes

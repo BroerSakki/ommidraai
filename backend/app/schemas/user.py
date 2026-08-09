@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 # Classes
 # ---
 class UserCreate(BaseModel):
-    usename: str = Field(min_length=3)
+    username: str = Field(min_length=3)
     email: EmailStr
     password: str = Field(min_length=8)
 
