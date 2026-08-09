@@ -3,6 +3,7 @@
 from app.models.location import Location
 from app.schemas.location import LocationCreate
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from fastapi import HTTPException
@@ -26,7 +27,10 @@ def get_location_id(
 
 # New Location Service
 # ---
-def add_location(db: Session, location: LocationCreate) -> int:
+def add_location(
+    db: Session,
+    location: LocationCreate
+) -> int:
     try:
         stmt = (
             insert(Location)
@@ -48,14 +52,49 @@ def add_location(db: Session, location: LocationCreate) -> int:
         db.commit()
         return location_id
 
-    except Exception:
+    except SQLAlchemyError:
         db.rollback()
-        raise
+        raise HTTPException(
+            status_code=400,
+            detail="Could not add location",
+        )
+# ---
+
+# Delete Location
+# ---
+def delete_location(
+    location_id: int,
+    db: Session,
+):
+    try:
+        location = db.scalar(
+            select(Location)
+            .where(
+                Location.id == location_id,
+            )
+        )
+        if location is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Location with id '{location_id}' could not be found"
+            )
+        
+        db.delete(location)
+        db.commit()
+
+        return f"Removed location with id '{location_id}'"
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not remove location with id '{location_id}'"
+        )
 # ---
 
 # Get location Place Name
 # ---
-async def get_place_name(location: LocationCreate):
+async def get_place_name(
+    location: LocationCreate
+):
     url = "https://nominatim.openstreetmap.org/reverse"
     params = {
         "lat": location.latitude,

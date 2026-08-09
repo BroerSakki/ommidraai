@@ -8,6 +8,7 @@ from fastapi import HTTPException, Depends
 
 # Import Local Libraries
 # ---
+from app.services.user_service import get_user_by_name
 from app.services.locations_service import add_location
 from app.algorithms.algoritm import evaluate_destinations_with_osrm
 # ---
@@ -46,6 +47,45 @@ def get_current_user_groups(
     ).all()
 # ---
 
+# Get User Group
+# ---
+def get_user_group(
+    db: Session,
+    group_name: str,
+    user: User
+) -> User_Group:
+    try:
+        group: Group = db.scalar(
+            select(Group)
+            .where(
+                Group.name == group_name,
+            )
+        )
+        if group is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Group '{group_name}' not found",
+            )
+        user_group: User_Group = db.scalar(
+            select(User_Group)
+            .where(
+                User_Group.group_id == group.id,
+                User_Group.user_id == user.id
+            )
+        )
+        if user_group is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"User is not in group '{group_name}'",
+            )
+        return user_group
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Database error while trying to get user group"
+        )
+# ---
+
 # New Group Service
 # ---
 def create_group(
@@ -79,7 +119,7 @@ def create_group(
             user_id = current_user.id,
             group_id = new_group.id,
             location_id = current_user.default_location_id,
-            role = user_roles.UserRole.creator,
+            role = user_roles.UserRole.owner,
         )
 
         # Do user group insert
@@ -330,7 +370,7 @@ def remove_group_location(
     return {"message": f"Location '{location_name}' was removed from the group"}
 # ---
 
-# Add user to group
+# Remove user from group
 # ---
 def remove_group_user():
     # Check if user is logged in
@@ -339,6 +379,112 @@ def remove_group_user():
     
     # Remove user from table
     return True
+# ---
+
+# Update User Role
+# ---
+def update_user_role(
+    db: Session,
+    current_user: User,
+    group_name: str,
+    user_name: str,
+    role: user_roles.UserRole,
+):
+    try:
+        actor: User_Group = get_user_group(
+            db=db,
+            group_name=group_name,
+            user=current_user,
+        )
+        target: User_Group = get_user_group(
+            db=db,
+            group_name=group_name,
+            user=get_user_by_name(
+                db=db,
+                user_name=user_name,
+            )
+        )
+        if not user_roles.can_manage_user(
+            actor=actor.role,
+            target= target.role,
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Permission denied",
+            )
+        target.role = role
+        if role == user_roles.UserRole.owner:
+            actor.role = user_roles.UserRole.admin
+        db.commit()
+        db.refresh(target)
+        return target
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Could not update user permissions"
+        )
+# ---
+
+# Get Members
+# ---
+def get_user_group_members(
+    db: Session,
+    group_id: int,
+):
+    try:
+        user_groups = db.scalars(
+            select(User_Group)
+            .where(
+                User_Group.group_id == group_id
+            )
+        ).all()
+        return user_groups
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=400,
+            detail="Could not connect to user groups"
+        )
+# ---
+
+# Leave User Group
+# ---
+def leave_user_group(
+    db: Session,
+    current_user: User,
+    group_name: str,
+):
+    user_group: User_Group = get_user_group(
+        db=db,
+        group_name=group_name,
+        user=current_user,
+    )
+    try:
+        db.delete(user_group)
+        db.commit()
+        if get_user_group_members(
+            db=db,
+            group_id=user_group.group_id,
+        ) is None:
+            group: Group = db.scalar(
+                select(Group)
+                .where(
+                    Group.name == group_name,
+                )
+            )
+            if group is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Group '{group_name}' not found"
+                )
+            db.delete(group)
+            db.commit()
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=400,
+            detail="Could not leave group",
+        )
+    return f"Left group '{group_name}'"
 # ---
 
 def update_user_group_data(

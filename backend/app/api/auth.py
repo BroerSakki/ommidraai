@@ -27,6 +27,15 @@ router = APIRouter(
 )
 # ---
 
+# Current User
+# ---
+@router.get("/me", response_model=UserResponse)
+def me(
+    current_user: User = Depends(get_current_user),
+):
+    return current_user
+# ---
+
 # Register
 # ---
 @router.post("/register", status_code=201)
@@ -134,13 +143,4 @@ def logout(
     return {
         "message": "Logged out"
     }
-# ---
-
-# Current User
-# ---
-@router.get("/me", response_model=UserResponse)
-def me(
-    current_user: User = Depends(get_current_user),
-):
-    return current_user
 # ---
