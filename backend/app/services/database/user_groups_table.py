@@ -141,11 +141,6 @@ def get_user_group(
                 User_Group.user_id == user_group_select.user_id,
             )
         )
-        if user_group is None:
-            raise HTTPException(
-                status_code=404,
-                detail="User group not found",
-            )
         # ---
 
         # Return

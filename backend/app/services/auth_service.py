@@ -39,7 +39,7 @@ def register(
 
         hashed = hash_password(user.password)
         new_user = User(
-            username=user.usename,
+            username=user.username,
             email=user.email,
             password_hash=hashed,
             default_location_id=default_location_id,

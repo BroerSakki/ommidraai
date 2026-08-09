@@ -123,6 +123,43 @@ def get_group_id(
         # ---
 # ---
 
+# Create Group
+# ---
+def create_group(
+    db: Session,
+    group_name: str,
+) -> Group:
+    try:
+        # Create Group
+        # ---
+        new_group: Group = Group(
+            name= group_name
+        )
+        # ---
+
+        # Update Database
+        # ---
+        db.add(new_group)
+        db.commit()
+        db.refresh(new_group)
+        # ---
+
+        # Return
+        # ---
+        return new_group
+        # ---
+
+    except SQLAlchemyError:
+        # Database Error
+        # ---
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Group was not created",
+        )
+        # ---
+# ---
+
 # Edit Group
 # ---
 def rename_group(
