@@ -20,18 +20,18 @@
 
 - [x] /groups – POST
 
-- [ ] /groups/{group_id} – GET  # Moeilik, implimenteer eers algoritme
+- [x] /groups/{group_id} – GET  # Moeilik, implimenteer eers algoritme
 
-- [ ] /groups/{group_id} – PUT
+- [x] /groups/{group_id} – PUT
 
-- [ ] /groups/{group_id} – DELETE
+- [x] /groups/{group_id} – DELETE
 
 - [x] /groups/{group_id}/invite – POST
 
 - [ ] /groups/{group_id}/{user_id} – DELETE
 
-- [ ] /groups/{group_id}/add_location – POST
+- [x] /groups/{group_id}/add_location – POST
 
-- [ ] /groups/{group_id}/{location_id} – DELETE
+- [x] /groups/{group_id}/{location_id} – DELETE
 
 

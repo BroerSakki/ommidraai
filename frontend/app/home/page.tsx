@@ -20,7 +20,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 py-8 pb-28">
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-dark via-brand-mid to-brand-light py-8 pb-28">
       <div className="relative z-10 mx-auto max-w-6xl rounded-3xl bg-white p-10 shadow-2xl">
         <PageHeader />
 
