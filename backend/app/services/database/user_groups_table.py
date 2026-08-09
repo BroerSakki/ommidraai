@@ -12,6 +12,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 # Import Models
 # ---
+from app.models.user import User
 from app.models.user_group import User_Group
 # ---
 
@@ -22,8 +23,8 @@ from app.schemas import user_group as user_group_schemas
 
 # Import Services
 # ---
-from app.services.database.groups_table import get_group_id
-from app.services.database.users_table import get_user_id
+from app.services.database import groups_table
+from app.services.database import users_table
 # ---
 
 # Get User Groups
@@ -175,8 +176,14 @@ def search_user_group(
         user_group: User_Group = get_user_group(
             db=db,
             user_group_select=user_group_schemas.UserGroupSelect(
-                group_id= get_group_id,
-                user_id= get_user_id,
+                group_id= groups_table.get_group_id(
+                    db=db,
+                    group_name=user_group_search.group_name,
+                ),
+                user_id= users_table.get_user_id(
+                    db=db,
+                    user_name=user_group_search.user_name,
+                ),
             )
         )
         # ---
@@ -201,8 +208,16 @@ def search_user_group(
 def add_user(
     db: Session,
     user_group_create: user_group_schemas.UserGroupCreate,
-) -> UserGroupCreate:
+) -> user_group_schemas.UserGroupCreate:
     try:
+        # Get User Location
+        # ---
+        default_location_id: int = users_table.get_user(
+            db=db,
+            user_id=user_group_create.user_id,
+        ).default_location_id
+        # ---
+
         # Check User Group
         # ---
         user_group_check: User_Group = get_user_group(
@@ -224,6 +239,7 @@ def add_user(
         new_user_group: User_Group = User_Group(
             group_id= user_group_create.group_id,
             user_id= user_group_create.user_id,
+            location_id= default_location_id,
             role= user_group_create.role,
             car_capacity= user_group_create.car_capacity,
             is_passenger= user_group_create.is_passenger,
