@@ -86,6 +86,32 @@ def add_user_location(
     return new_user_location
 # ---
 
+# User By Name
+# ---
+def get_user_by_name(
+    db: Session,
+    user_name: str
+) -> User:
+    try:
+        user: User = db.scalar(
+            select(User)
+            .where(
+                User.username == user_name,
+            )
+        )
+        if user is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"User '{user_name}' not found",
+            )
+        return user
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not access user '{user_name}'"
+        )
+# ---
+
 # Remove User Location
 # ---
 def remove_user_location(

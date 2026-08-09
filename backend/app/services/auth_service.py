@@ -18,7 +18,6 @@ from app.security import (
     create_refresh_token,
     verify_refresh_token
 )
-
 # ---
 
 # Import Schemas
@@ -30,7 +29,11 @@ from app.schemas.user import UserCreate
 
 # Register Service
 # ---
-def register(db: Session, user: UserCreate, location: LocationCreate):
+def register(
+    db: Session,
+    user: UserCreate,
+    location: LocationCreate
+) -> User:
     try:
         default_location_id = add_location(db=db, location=location)
 
