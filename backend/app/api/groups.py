@@ -145,18 +145,35 @@ def add_location(
 
 # Leave Group
 # ---
-@router.delete("/{group_id}/location/delete")
-def remove_location(
-    group_id: int,
-    display_name: str = None,
+@router.post("/{group_id}/leave")
+def leave_group(
+    group_name: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return group_service.leave_user_group(
+        db=db,
+        current_user=current_user,
+        group_name=group_name,
+    )
+# ---
+
+# Edit Member Roles
+# ---
+@router.put("/{group_name}/user/{user_name}/role")
+def update_member_role(
+    group_name: str,
+    user_name: str,
+    role: user_roles.UserRole,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     return group_service.update_user_role(
         db=db,
         current_user=current_user,
-        location_name=display_name,
-        group_id=group_id,
+        group_name=group_name,
+        user_name=user_name,
+        role=role,
     )
 # ---
 
@@ -179,19 +196,19 @@ def update_user_properties(
 	)
 # ---
 
-# Remove user
+# Remove Location
 # ---
-@router.delete("/{group_id}/user/remove")
-def remove_user(
+@router.delete("/{group_id}/location/delete")
+def remove_location(
     group_id: int,
-    username: str,
+    location_name: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return group_service.remove_group_user(
+    return group_service.remove_group_location(
         db=db,
         current_user=current_user,
+        location_name=location_name,
         group_id=group_id,
-        username=username,
-	)
+    )
 # ---
