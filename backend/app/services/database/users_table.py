@@ -1,6 +1,7 @@
 # Base Imports
 # ---
 from fastapi import HTTPException
+from pydantic import EmailStr
 # ---
 
 # Database Imports
@@ -23,6 +24,43 @@ from app.models.user import User
 # Import Schemas
 # ---
 from app.schemas.user import UserCreate
+# ---
+
+# Get User
+# ---
+def get_user(
+    db: Session,
+    user_id: int,
+) -> User:
+    try:
+        # Get User
+        # ---
+        user: User = db.scalar(
+            select(User)
+            .where(
+                User.id == user_id,
+            )
+        )
+        if user is None:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found",
+            )
+        # ---
+
+        # Return
+        # ---
+        return user
+        # ---
+
+    except SQLAlchemyError:
+        # Database Error
+        # ---
+        raise HTTPException(
+            status_code=400,
+            detail="Could not retrieve user",
+        )
+        # ---
 # ---
 
 # Get User ID
@@ -74,7 +112,7 @@ def create_user(
         # ---
         hashed = hash_password(user.password)
         new_user = User(
-            username=user.usename,
+            username=user.username,
             email=user.email,
             password_hash=hashed,
             default_location_id=default_location_id,
@@ -109,8 +147,8 @@ def create_user(
 def change_username(
     db: Session,
     user: User,
-    new_user_name: UserCreate.usename,
-) -> UserCreate.usename:
+    new_user_name: UserCreate,
+) -> str:
     try:
         # Update Database
         # ---
@@ -137,8 +175,8 @@ def change_username(
 def change_password(
     db: Session,
     user: User,
-    new_password: UserCreate.password,
-) -> UserCreate.password:
+    new_password: str,
+) -> str:
     try:
         # Hash Password
         # ---
@@ -170,8 +208,8 @@ def change_password(
 def change_email(
     db: Session,
     user: User,
-    new_email: UserCreate.email,
-) -> UserCreate.email:
+    new_email: EmailStr,
+) -> str:
     try:
         # Update Database
         # ---
@@ -229,11 +267,11 @@ def change_default_location(
 def delete_user(
     db: Session,
     user: User,
-) -> UserCreate.usename:
+) -> str:
     try:
         # Store Username
         # ---
-        user_name: UserCreate.usename = user.username
+        user_name: UserCreate.username = user.username
         # ---
 
         # Update Database
