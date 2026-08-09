@@ -6,7 +6,7 @@ from enum import Enum
 # Class
 # ---
 class UserRole(str, Enum):
-	creator = "creator"
+	owner = "owner"
 	admin = "admin"
 	member = "member"
 	guest = "guest"
@@ -16,16 +16,16 @@ class UserRole(str, Enum):
 # ---
 def can_manage_locations(role:UserRole) -> bool:
 	return role in {
-		UserRole.creator,
+		UserRole.owner,
 		UserRole.admin,
 		UserRole.member,
 	}
 
 def can_delete_group(role: UserRole) -> bool:
-	return role == UserRole.creator
+	return role == UserRole.owner
 
 def can_manage_user(actor: UserRole, target: UserRole) -> bool:
-	if actor == UserRole.creator:
+	if actor == UserRole.owner:
 		return True
 
 	if actor == UserRole.admin:
