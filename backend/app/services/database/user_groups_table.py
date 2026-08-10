@@ -1,6 +1,7 @@
 # Base Imports
 # ---
 from fastapi import HTTPException
+from typing import List
 # ---
 
 # Database Imports
@@ -32,7 +33,7 @@ from app.services.database import users_table
 def get_user_groups(
     db: Session,
     user_id: int,
-):
+) -> List[User_Group]:
     try:
         # Get User Groups
         # ---
@@ -64,7 +65,7 @@ def get_user_groups(
 def get_group_users(
     db: Session,
     group_id: int,
-):
+) -> List[User_Group]:
     try:
         # Get User Groups
         # ---
@@ -328,4 +329,31 @@ def remove_user(
             detail="User was not removed",
         )
         # ---
-# --
+# ---
+
+# Remove All Users
+# ---
+def remove_all_users(
+    db: Session,
+    user_groups: List[User_Group]
+) -> str:
+    try:
+        # Update Database
+        # ---
+        for user_group in user_groups:
+            db.delete(user_group)
+        db.commit()
+        # ---
+
+        # Return
+        # ---
+        return "All users removed from group"
+        # ---
+    
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Users were not removed",
+        )
+# ---
