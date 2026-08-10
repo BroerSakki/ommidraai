@@ -13,12 +13,13 @@ from sqlalchemy.exc import SQLAlchemyError
 # Import Models
 # ---
 from app.models.user import User
+from app.models.user_group import User_Group
 # ---
 
 # Import Schemas
 # ---
 from app.schemas import user_roles
-from app.schemas import user_group
+from app.schemas import user_group as user_group_schemas
 # ---
 
 # Import Services
@@ -69,31 +70,120 @@ def create_group(
     db: Session,
     current_user: User,
     group_name: str,
-):
-    # Create Named Group
-    # ---
-    group_id: int = groups_table.create_group(
-        db=db,
-        group_name=group_name,
-    ).id
-    # ---
+) -> str:
+    try:
+        # Create Named Group
+        # ---
+        group_id: int = groups_table.create_group(
+            db=db,
+            group_name=group_name,
+        ).id
+        # ---
 
-    # Build Schema
-    # ---
-    user_group_create: user_group.UserGroupCreate = user_group.UserGroupCreate(
-        user_id= current_user.id,
-        group_id= group_id,
-        role= user_roles.UserRole.owner,
-        car_capacity= 0,
-        is_passenger= False,
-    )
-    # ---
+        # Build Schema
+        # ---
+        user_group_create: user_group_schemas.UserGroupCreate = user_group_schemas.UserGroupCreate(
+            user_id= current_user.id,
+            group_id= group_id,
+            role= user_roles.UserRole.owner,
+            car_capacity= 0,
+            is_passenger= False,
+        )
+        # ---
 
-    # Add Current User
-    # ---
-    user_groups_table.add_user(
-        db=db,
-        user_group_create=user_group_create,
-    )
-    # ---
+        # Add Current User
+        # ---
+        user_groups_table.add_user(
+            db=db,
+            user_group_create=user_group_create,
+        )
+        # ---
+
+        # Return
+        # ---
+        return f"Group '{group_name}' was created"
+        # ---
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Group not created",
+        )
+# ---
+
+# Delete Group
+# ---
+def delete_group(
+    db: Session,
+    current_user: User,
+    group_name: str,
+) -> str:
+    try:
+        # Get Group
+        # ---
+        group_id: int= groups_table.get_group_id(
+                db=db,
+                group_name=group_name,
+        )
+        group: group = groups_table.get_group(
+            db=db,
+            group_id=group_id,
+        )
+        # ---
+
+        # Get User Group
+        # ---
+        user_group: User_Group = user_groups_table.get_user_group(
+            db=db,
+            user_group_select=user_group_schemas.UserGroupSelect(
+                group_id=group_id,
+                user_id=current_user.id,
+            )
+        )
+        if user_group is None:
+            raise HTTPException(
+                status_code=404,
+                detail="User not in group",
+            )
+        # ---
+
+        # Check User Permissions
+        # ---
+        if not user_roles.can_delete_group(
+            role=user_group.role,
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Permission denied",
+            )
+        # ---
+
+        # Empty Database
+        # ---
+        user_groups_table.remove_all_users(
+            db=db,
+            user_groups=user_groups_table.get_group_users(
+                db=db,
+                group_id=group_id,
+            )
+        )
+        # ---
+
+        # Delete Group
+        # ---
+        return groups_table.delete_group(
+            db=db,
+            group=group,
+        )
+        # ---
+
+    except SQLAlchemyError:
+        # Database Error
+        # ---
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Group was not deleted",
+        )
+        # ---
 # ---
