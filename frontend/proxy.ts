@@ -1,24 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const LOGIN_PATH = '/login'
-const HOME_PATH = '/home'
+const REGISTER_PATH = '/register'
+const HOME_PATH = '/'
 
 async function isAuthenticated(request: NextRequest): Promise<boolean> {
-  const token = request.cookies.get('access_token')?.value;
+  const token = request.cookies.get('access_token')?.value
+  if (!token) return false
 
   try {
     if (token) {
-        const response = await fetch(`http://localhost:3000/api/backend/auth/me`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        })
+      const response = await fetch(`http://localhost:3000/api/backend/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      })
 
-        return response.ok
+      return response.ok
     } else {
-        return false
+      return false
     }
   } catch {
     return false
@@ -28,31 +30,28 @@ async function isAuthenticated(request: NextRequest): Promise<boolean> {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (!['/', '/home', '/login'].includes(pathname)) {
+  if (pathname.includes('.')) {
     return NextResponse.next()
   }
 
   const authenticated = await isAuthenticated(request)
+  const isAuthPage = pathname === LOGIN_PATH || pathname === REGISTER_PATH
 
-  if (pathname === '/') {
-    return NextResponse.redirect(new URL(authenticated ? HOME_PATH : LOGIN_PATH, request.url))
-  }
-
-  if (pathname === '/home') {
-    if (!authenticated) {
-      return NextResponse.redirect(new URL(LOGIN_PATH, request.url))
+  if (authenticated) {
+    if (isAuthPage) {
+      return NextResponse.redirect(new URL(HOME_PATH, request.url))
+    } else {
+      return NextResponse.next()
     }
-
-    return NextResponse.rewrite(new URL(HOME_PATH, request.url))
+  } else {
+    if (!(isAuthPage)) {
+      return NextResponse.redirect(new URL(LOGIN_PATH, request.url))
+    } else {
+      return NextResponse.next()
+    }
   }
-
-  if (pathname === '/login' && authenticated) {
-    return NextResponse.redirect(new URL(HOME_PATH, request.url))
-  }
-
-  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/', '/home', '/login'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|public|api).*)',],
 }
