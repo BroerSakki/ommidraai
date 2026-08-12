@@ -31,10 +31,12 @@ export function MyGroups({ groups, onDelete }: MyGroupsProps) {
               name={group}
               actionLabel="Delete"
               actionVariant="danger"
-              onOpen={() =>
-                router.push(`/group/${encodeURIComponent(group)}`)
-              }
-              onAction={() => onDelete(index)}
+              onAction={() => {
+                setMyGroups((prev) => prev.filter((item) => item !== group));
+              }}
+              onOpen={() => {
+                router.push(`/group/${encodeURIComponent(group)}`);
+              }}
             />
           ))}
         </div>
