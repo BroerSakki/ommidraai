@@ -22,21 +22,25 @@ export function GroupCard({
 
   return (
     <div className="flex h-40 w-40 flex-col justify-between rounded-xl border-2 border-green-600 bg-gray-900 p-4 shadow-lg">
+      {/* Group name */}
       <div className="flex flex-1 items-center justify-center">
-        <h3 className="text-center text-lg font-semibold text-white break-words">
+        <h3 className="break-words text-center text-lg font-semibold text-white">
           {name}
         </h3>
       </div>
 
+      {/* Buttons */}
       <div className="flex gap-2">
+        {/* Open */}
         <button
           type="button"
           onClick={onOpen}
-          className="flex-1 rounded-md bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700 transition"
+          className="flex-1 rounded-md bg-blue-600 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
         >
           Open
         </button>
 
+        {/* Delete / Leave */}
         <button
           type="button"
           onClick={onAction}

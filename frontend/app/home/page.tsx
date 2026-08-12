@@ -4,12 +4,14 @@ import { useState } from "react";
 import { PageHeader } from "./components/page-header";
 import { MyGroups } from "./components/my-group";
 import { MemberGroups } from "./components/member-group";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const [myGroups, setMyGroups] = useState<string[]>([]);
   const [memberGroups, setMemberGroups] = useState<string[]>([]);
 
   const [groupName, setGroupName] = useState("");
+  const router = useRouter();
 
   function addGroup() {
     const name = prompt("Enter a new group name:");

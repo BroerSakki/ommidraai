@@ -30,14 +30,15 @@ export function MemberGroups({
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {groups.map((group, index) => (
             <GroupCard
-              key={index}
               name={group}
               actionLabel="Leave"
               actionVariant="warning"
-              onOpen={() =>
-                router.push(`/group/${encodeURIComponent(group)}`)
-              }
-              onAction={() => onLeave(index)}
+              onAction={() => {
+                setMemberGroups((prev) => prev.filter((item) => item !== group));
+              }}
+              onOpen={() => {
+                router.push(`/group/${encodeURIComponent(group)}`);
+              }}
             />
           ))}
         </div>
