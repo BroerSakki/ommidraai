@@ -4,6 +4,7 @@ from fastapi import (
     APIRouter,
     Depends,
 )
+from fastapi_pagination import Page
 from sqlalchemy.orm import Session
 # ---
 
@@ -23,6 +24,7 @@ from app.models.user import User
 # Import Schemas
 # ---
 from app.schemas import invite
+from app.schemas.user_group import UserGroupCreate
 from app.schemas.group import GroupCreate
 from app.schemas.location import LocationCreate
 from app.schemas import user_roles
@@ -38,7 +40,7 @@ router = APIRouter(
 
 # Get User Groups
 # ---
-@router.get("/")
+@router.get("/", response_model=Page[UserGroupCreate])
 def get_user_groups(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)

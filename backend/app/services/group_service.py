@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select, update, exists
 from fastapi import HTTPException, Depends
+from fastapi_pagination.ext.sqlalchemy import paginate
 # ---
 
 # Import Local Libraries
@@ -40,12 +41,12 @@ def get_current_user_groups(
     current_user: User
 ): 
     # Go get from user_group all group_ids that current user_id is in
-    return db.scalars(
+    return paginate(db,
         select(User_Group)
         .where(
             User_Group.user_id == current_user.id
         )
-    ).all()
+    )
 # ---
 
 # Get User Group
