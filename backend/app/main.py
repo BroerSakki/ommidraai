@@ -2,6 +2,7 @@
 # ---
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import add_pagination
 from sqlalchemy import text
 from app.database import engine
 # --
@@ -52,4 +53,9 @@ app.include_router(group_router)
 app.include_router(invite_router)
 app.include_router(user_router)
 app.include_router(dev_database_router)
+# ---
+
+# Pagination
+# ---
+add_pagination(app)
 # ---
