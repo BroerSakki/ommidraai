@@ -211,7 +211,7 @@ export default function Home() {
                 {hasMore && !loading && (
                   <button
                     onClick={handleLoadMore}
-                    className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition shadow-sm text-sm"
+                    className="px-6 py-2.5 bg-[#3d3461] text-white font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition shadow-sm text-sm"
                   >
                     Load More Groups
                   </button>
