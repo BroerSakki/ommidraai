@@ -46,6 +46,7 @@ def get_current_user_groups(
         .where(
             User_Group.user_id == current_user.id
         )
+        .order_by(User_Group.group_id.desc()) # This shows most recent groups first, but maybe we want to order groups by name later?
     )
 # ---
 
