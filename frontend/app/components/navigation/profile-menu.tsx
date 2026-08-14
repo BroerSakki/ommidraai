@@ -96,6 +96,7 @@ export function ProfileMenu() {
                             px-5
                             py-3
                             hover:bg-[#eef5f1]
+                            text-gray-500
                         "
                     >
                          Profile
@@ -115,19 +116,19 @@ export function ProfileMenu() {
 
                     <hr />
 
-                    <button
+                    <Link
+                        href="/login"
                         className="
-                            w-full
-                            text-left
+                            block
                             px-5
                             py-3
-                            text-red-600
                             hover:bg-red-50
+                            text-red-600
                         "
                         onClick={handleLogout}
                     >
                         Logout
-                    </button>
+                    </Link>
                 </div>
             )}
         </div>

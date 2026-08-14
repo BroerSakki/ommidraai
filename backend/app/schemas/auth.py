@@ -1,6 +1,7 @@
 # Imports
 # ---
 from pydantic import BaseModel
+from typing import Optional
 # ---
 
 # Classes
@@ -8,6 +9,9 @@ from pydantic import BaseModel
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+class RefreshRequest(BaseModel):
+    refresh_token: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str

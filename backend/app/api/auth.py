@@ -1,7 +1,8 @@
 # Import External Libraries
 # ---
-from fastapi import APIRouter, Depends, Response, Request, HTTPException
+from fastapi import APIRouter, Depends, Response, Request, HTTPException, Header
 from sqlalchemy.orm import Session
+from typing import Optional
 # ---
 
 # Import Local Libraries
@@ -15,7 +16,7 @@ from app.security import get_current_user, ACCESS_COOKIE_NAME, REFRESH_COOKIE_NA
 # Import Schemas
 # ---
 from app.schemas.user import UserCreate, UserResponse
-from app.schemas.auth import LoginRequest, Token
+from app.schemas.auth import LoginRequest, Token, RefreshRequest
 from app.schemas.location import LocationCreate
 # ---
 
@@ -94,10 +95,14 @@ def login(
 def refresh(
     request: Request,
     response: Response,
+    body: Optional[RefreshRequest] = None,
 ):
     refresh_token = request.cookies.get(
         REFRESH_COOKIE_NAME
     )
+
+    if not refresh_token and body:
+        refresh_token = body.refresh_token
 
     if refresh_token is None:
         raise HTTPException(
@@ -120,6 +125,7 @@ def refresh(
 
     return {
         "message": "Token refreshed",
+        "access_token": access_token,
     }
 # ---
 

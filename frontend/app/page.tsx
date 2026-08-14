@@ -2,13 +2,66 @@
 
 import { ProfileMenu } from "@/app/components/navigation/profile-menu";
 import { AddGroupModal } from "@/app/components/homepage/add-group-modal";
-import { useState } from "react";
+import LoadMoreGroups from "@/app/components/groups/load-groups";
+import { GroupItem } from "@/app/components/groups/group-card";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false);
 
   const router = useRouter();
+
+  const [groupItems, setGroupItems] = useState<GroupItem[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+
+  const pageSize = 12;
+  const apiUrl = "/api/backend/groups/get";
+
+  const fetchGroups = async (currentPage: number, signal?: AbortSignal) => {
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      const fullUrl = `${apiUrl}?page=${currentPage}&size=${pageSize}`;
+      
+      // 2. Attach the signal to the standard fetch configuration block
+      const response = await fetch(fullUrl, { signal });
+      const data = await response.json();
+
+      const newItems = data.items || [];
+      if (newItems.length < pageSize) {
+        setHasMore(false);
+      }
+
+      setGroupItems((prevItems) => [...prevItems, ...newItems]);
+    } catch (error) {
+      // Ignore errors caused intentionally by aborting the request
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("Error fetching dashboard items:", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    fetchGroups(1, signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchGroups(nextPage);
+  };
 
   const createGroup = async (groupName: string) => {
     try {
@@ -31,6 +84,7 @@ export default function Home() {
       setIsAddGroupModalOpen(false);
 
       router.refresh();
+      window.location.reload();
     } catch (err) {
       alert(err);
     }
@@ -84,12 +138,8 @@ export default function Home() {
               </div>
 
               <div className="grid gap-4">
-                {/* Groups will go here */}
+                <LoadMoreGroups items={groupItems} isOwnerType={true}/>
               </div>
-
-              <p className="rounded-xl bg-[#eef5f1] p-6 text-center text-gray-500">
-                No groups yet. Add one above.
-              </p>
 
             </section>
 
@@ -145,15 +195,32 @@ export default function Home() {
               <div
                   id="member-groups-list"
                   className="grid gap-4"
-              ></div>
-
-              <p
-                  id="member-groups-empty"
-                  className="rounded-xl bg-[#eef5f1] p-6 text-center text-gray-500"
               >
-                You haven't joined any groups yet.
-              </p>
+                <LoadMoreGroups items={groupItems} isOwnerType={false}/>
+              </div>
 
+            </section>
+
+            <section
+                className="rounded-3xl bg-white p-8 shadow-xl border border-[#b6cfc6]"
+                aria-labelledby="load-more-title"
+            >
+              <div className="flex flex-col items-center justify-center pt-6">
+                {loading && <p className="text-gray-500 animate-pulse text-sm">Loading next batch...</p>}
+
+                {hasMore && !loading && (
+                  <button
+                    onClick={handleLoadMore}
+                    className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition shadow-sm text-sm"
+                  >
+                    Load More Groups
+                  </button>
+                )}
+
+                {!hasMore && groupItems.length > 0 && (
+                  <p className="text-gray-400 text-sm">All available groups have been fetched.</p>
+                )}
+              </div>
             </section>
 
           </div>
