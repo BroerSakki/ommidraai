@@ -42,7 +42,8 @@ def get_current_user_groups(
 ): 
     # Go get from user_group all group_ids that current user_id is in
     return paginate(db,
-        select(User_Group)
+        select(User_Group, Group)
+        .join(Group, Group.id == User_Group.group_id)
         .where(
             User_Group.user_id == current_user.id
         )
