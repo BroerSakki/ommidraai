@@ -13,11 +13,11 @@ export function PageHeader() {
     <header className="mb-8 flex items-start justify-between">
       {/* Left */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl text-black font-bold tracking-tight">
           Groups
         </h1>
 
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-black">
           Manage the groups you own and the groups you belong to.
         </p>
       </div>
@@ -38,7 +38,7 @@ export function PageHeader() {
         </button>
 
         {showNotifications && (
-          <div className="absolute right-0 mt-2 w-72 rounded-lg border border-gray-300 bg-white shadow-lg z-50">
+          <div className="absolute right-0 mt-2 w-72 rounded-lg border border-gray-300 text-black bg-white shadow-lg z-50">
             <div className="border-b p-3 font-semibold">
               Notifications
             </div>

@@ -14,7 +14,7 @@ export function MyGroups({ groups, onDelete }: MyGroupsProps) {
   return (
     <section className="mb-10 rounded-xl border p-6 shadow-sm">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl text-black font-semibold">
           My Groups
         </h2>
       </div>
