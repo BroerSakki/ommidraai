@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 type Role = "owner" | "admin" | "member";
 
@@ -12,6 +12,7 @@ type GroupMember = {
 
 export default function GroupPage() {
   const params = useParams();
+  const router = useRouter();
 
   const groupName = decodeURIComponent(
     Array.isArray(params.groupName)
@@ -19,7 +20,7 @@ export default function GroupPage() {
       : params.groupName || "Group"
   );
 
-  // Change this to test different roles:
+  // Change this to "admin" or "member" to test different roles.
   const currentUserRole: Role = "owner";
 
   const [members, setMembers] = useState<GroupMember[]>([
@@ -36,9 +37,10 @@ export default function GroupPage() {
     "Cape Town",
   ]);
 
-  // -----------------------------
-  // Invite member
-  // -----------------------------
+  // --------------------------------
+  // INVITE MEMBER
+  // --------------------------------
+
   function inviteMember() {
     const name = prompt("Enter the name of the member to invite:");
 
@@ -53,16 +55,18 @@ export default function GroupPage() {
     ]);
   }
 
-  // -----------------------------
-  // Kick member/admin
-  // -----------------------------
+  // --------------------------------
+  // KICK MEMBER
+  // --------------------------------
+
   function kickMember() {
     const name = prompt("Enter the name of the member to kick:");
 
     if (!name?.trim()) return;
 
     const member = members.find(
-      (item) => item.name.toLowerCase() === name.trim().toLowerCase()
+      (item) =>
+        item.name.toLowerCase() === name.trim().toLowerCase()
     );
 
     if (!member) {
@@ -77,15 +81,18 @@ export default function GroupPage() {
 
     setMembers((prev) =>
       prev.filter(
-        (item) => item.name.toLowerCase() !== name.trim().toLowerCase()
+        (item) =>
+          item.name.toLowerCase() !== name.trim().toLowerCase()
       )
     );
   }
 
-  // -----------------------------
-  // Leave group
-  // -----------------------------
+  // --------------------------------
+  // LEAVE GROUP
+  // --------------------------------
+
   function leaveGroup() {
+    // Owner must choose a new owner before leaving.
     if (currentUserRole === "owner") {
       const newOwner = prompt(
         "You are the owner.\n\nEnter the name of an admin who should become the new owner:"
@@ -95,7 +102,8 @@ export default function GroupPage() {
 
       const admin = members.find(
         (member) =>
-          member.name.toLowerCase() === newOwner.trim().toLowerCase() &&
+          member.name.toLowerCase() ===
+            newOwner.trim().toLowerCase() &&
           member.role === "admin"
       );
 
@@ -145,9 +153,10 @@ export default function GroupPage() {
     // Later you can redirect back to the homepage here.
   }
 
-  // -----------------------------
-  // Delete group
-  // -----------------------------
+  // --------------------------------
+  // DELETE GROUP
+  // --------------------------------
+
   function deleteGroup() {
     const confirmDelete = confirm(
       `Are you sure you want to delete "${groupName}"?\n\nThis cannot be undone.`
@@ -160,21 +169,26 @@ export default function GroupPage() {
     // Later you can redirect to the homepage here.
   }
 
-  // -----------------------------
-  // Add location
-  // -----------------------------
+  // --------------------------------
+  // ADD LOCATION
+  // --------------------------------
+
   function addLocation() {
     const location = prompt("Enter a location:");
 
     if (!location?.trim()) return;
 
-    setLocations((prev) => [...prev, location.trim()]);
+    setLocations((prev) => [
+      ...prev,
+      location.trim(),
+    ]);
   }
 
-  // -----------------------------
-  // Sort members
+  // --------------------------------
+  // SORT MEMBERS
   // Owner → Admin → Member
-  // -----------------------------
+  // --------------------------------
+
   const ownerMembers = members.filter(
     (member) => member.role === "owner"
   );
@@ -212,14 +226,12 @@ export default function GroupPage() {
         </header>
 
         {/* -------------------------------- */}
-        {/* MAIN CONTENT */}
+        {/* LOCATIONS + MAP */}
         {/* -------------------------------- */}
 
         <div className="grid gap-8 lg:grid-cols-[250px_1fr]">
 
-          {/* -------------------------------- */}
-          {/* LOCATIONS - LEFT */}
-          {/* -------------------------------- */}
+          {/* LOCATIONS */}
 
           <section className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
@@ -257,9 +269,7 @@ export default function GroupPage() {
             )}
           </section>
 
-          {/* -------------------------------- */}
-          {/* MAP */}
-          {/* -------------------------------- */}
+          {/* WORLD MAP */}
 
           <section className="flex h-[350px] items-center justify-center rounded-2xl border border-gray-300 bg-gray-200">
 
@@ -392,98 +402,113 @@ export default function GroupPage() {
         {/* BOTTOM ACTIONS */}
         {/* -------------------------------- */}
 
-        <section className="mt-8 flex flex-wrap justify-end gap-3 border-t border-gray-200 pt-6">
+        <section className="mt-8 flex items-center justify-between gap-3 border-t border-gray-200 pt-6">
 
-          {/* MEMBER */}
+          {/* BACK BUTTON - LEFT */}
 
-          {currentUserRole === "member" && (
-            <>
-              <button
-                type="button"
-                onClick={inviteMember}
-                className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
-              >
-                Invite
-              </button>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="rounded-lg bg-gray-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-gray-700"
+          >
+            ← Back
+          </button>
 
-              <button
-                type="button"
-                onClick={leaveGroup}
-                className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
-              >
-                Leave
-              </button>
-            </>
-          )}
+          {/* RIGHT-SIDE ACTIONS */}
 
-          {/* ADMIN */}
+          <div className="flex flex-wrap justify-end gap-3">
 
-          {currentUserRole === "admin" && (
-            <>
-              <button
-                type="button"
-                onClick={inviteMember}
-                className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
-              >
-                Invite
-              </button>
+            {/* MEMBER */}
 
-              <button
-                type="button"
-                onClick={kickMember}
-                className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
-              >
-                Kick
-              </button>
+            {currentUserRole === "member" && (
+              <>
+                <button
+                  type="button"
+                  onClick={inviteMember}
+                  className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                >
+                  Invite
+                </button>
 
-              <button
-                type="button"
-                onClick={leaveGroup}
-                className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
-              >
-                Leave
-              </button>
-            </>
-          )}
+                <button
+                  type="button"
+                  onClick={leaveGroup}
+                  className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                >
+                  Leave
+                </button>
+              </>
+            )}
 
-          {/* OWNER */}
+            {/* ADMIN */}
 
-          {currentUserRole === "owner" && (
-            <>
-              <button
-                type="button"
-                onClick={inviteMember}
-                className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
-              >
-                Invite
-              </button>
+            {currentUserRole === "admin" && (
+              <>
+                <button
+                  type="button"
+                  onClick={inviteMember}
+                  className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                >
+                  Invite
+                </button>
 
-              <button
-                type="button"
-                onClick={kickMember}
-                className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
-              >
-                Kick
-              </button>
+                <button
+                  type="button"
+                  onClick={kickMember}
+                  className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
+                >
+                  Kick
+                </button>
 
-              <button
-                type="button"
-                onClick={leaveGroup}
-                className="rounded-lg bg-yellow-500 px-5 py-3 font-semibold text-black shadow transition hover:bg-yellow-600"
-              >
-                Leave
-              </button>
+                <button
+                  type="button"
+                  onClick={leaveGroup}
+                  className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                >
+                  Leave
+                </button>
+              </>
+            )}
 
-              <button
-                type="button"
-                onClick={deleteGroup}
-                className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
-              >
-                Delete Group
-              </button>
-            </>
-          )}
+            {/* OWNER */}
 
+            {currentUserRole === "owner" && (
+              <>
+                <button
+                  type="button"
+                  onClick={inviteMember}
+                  className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                >
+                  Invite
+                </button>
+
+                <button
+                  type="button"
+                  onClick={kickMember}
+                  className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
+                >
+                  Kick
+                </button>
+
+                <button
+                  type="button"
+                  onClick={leaveGroup}
+                  className="rounded-lg bg-yellow-500 px-5 py-3 font-semibold text-black shadow transition hover:bg-yellow-600"
+                >
+                  Leave
+                </button>
+
+                <button
+                  type="button"
+                  onClick={deleteGroup}
+                  className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                >
+                  Delete Group
+                </button>
+              </>
+            )}
+
+          </div>
         </section>
 
       </div>
