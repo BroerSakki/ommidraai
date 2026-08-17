@@ -1,7 +1,25 @@
 "use client";
 
-type GroupCardProps = {
+interface UserGroupDetails {
+  user_id: number;
+  group_id: number;
+  role: string;
+  car_capacity: number;
+  is_passenger: boolean;
+}
+
+interface GroupDetails {
   name: string;
+}
+
+export interface GroupItem {
+  User_Group: UserGroupDetails;
+  Group: GroupDetails;
+}
+
+type GroupCardProps = {
+  name?: string;
+  groupItem?: GroupItem;
   actionLabel: string;
   actionVariant?: "danger" | "warning";
   onAction: () => void;
@@ -10,11 +28,16 @@ type GroupCardProps = {
 
 export function GroupCard({
   name,
+  groupItem,
   actionLabel,
   actionVariant = "danger",
   onAction,
   onOpen,
 }: GroupCardProps) {
+  // Get the group name from groupItem if it exists.
+  // Otherwise use the name prop.
+  const groupName = groupItem?.Group?.name ?? name ?? "Unnamed Group";
+
   const buttonClasses =
     actionVariant === "warning"
       ? "bg-yellow-500 hover:bg-yellow-600"
@@ -25,13 +48,13 @@ export function GroupCard({
       {/* Group name */}
       <div className="flex flex-1 items-center justify-center">
         <h3 className="break-words text-center text-lg font-semibold text-white">
-          {name}
+          {groupName}
         </h3>
       </div>
 
       {/* Buttons */}
       <div className="flex gap-2">
-        {/* Open */}
+        {/* Open button */}
         <button
           type="button"
           onClick={onOpen}
@@ -40,7 +63,7 @@ export function GroupCard({
           Open
         </button>
 
-        {/* Delete / Leave */}
+        {/* Delete / Leave button */}
         <button
           type="button"
           onClick={onAction}
