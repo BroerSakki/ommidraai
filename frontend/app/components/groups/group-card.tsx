@@ -8,14 +8,19 @@ interface UserGroupDetails {
 
 interface GroupDetails {
   name: string;
+  actionLabel: string;
+  actionVariant?: "danger" | "warning";
 }
 
 export interface GroupItem {
   User_Group: UserGroupDetails;
   Group: GroupDetails;
+  onOpen: () => void;
+  onAction: () => void;
 }
 
-export default function GroupCard({ groupItem }: { groupItem: GroupItem }) {
+
+export default function GroupCard({ groupItem,onOpen,onAction,actionLabel,actionVariant = "danger",}: { groupItem: GroupItem }) {
   const { Group, User_Group } = groupItem;
 
   return (
@@ -30,7 +35,14 @@ export default function GroupCard({ groupItem }: { groupItem: GroupItem }) {
         </span>
       </div>
       <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400">
-        <button className="text-white rounded-full px-2.5 py-0.5 bg-[#3d3461] font-medium hover:underline">View</button>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex-1 rounded-md bg-blue-600 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+        >
+          Open
+        </button>
+        
       </div>
     </div>
   );
