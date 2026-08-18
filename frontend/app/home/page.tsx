@@ -4,13 +4,17 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "./components/page-header";
 import { MyGroups } from "./components/my-group";
 import { MemberGroups } from "./components/member-group";
+import { AddGroupModal } from "./components/model/add-model";
 
 export default function HomePage() {
   const [myGroups, setMyGroups] = useState<string[]>([]);
   const [memberGroups, setMemberGroups] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Load saved groups when the Home page opens
+  // Controls the Add Group modal
+  const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+
+  // Load saved groups when Home page opens
   useEffect(() => {
     try {
       const savedMyGroups = localStorage.getItem("myGroups");
@@ -30,14 +34,14 @@ export default function HomePage() {
     setLoaded(true);
   }, []);
 
-  // Save My Groups whenever they change
+  // Save My Groups
   useEffect(() => {
     if (!loaded) return;
 
     localStorage.setItem("myGroups", JSON.stringify(myGroups));
   }, [myGroups, loaded]);
 
-  // Save Member Groups whenever they change
+  // Save Member Groups
   useEffect(() => {
     if (!loaded) return;
 
@@ -47,24 +51,44 @@ export default function HomePage() {
     );
   }, [memberGroups, loaded]);
 
-  function addGroup() {
-    const name = prompt("Enter a new group name:");
+  // Called by AddGroupModal when OK is clicked
+  function createGroup(groupName: string) {
+    const trimmedName = groupName.trim();
 
-    if (!name?.trim()) return;
-
-    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return;
+    }
 
     // Prevent duplicate group names
-    if (
-      myGroups.some(
-        (group) => group.toLowerCase() === trimmedName.toLowerCase()
-      )
-    ) {
+    const alreadyExists = myGroups.some(
+      (group) =>
+        group.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (alreadyExists) {
       alert("A group with that name already exists.");
       return;
     }
 
+    // Add the new group
     setMyGroups((prev) => [...prev, trimmedName]);
+
+    // Close modal
+    setShowAddGroupModal(false);
+  }
+
+  // Delete group
+  function deleteGroup(index: number) {
+    setMyGroups((prev) =>
+      prev.filter((_, i) => i !== index)
+    );
+  }
+
+  // Leave member group
+  function leaveGroup(index: number) {
+    setMemberGroups((prev) =>
+      prev.filter((_, i) => i !== index)
+    );
   }
 
   return (
@@ -76,11 +100,7 @@ export default function HomePage() {
         <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-md">
           <MyGroups
             groups={myGroups}
-            onDelete={(index) => {
-              setMyGroups((prev) =>
-                prev.filter((_, i) => i !== index)
-              );
-            }}
+            onDelete={deleteGroup}
           />
         </div>
 
@@ -88,27 +108,30 @@ export default function HomePage() {
         <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-md">
           <MemberGroups
             groups={memberGroups}
-            onLeave={(index) => {
-              setMemberGroups((prev) =>
-                prev.filter((_, i) => i !== index)
-              );
-            }}
+            onLeave={leaveGroup}
           />
         </div>
       </div>
 
-      {/* Add Group button */}
+      {/* Bottom buttons */}
       <div className="fixed bottom-8 left-1/2 z-[9999] w-full max-w-6xl -translate-x-1/2 px-10">
         <div className="flex justify-end gap-4">
           <button
             type="button"
-            onClick={addGroup}
+            onClick={() => setShowAddGroupModal(true)}
             className="rounded-xl bg-green-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:bg-green-700 active:scale-95"
           >
             + Add Group
           </button>
         </div>
       </div>
+
+      {/* Add Group Modal */}
+      <AddGroupModal
+        isOpen={showAddGroupModal}
+        onClose={() => setShowAddGroupModal(false)}
+        onCreate={createGroup}
+      />
     </main>
   );
 }

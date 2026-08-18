@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { AddGroupModal } from "@/app/home/components/model/add-model";
 
 type Role = "owner" | "admin" | "member";
 
@@ -10,26 +11,77 @@ type GroupMember = {
   role: Role;
 };
 
+type ModalType =
+  | "invite"
+  | "kick"
+  | "location"
+  | "new-owner"
+  | null;
+
 export default function GroupPage() {
   const params = useParams();
   const router = useRouter();
 
+  /*
+   * Get the group name from the URL.
+   *
+   * Example:
+   * /group/Study%20Group
+   *
+   * becomes:
+   * Study Group
+   */
   const groupName = decodeURIComponent(
     Array.isArray(params.groupName)
       ? params.groupName[0]
       : params.groupName || "Group"
   );
 
-  // Change this to "admin" or "member" to test different roles.
+  /*
+   * Change this to:
+   *
+   * "owner"
+   * "admin"
+   * "member"
+   *
+   * to test the different group roles.
+   */
   const currentUserRole: Role = "owner";
 
+  /*
+   * -----------------------------
+   * MEMBERS
+   * -----------------------------
+   */
+
   const [members, setMembers] = useState<GroupMember[]>([
-    { name: "Group Owner", role: "owner" },
-    { name: "Admin 1", role: "admin" },
-    { name: "Admin 2", role: "admin" },
-    { name: "Member 1", role: "member" },
-    { name: "Member 2", role: "member" },
+    {
+      name: "Group Owner",
+      role: "owner",
+    },
+    {
+      name: "Admin 1",
+      role: "admin",
+    },
+    {
+      name: "Admin 2",
+      role: "admin",
+    },
+    {
+      name: "Member 1",
+      role: "member",
+    },
+    {
+      name: "Member 2",
+      role: "member",
+    },
   ]);
+
+  /*
+   * -----------------------------
+   * LOCATIONS
+   * -----------------------------
+   */
 
   const [locations, setLocations] = useState<string[]>([
     "Pretoria",
@@ -37,36 +89,67 @@ export default function GroupPage() {
     "Cape Town",
   ]);
 
-  // --------------------------------
-  // INVITE MEMBER
-  // --------------------------------
+  /*
+   * -----------------------------
+   * MODAL
+   * -----------------------------
+   */
 
-  function inviteMember() {
-    const name = prompt("Enter the name of the member to invite:");
+  const [activeModal, setActiveModal] =
+    useState<ModalType>(null);
 
-    if (!name?.trim()) return;
+  /*
+   * -----------------------------
+   * INVITE MEMBER
+   * -----------------------------
+   */
+
+  function inviteMember(name: string) {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      return;
+    }
+
+    const alreadyExists = members.some(
+      (member) =>
+        member.name.toLowerCase() ===
+        trimmedName.toLowerCase()
+    );
+
+    if (alreadyExists) {
+      alert("A member with that name already exists.");
+      return;
+    }
 
     setMembers((prev) => [
       ...prev,
       {
-        name: name.trim(),
+        name: trimmedName,
         role: "member",
       },
     ]);
+
+    setActiveModal(null);
   }
 
-  // --------------------------------
-  // KICK MEMBER
-  // --------------------------------
+  /*
+   * -----------------------------
+   * KICK MEMBER
+   * -----------------------------
+   */
 
-  function kickMember() {
-    const name = prompt("Enter the name of the member to kick:");
+  function kickMember(name: string) {
+    const trimmedName = name.trim();
 
-    if (!name?.trim()) return;
+    if (!trimmedName) {
+      return;
+    }
 
     const member = members.find(
       (item) =>
-        item.name.toLowerCase() === name.trim().toLowerCase()
+        item.name.toLowerCase() ===
+        trimmedName.toLowerCase()
     );
 
     if (!member) {
@@ -74,6 +157,9 @@ export default function GroupPage() {
       return;
     }
 
+    /*
+     * The owner cannot be kicked.
+     */
     if (member.role === "owner") {
       alert("The owner cannot be kicked.");
       return;
@@ -82,112 +168,171 @@ export default function GroupPage() {
     setMembers((prev) =>
       prev.filter(
         (item) =>
-          item.name.toLowerCase() !== name.trim().toLowerCase()
+          item.name.toLowerCase() !==
+          trimmedName.toLowerCase()
       )
     );
+
+    setActiveModal(null);
   }
 
-  // --------------------------------
-  // LEAVE GROUP
-  // --------------------------------
+  /*
+   * -----------------------------
+   * ADD LOCATION
+   * -----------------------------
+   */
 
-  function leaveGroup() {
-    // Owner must choose a new owner before leaving.
-    if (currentUserRole === "owner") {
-      const newOwner = prompt(
-        "You are the owner.\n\nEnter the name of an admin who should become the new owner:"
-      );
+  function addLocation(location: string) {
+    const trimmedLocation = location.trim();
 
-      if (!newOwner?.trim()) return;
-
-      const admin = members.find(
-        (member) =>
-          member.name.toLowerCase() ===
-            newOwner.trim().toLowerCase() &&
-          member.role === "admin"
-      );
-
-      if (!admin) {
-        alert("You must select an existing admin.");
-        return;
-      }
-
-      const confirmTransfer = confirm(
-        `${admin.name} will become the new owner. Continue?`
-      );
-
-      if (!confirmTransfer) return;
-
-      setMembers((prev) =>
-        prev.map((member) => {
-          if (member.role === "owner") {
-            return {
-              ...member,
-              role: "admin",
-            };
-          }
-
-          if (member.name === admin.name) {
-            return {
-              ...member,
-              role: "owner",
-            };
-          }
-
-          return member;
-        })
-      );
-
-      alert(`${admin.name} is now the new owner.`);
+    if (!trimmedLocation) {
       return;
     }
 
-    const confirmLeave = confirm(
-      `Are you sure you want to leave ${groupName}?`
+    const alreadyExists = locations.some(
+      (item) =>
+        item.toLowerCase() ===
+        trimmedLocation.toLowerCase()
     );
 
-    if (!confirmLeave) return;
-
-    alert(`You left ${groupName}.`);
-
-    // Later you can redirect back to the homepage here.
-  }
-
-  // --------------------------------
-  // DELETE GROUP
-  // --------------------------------
-
-  function deleteGroup() {
-    const confirmDelete = confirm(
-      `Are you sure you want to delete "${groupName}"?\n\nThis cannot be undone.`
-    );
-
-    if (!confirmDelete) return;
-
-    alert(`${groupName} has been deleted.`);
-
-    // Later you can redirect to the homepage here.
-  }
-
-  // --------------------------------
-  // ADD LOCATION
-  // --------------------------------
-
-  function addLocation() {
-    const location = prompt("Enter a location:");
-
-    if (!location?.trim()) return;
+    if (alreadyExists) {
+      alert("That location has already been added.");
+      return;
+    }
 
     setLocations((prev) => [
       ...prev,
-      location.trim(),
+      trimmedLocation,
     ]);
+
+    setActiveModal(null);
   }
 
-  // --------------------------------
-  // SORT MEMBERS
-  // Owner → Admin → Member
-  // --------------------------------
+  /*
+   * -----------------------------
+   * TRANSFER OWNERSHIP
+   * -----------------------------
+   *
+   * The owner must choose an existing
+   * admin before leaving.
+   */
+
+  function transferOwnership(newOwnerName: string) {
+    const trimmedName = newOwnerName.trim();
+
+    if (!trimmedName) {
+      return;
+    }
+
+    const admin = members.find(
+      (member) =>
+        member.name.toLowerCase() ===
+          trimmedName.toLowerCase() &&
+        member.role === "admin"
+    );
+
+    if (!admin) {
+      alert(
+        "You must enter the name of an existing admin."
+      );
+      return;
+    }
+
+    setMembers((prev) =>
+      prev.map((member) => {
+        /*
+         * Current owner becomes admin.
+         */
+        if (member.role === "owner") {
+          return {
+            ...member,
+            role: "admin",
+          };
+        }
+
+        /*
+         * Selected admin becomes owner.
+         */
+        if (
+          member.name.toLowerCase() ===
+          admin.name.toLowerCase()
+        ) {
+          return {
+            ...member,
+            role: "owner",
+          };
+        }
+
+        return member;
+      })
+    );
+
+    setActiveModal(null);
+  }
+
+  /*
+   * -----------------------------
+   * LEAVE GROUP
+   * -----------------------------
+   */
+
+  function leaveGroup() {
+    /*
+     * If the current user is the owner,
+     * they must choose a new owner first.
+     */
+    if (currentUserRole === "owner") {
+      setActiveModal("new-owner");
+      return;
+    }
+
+    /*
+     * Admin/member can leave directly.
+     */
+    router.back();
+  }
+
+  /*
+   * -----------------------------
+   * DELETE GROUP
+   * -----------------------------
+   */
+
+  function deleteGroup() {
+    const savedGroups =
+      localStorage.getItem("myGroups");
+
+    if (savedGroups) {
+      try {
+        const groups: string[] =
+          JSON.parse(savedGroups);
+
+        const updatedGroups = groups.filter(
+          (group) =>
+            group.toLowerCase() !==
+            groupName.toLowerCase()
+        );
+
+        localStorage.setItem(
+          "myGroups",
+          JSON.stringify(updatedGroups)
+        );
+      } catch (error) {
+        console.error(
+          "Failed to update saved groups:",
+          error
+        );
+      }
+    }
+
+    router.push("/Home");
+  }
+
+  /*
+   * -----------------------------
+   * SORT MEMBERS
+   * -----------------------------
+   */
 
   const ownerMembers = members.filter(
     (member) => member.role === "owner"
@@ -201,13 +346,94 @@ export default function GroupPage() {
     (member) => member.role === "member"
   );
 
+  /*
+   * -----------------------------
+   * MODAL SETTINGS
+   * -----------------------------
+   */
+
+  const modalSettings = {
+    invite: {
+      title: "Invite Member",
+      description:
+        "Enter the name of the person you want to invite.",
+      label: "Member Name",
+      placeholder: "Enter member name",
+      confirmText: "Invite",
+    },
+
+    kick: {
+      title: "Kick Member",
+      description:
+        "Enter the name of the member you want to kick.",
+      label: "Member Name",
+      placeholder: "Enter member name",
+      confirmText: "Kick",
+    },
+
+    location: {
+      title: "Add Location",
+      description:
+        "Enter the name of the location you want to add.",
+      label: "Location",
+      placeholder: "Enter location",
+      confirmText: "Add",
+    },
+
+    "new-owner": {
+      title: "Transfer Ownership",
+      description:
+        "Enter the name of an existing admin who should become the new owner.",
+      label: "New Owner",
+      placeholder: "Enter admin name",
+      confirmText: "Transfer",
+    },
+  };
+
+  /*
+   * -----------------------------
+   * HANDLE MODAL SUBMIT
+   * -----------------------------
+   */
+
+  function handleModalCreate(value: string) {
+    if (activeModal === "invite") {
+      inviteMember(value);
+      return;
+    }
+
+    if (activeModal === "kick") {
+      kickMember(value);
+      return;
+    }
+
+    if (activeModal === "location") {
+      addLocation(value);
+      return;
+    }
+
+    if (activeModal === "new-owner") {
+      transferOwnership(value);
+      return;
+    }
+  }
+
+  /*
+   * Get the settings for the currently
+   * open modal.
+   */
+  const currentModal =
+    activeModal !== null
+      ? modalSettings[activeModal]
+      : null;
+
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-10">
       <div className="mx-auto max-w-7xl rounded-3xl bg-white p-6 shadow-2xl lg:p-10">
 
-        {/* -------------------------------- */}
-        {/* HEADER */}
-        {/* -------------------------------- */}
+        {/* ====================================== */}
+        {/* GROUP HEADER */}
+        {/* ====================================== */}
 
         <header className="mb-8 border-b border-gray-200 pb-6">
           <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
@@ -225,16 +451,17 @@ export default function GroupPage() {
           </div>
         </header>
 
-        {/* -------------------------------- */}
+        {/* ====================================== */}
         {/* LOCATIONS + MAP */}
-        {/* -------------------------------- */}
+        {/* ====================================== */}
 
         <div className="grid gap-8 lg:grid-cols-[250px_1fr]">
 
+          {/* ---------------------------------- */}
           {/* LOCATIONS */}
+          {/* ---------------------------------- */}
 
           <section className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
-
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
                 Locations
@@ -243,7 +470,9 @@ export default function GroupPage() {
               {currentUserRole !== "member" && (
                 <button
                   type="button"
-                  onClick={addLocation}
+                  onClick={() =>
+                    setActiveModal("location")
+                  }
                   className="rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   +
@@ -257,24 +486,26 @@ export default function GroupPage() {
               </p>
             ) : (
               <ul className="space-y-3">
-                {locations.map((location, index) => (
-                  <li
-                    key={`${location}-${index}`}
-                    className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
-                  >
-                    {location}
-                  </li>
-                ))}
+                {locations.map(
+                  (location, index) => (
+                    <li
+                      key={`${location}-${index}`}
+                      className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
+                    >
+                      {location}
+                    </li>
+                  )
+                )}
               </ul>
             )}
           </section>
 
+          {/* ---------------------------------- */}
           {/* WORLD MAP */}
+          {/* ---------------------------------- */}
 
           <section className="flex h-[350px] items-center justify-center rounded-2xl border border-gray-300 bg-gray-200">
-
             <div className="flex h-[300px] w-full max-w-[600px] items-center justify-center rounded-2xl border-2 border-dashed border-gray-400 bg-gray-100">
-
               <div className="text-center">
                 <div className="mb-3 text-5xl">
                   🌍
@@ -288,15 +519,13 @@ export default function GroupPage() {
                   Map will go here
                 </p>
               </div>
-
             </div>
-
           </section>
         </div>
 
-        {/* -------------------------------- */}
+        {/* ====================================== */}
         {/* MEMBERS */}
-        {/* -------------------------------- */}
+        {/* ====================================== */}
 
         <section className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-6">
 
@@ -310,7 +539,9 @@ export default function GroupPage() {
             </span>
           </div>
 
+          {/* ---------------------------------- */}
           {/* OWNER */}
+          {/* ---------------------------------- */}
 
           <div className="mb-6">
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-green-700">
@@ -318,24 +549,28 @@ export default function GroupPage() {
             </h3>
 
             <div className="space-y-2">
-              {ownerMembers.map((member) => (
-                <div
-                  key={member.name}
-                  className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4"
-                >
-                  <span className="font-semibold text-gray-900">
-                    {member.name}
-                  </span>
+              {ownerMembers.map(
+                (member) => (
+                  <div
+                    key={member.name}
+                    className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4"
+                  >
+                    <span className="font-semibold text-gray-900">
+                      {member.name}
+                    </span>
 
-                  <span className="rounded-full bg-green-600 px-3 py-1 text-xs font-bold text-white">
-                    Owner
-                  </span>
-                </div>
-              ))}
+                    <span className="rounded-full bg-green-600 px-3 py-1 text-xs font-bold text-white">
+                      Owner
+                    </span>
+                  </div>
+                )
+              )}
             </div>
           </div>
 
+          {/* ---------------------------------- */}
           {/* ADMINS */}
+          {/* ---------------------------------- */}
 
           <div className="mb-6">
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-700">
@@ -348,25 +583,29 @@ export default function GroupPage() {
                   No admins.
                 </p>
               ) : (
-                adminMembers.map((member) => (
-                  <div
-                    key={member.name}
-                    className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4"
-                  >
-                    <span className="font-semibold text-gray-900">
-                      {member.name}
-                    </span>
+                adminMembers.map(
+                  (member) => (
+                    <div
+                      key={member.name}
+                      className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4"
+                    >
+                      <span className="font-semibold text-gray-900">
+                        {member.name}
+                      </span>
 
-                    <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">
-                      Admin
-                    </span>
-                  </div>
-                ))
+                      <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">
+                        Admin
+                      </span>
+                    </div>
+                  )
+                )
               )}
             </div>
           </div>
 
+          {/* ---------------------------------- */}
           {/* MEMBERS */}
+          {/* ---------------------------------- */}
 
           <div>
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-600">
@@ -379,32 +618,34 @@ export default function GroupPage() {
                   No members.
                 </p>
               ) : (
-                normalMembers.map((member) => (
-                  <div
-                    key={member.name}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4"
-                  >
-                    <span className="font-semibold text-gray-900">
-                      {member.name}
-                    </span>
+                normalMembers.map(
+                  (member) => (
+                    <div
+                      key={member.name}
+                      className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4"
+                    >
+                      <span className="font-semibold text-gray-900">
+                        {member.name}
+                      </span>
 
-                    <span className="rounded-full bg-gray-300 px-3 py-1 text-xs font-bold text-gray-700">
-                      Member
-                    </span>
-                  </div>
-                ))
+                      <span className="rounded-full bg-gray-300 px-3 py-1 text-xs font-bold text-gray-700">
+                        Member
+                      </span>
+                    </div>
+                  )
+                )
               )}
             </div>
           </div>
         </section>
 
-        {/* -------------------------------- */}
+        {/* ====================================== */}
         {/* BOTTOM ACTIONS */}
-        {/* -------------------------------- */}
+        {/* ====================================== */}
 
         <section className="mt-8 flex items-center justify-between gap-3 border-t border-gray-200 pt-6">
 
-          {/* BACK BUTTON - LEFT */}
+          {/* BACK BUTTON */}
 
           <button
             type="button"
@@ -414,17 +655,21 @@ export default function GroupPage() {
             ← Back
           </button>
 
-          {/* RIGHT-SIDE ACTIONS */}
+          {/* RIGHT SIDE ACTIONS */}
 
           <div className="flex flex-wrap justify-end gap-3">
 
+            {/* ============================== */}
             {/* MEMBER */}
+            {/* ============================== */}
 
             {currentUserRole === "member" && (
               <>
                 <button
                   type="button"
-                  onClick={inviteMember}
+                  onClick={() =>
+                    setActiveModal("invite")
+                  }
                   className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   Invite
@@ -440,13 +685,17 @@ export default function GroupPage() {
               </>
             )}
 
+            {/* ============================== */}
             {/* ADMIN */}
+            {/* ============================== */}
 
             {currentUserRole === "admin" && (
               <>
                 <button
                   type="button"
-                  onClick={inviteMember}
+                  onClick={() =>
+                    setActiveModal("invite")
+                  }
                   className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   Invite
@@ -454,7 +703,9 @@ export default function GroupPage() {
 
                 <button
                   type="button"
-                  onClick={kickMember}
+                  onClick={() =>
+                    setActiveModal("kick")
+                  }
                   className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
                 >
                   Kick
@@ -470,13 +721,17 @@ export default function GroupPage() {
               </>
             )}
 
+            {/* ============================== */}
             {/* OWNER */}
+            {/* ============================== */}
 
             {currentUserRole === "owner" && (
               <>
                 <button
                   type="button"
-                  onClick={inviteMember}
+                  onClick={() =>
+                    setActiveModal("invite")
+                  }
                   className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   Invite
@@ -484,7 +739,9 @@ export default function GroupPage() {
 
                 <button
                   type="button"
-                  onClick={kickMember}
+                  onClick={() =>
+                    setActiveModal("kick")
+                  }
                   className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
                 >
                   Kick
@@ -507,11 +764,26 @@ export default function GroupPage() {
                 </button>
               </>
             )}
-
           </div>
         </section>
-
       </div>
+
+      {/* ====================================== */}
+      {/* SHARED ADD MODEL */}
+      {/* ====================================== */}
+
+      {currentModal && (
+        <AddGroupModal
+          isOpen={activeModal !== null}
+          onClose={() => setActiveModal(null)}
+          onCreate={handleModalCreate}
+          title={currentModal.title}
+          description={currentModal.description}
+          label={currentModal.label}
+          placeholder={currentModal.placeholder}
+          confirmText={currentModal.confirmText}
+        />
+      )}
     </main>
   );
 }
