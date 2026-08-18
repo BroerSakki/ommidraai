@@ -14,10 +14,14 @@ export function MemberGroups({
 }: MemberGroupsProps) {
   const router = useRouter();
 
+  function openGroup(group: string) {
+    router.push(`/group/${encodeURIComponent(group)}`);
+  }
+
   return (
     <section className="rounded-xl border p-6 shadow-sm">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-xl text-black font-semibold">
+        <h2 className="text-xl font-semibold text-black">
           Member Groups
         </h2>
       </div>
@@ -30,15 +34,12 @@ export function MemberGroups({
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {groups.map((group, index) => (
             <GroupCard
+              key={`${group}-${index}`}
               name={group}
               actionLabel="Leave"
               actionVariant="warning"
-              onAction={() => {
-                setMemberGroups((prev) => prev.filter((item) => item !== group));
-              }}
-              onOpen={() => {
-                router.push(`/group/${encodeURIComponent(group)}`);
-              }}
+              onAction={() => onLeave(index)}
+              onOpen={() => openGroup(group)}
             />
           ))}
         </div>
