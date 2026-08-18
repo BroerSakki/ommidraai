@@ -217,7 +217,7 @@ def remove_location(
 
 # Delete Group
 # ---
-@router.delete("/{group_id}")
+@router.delete("/{group_id}/delete")
 def delete_group(
     group_name: str,
     current_user: User = Depends(get_current_user),
