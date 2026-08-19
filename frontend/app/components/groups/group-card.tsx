@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 interface UserGroupDetails {
   user_id: number;
   group_id: number;
@@ -34,8 +36,10 @@ export default function GroupCard({
   onAction,
   onOpen,
 }: GroupCardProps) {
+  const t = useTranslations("common");
+
   const groupName =
-    groupItem?.Group?.name ?? name ?? "Unnamed Group";
+    groupItem?.Group?.name ?? name ?? t("unnamedGroup");
 
   const buttonClasses =
     actionVariant === "warning"
@@ -59,7 +63,7 @@ export default function GroupCard({
           onClick={onOpen}
           className="flex-1 rounded-md bg-blue-600 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
         >
-          Open
+          {t("open")}
         </button>
 
         {/* Delete / Leave */}

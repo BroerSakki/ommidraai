@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import GroupCard, { GroupItem } from "./group-card";
 
 interface LoadMoreGroupsProps {
@@ -8,10 +9,12 @@ interface LoadMoreGroupsProps {
 }
 
 export default function LoadMoreGroups({ items, onOpen }: LoadMoreGroupsProps) {
+  const t = useTranslations("home");
+
   if (items.length === 0) {
     return (
       <div className="p-6 text-center border border-dashed rounded-xl bg-gray-50 text-gray-400 text-sm">
-        No groups found in this section.
+        {t("noGroupsInSection")}
       </div>
     );
   }

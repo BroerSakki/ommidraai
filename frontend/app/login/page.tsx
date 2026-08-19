@@ -6,6 +6,8 @@ import Image from "next/image"
 import logo from "@/app/components/Image/ommidraai-mark.png"
 import Link from "next/link"
 import { useRouter } from 'next/navigation';
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "@/app/components/navigation/language-switcher";
 
 export default function Login() {
   const [username, setUsername] = useState("")
@@ -13,6 +15,8 @@ export default function Login() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter();
+  const t = useTranslations("login");
+  const tCommon = useTranslations("common");
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -28,7 +32,7 @@ export default function Login() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.detail || 'Something went wrong');
+            throw new Error(data.detail || tCommon("somethingWentWrong"));
         }
 
         router.refresh();
@@ -36,7 +40,7 @@ export default function Login() {
         if (err instanceof Error) {
             setError(err.message);
         } else {
-            setError("An unexpected error occured: " + err);
+            setError(t("unexpectedError") + ": " + err);
         }
     } finally {
         setLoading(false);
@@ -44,31 +48,35 @@ export default function Login() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-dark via-brand-mid to-brand-light px-4 py-10">
+    <main className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-dark via-brand-mid to-brand-light px-4 py-10">
+      <div className="absolute right-4 top-4 z-50">
+        <LanguageSwitcher />
+      </div>
+
       <div className="w-full max-w-4xl rounded-[2rem] border border-white/20 bg-white/90 p-6 shadow-2xl shadow-brand-dark/25 backdrop-blur-xl">
         <div className="mb-2 flex flex-col items-center text-center">
           <Image
             src={logo}
-            alt="Ommidraai logo"
+            alt={t("logoAlt")}
             width={1200}
             height={400}
             className="w-11/12 max-w-[1100px] h-auto object-contain"
             priority
           />
-          <p className="mt-2 text-sm uppercase tracking-[0.3em] text-brand-dark/70">Welcome back</p>
-          <h2 className="mt-2 text-2xl font-semibold text-balance text-brand-dark">Sign in to your account</h2>
-          <p className="mt-2 text-sm text-slate-600">Enter your username and password to continue.</p>
+          <p className="mt-2 text-sm uppercase tracking-[0.3em] text-brand-dark/70">{t("welcomeBack")}</p>
+          <h2 className="mt-2 text-2xl font-semibold text-balance text-brand-dark">{t("signInTitle")}</h2>
+          <p className="mt-2 text-sm text-slate-600">{t("signInSubtitle")}</p>
         </div>
 
         {error && <p className="text-red-600">{error}</p>}
 
         <form onSubmit={handleLogin} className="flex flex-col gap-6">
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-brand-dark">Username</span>
+            <span className="mb-2 block text-sm font-medium text-brand-dark">{t("username")}</span>
             <input
               type="text"
               name="username"
-              placeholder="Enter your username"
+              placeholder={t("usernamePlaceholder")}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
@@ -78,11 +86,11 @@ export default function Login() {
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-brand-dark">Password</span>
+            <span className="mb-2 block text-sm font-medium text-brand-dark">{t("password")}</span>
             <input
               type="password"
               name="password"
-              placeholder="Enter your password"
+              placeholder={t("passwordPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
@@ -97,7 +105,7 @@ export default function Login() {
               disabled={loading}
               className="rounded-3xl bg-brand-dark px-4 py-3 text-base font-semibold text-white transition hover:bg-[#312a51]"
             >
-              {loading ? 'Logging in...' : 'Sign In'}
+              {loading ? t("loggingIn") : t("signIn")}
             </button>
             <Link
               href="/register"
@@ -105,14 +113,14 @@ export default function Login() {
             >
               <button
                 type="button"
-                className="text-center" 
+                className="text-center"
               >
-                Register
+                {t("register")}
               </button>
             </Link>
           </div>
 
-          
+
         </form>
       </div>
     </main>

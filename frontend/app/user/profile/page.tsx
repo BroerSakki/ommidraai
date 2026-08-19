@@ -1,11 +1,8 @@
-import type { Metadata } from "next";
+"use client";
+
 import { ProfileHeader } from "@/app/components/profile/profile-header";
 import { ProfileInfo } from "@/app/components/profile/profile-info";
 import { SavedLocations } from "@/app/components/profile/saved-locations";
-
-export const metadata: Metadata = {
-    title: "Profile",
-};
 
 const user = {
     username: "Username",

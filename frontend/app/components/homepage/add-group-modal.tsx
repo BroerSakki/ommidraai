@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface AddGroupModalProps {
     isOpen: boolean;
@@ -14,6 +15,8 @@ export function AddGroupModal({
                                   onCreate,
                               }: AddGroupModalProps) {
     const [groupName, setGroupName] = useState("");
+    const t = useTranslations("modal");
+    const tCommon = useTranslations("common");
 
     if (!isOpen) {
         return null;
@@ -48,11 +51,11 @@ export function AddGroupModal({
                 <div className="mb-6 flex items-start justify-between">
                     <div>
                         <h2 className="text-2xl font-bold text-[#3d3461]">
-                            Create a Group
+                            {t("createGroupTitle")}
                         </h2>
 
                         <p className="mt-1 text-gray-500">
-                            Enter a name for your new group.
+                            {t("createGroupDescription")}
                         </p>
                     </div>
 
@@ -60,7 +63,7 @@ export function AddGroupModal({
                         type="button"
                         onClick={handleClose}
                         className="rounded-xl px-3 py-2 text-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-                        aria-label="Close modal"
+                        aria-label={t("closeModal")}
                     >
                         ×
                     </button>
@@ -73,7 +76,7 @@ export function AddGroupModal({
                             htmlFor="modal-group-name"
                             className="mb-2 block font-semibold text-[#3d3461]"
                         >
-                            Group Name
+                            {t("groupName")}
                         </label>
 
                         <input
@@ -81,7 +84,7 @@ export function AddGroupModal({
                             type="text"
                             value={groupName}
                             onChange={(event) => setGroupName(event.target.value)}
-                            placeholder="Enter group name"
+                            placeholder={t("groupNamePlaceholder")}
                             required
                             autoFocus
                             className="w-full rounded-xl border-2 border-[#b6cfc6] px-4 py-3 text-gray-700 outline-none transition focus:border-[#3d3461]"
@@ -95,14 +98,14 @@ export function AddGroupModal({
                             onClick={handleClose}
                             className="rounded-xl border-2 border-[#b6cfc6] px-6 py-3 font-semibold text-[#3d3461] transition hover:bg-[#eef5f1]"
                         >
-                            Cancel
+                            {tCommon("cancel")}
                         </button>
 
                         <button
                             type="submit"
                             className="rounded-xl bg-[#3d3461] px-6 py-3 font-semibold text-white transition hover:bg-[#544a85]"
                         >
-                            Create Group
+                            {t("createGroup")}
                         </button>
                     </div>
                 </form>

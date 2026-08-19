@@ -3,11 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
+import { useTranslations } from "next-intl";
 
 export function ProfileMenu() {
     const [open, setOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+    const t = useTranslations("navigation");
+    const tCommon = useTranslations("common");
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -39,7 +42,7 @@ export function ProfileMenu() {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.detail || 'Something went wrong');
+                throw new Error(data.detail || tCommon("somethingWentWrong"));
             }
 
             router.refresh();
@@ -99,7 +102,7 @@ export function ProfileMenu() {
                             text-gray-500
                         "
                     >
-                         Profile
+                        {t("profile")}
                     </Link>
 
                     {/*<Link
@@ -127,7 +130,7 @@ export function ProfileMenu() {
                         "
                         onClick={handleLogout}
                     >
-                        Logout
+                        {t("logout")}
                     </Link>
                 </div>
             )}

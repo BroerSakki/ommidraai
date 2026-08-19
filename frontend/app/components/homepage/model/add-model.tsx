@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface AddGroupModalProps {
   isOpen: boolean;
@@ -19,13 +20,25 @@ export function AddGroupModal({
   onClose,
   onCreate,
 
-  title = "Create a Group",
-  description = "Enter a name for your new group.",
-  label = "Group Name",
-  placeholder = "Enter group name",
-  confirmText = "OK",
+  title,
+  description,
+  label,
+  placeholder,
+  confirmText,
 }: AddGroupModalProps) {
   const [value, setValue] = useState("");
+  const tModal = useTranslations("modal");
+  const tCommon = useTranslations("common");
+
+  // Resolve text that is not explicitly provided from the parent with the
+  // translated defaults for the "create group" flow.
+  const resolvedTitle = title ?? tModal("createGroupTitle");
+  const resolvedDescription =
+    description ?? tModal("createGroupDescription");
+  const resolvedLabel = label ?? tModal("groupName");
+  const resolvedPlaceholder =
+    placeholder ?? tModal("groupNamePlaceholder");
+  const resolvedConfirmText = confirmText ?? tCommon("ok");
 
   /*
    * Clear the input whenever the modal opens.
@@ -90,11 +103,11 @@ export function AddGroupModal({
         <div className="mb-6 flex items-start justify-between">
           <div>
             <h2 className="text-2xl font-bold text-[#3d3461]">
-              {title}
+              {resolvedTitle}
             </h2>
 
             <p className="mt-1 text-gray-500">
-              {description}
+              {resolvedDescription}
             </p>
           </div>
 
@@ -103,7 +116,7 @@ export function AddGroupModal({
             type="button"
             onClick={handleClose}
             className="rounded-xl px-3 py-2 text-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Close modal"
+            aria-label={tModal("closeModal")}
           >
             ×
           </button>
@@ -120,7 +133,7 @@ export function AddGroupModal({
               htmlFor="modal-input"
               className="mb-2 block font-semibold text-[#3d3461]"
             >
-              {label}
+              {resolvedLabel}
             </label>
 
             <input
@@ -130,7 +143,7 @@ export function AddGroupModal({
               onChange={(event) =>
                 setValue(event.target.value)
               }
-              placeholder={placeholder}
+              placeholder={resolvedPlaceholder}
               required
               autoFocus
               className="w-full rounded-xl border-2 border-[#b6cfc6] px-4 py-3 text-gray-700 outline-none transition focus:border-[#3d3461]"
@@ -148,7 +161,7 @@ export function AddGroupModal({
               onClick={handleClose}
               className="rounded-xl border-2 border-[#b6cfc6] px-6 py-3 font-semibold text-[#3d3461] transition hover:bg-[#eef5f1]"
             >
-              Cancel
+              {tCommon("cancel")}
             </button>
 
             {/* Confirm */}
@@ -156,7 +169,7 @@ export function AddGroupModal({
               type="submit"
               className="rounded-xl bg-[#3d3461] px-6 py-3 font-semibold text-white transition hover:bg-[#544a85]"
             >
-              {confirmText}
+              {resolvedConfirmText}
             </button>
           </div>
         </form>

@@ -5,6 +5,8 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { MapPin } from "lucide-react"
+import { useTranslations } from "next-intl"
+import { LanguageSwitcher } from "@/app/components/navigation/language-switcher"
 
 type SearchResult = {
     lat: string
@@ -20,6 +22,8 @@ export default function Register() {
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+    const t = useTranslations("register")
+    const tCommon = useTranslations("common")
 
     const [locationQuery, setLocationQuery] = useState("")
     const [locationResults, setLocationResults] = useState<SearchResult[]>([])
@@ -64,11 +68,13 @@ export default function Register() {
             setLocationResults(data)
 
             if (data.length === 0) {
-                setLocationError("No places found for that search.")
+                setLocationError(t("noPlacesFound"))
             }
         } catch (err) {
             setLocationError(
-                `Search failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+                t("searchFailed", {
+                    error: err instanceof Error ? err.message : tCommon("unknownError"),
+                }),
             )
         } finally {
             setLocationSearching(false)
@@ -105,12 +111,12 @@ export default function Register() {
         setError("")
 
         if (password !== confirmPassword) {
-            setError("Passwords do not match.")
+            setError(t("passwordsDoNotMatch"))
             return
         }
 
         if (!selectedLocation) {
-            setError("Please select your home location.")
+            setError(t("selectHomeLocation"))
             return
         }
 
@@ -136,7 +142,7 @@ export default function Register() {
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data.detail || "Something went wrong")
+                throw new Error(data.detail || tCommon("somethingWentWrong"))
             }
 
             router.push("/login")
@@ -144,7 +150,7 @@ export default function Register() {
             if (err instanceof Error) {
                 setError(err.message)
             } else {
-                setError("An unexpected error occurred")
+                setError(t("unexpectedError"))
             }
         } finally {
             setLoading(false)
@@ -153,6 +159,10 @@ export default function Register() {
 
     return (
         <main className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-dark via-brand-mid to-brand-light px-4 py-10">
+            <div className="absolute right-4 top-4 z-50">
+                <LanguageSwitcher />
+            </div>
+
             <div
                 className="absolute inset-0 -z-10 bg-cover bg-center"
                 style={{ backgroundImage: `url(/images/Register_Background.png)` }}
@@ -161,18 +171,18 @@ export default function Register() {
             <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-white/30 bg-white/95 shadow-2xl shadow-brand-dark/25 backdrop-blur-sm">
                 <div className="p-8">
                     <div className="mb-6 flex flex-col items-center text-center">
-                        <p className="text-sm uppercase tracking-[0.3em] text-brand-dark/70">Join us</p>
-                        <h2 className="mt-2 text-3xl font-semibold text-balance text-brand-dark">Create your account</h2>
-                        <p className="mt-3 text-sm text-slate-600">Choose a username and password to get started.</p>
+                        <p className="text-sm uppercase tracking-[0.3em] text-brand-dark/70">{t("heading")}</p>
+                        <h2 className="mt-2 text-3xl font-semibold text-balance text-brand-dark">{t("createTitle")}</h2>
+                        <p className="mt-3 text-sm text-slate-600">{t("createSubtitle")}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                         <label className="block">
-                            <span className="mb-2 block text-sm font-medium text-brand-dark">Username</span>
+                            <span className="mb-2 block text-sm font-medium text-brand-dark">{t("username")}</span>
                             <input
                                 type="text"
                                 name="username"
-                                placeholder="Choose a username"
+                                placeholder={t("usernamePlaceholder")}
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 autoComplete="username"
@@ -182,11 +192,11 @@ export default function Register() {
                         </label>
 
                         <label className="block">
-                            <span className="mb-2 block text-sm font-medium text-brand-dark">Email Address</span>
+                            <span className="mb-2 block text-sm font-medium text-brand-dark">{t("email")}</span>
                             <input
                                 type="email"
                                 name="email"
-                                placeholder="Enter your email address"
+                                placeholder={t("emailPlaceholder")}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 autoComplete="email"
@@ -196,11 +206,11 @@ export default function Register() {
                         </label>
 
                         <label className="block">
-                            <span className="mb-2 block text-sm font-medium text-brand-dark">Password</span>
+                            <span className="mb-2 block text-sm font-medium text-brand-dark">{t("password")}</span>
                             <input
                                 type="password"
                                 name="password"
-                                placeholder="Create a password"
+                                placeholder={t("passwordPlaceholder")}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 autoComplete="new-password"
@@ -210,11 +220,11 @@ export default function Register() {
                         </label>
 
                         <label className="block">
-                            <span className="mb-2 block text-sm font-medium text-brand-dark">Confirm Password</span>
+                            <span className="mb-2 block text-sm font-medium text-brand-dark">{t("confirmPassword")}</span>
                             <input
                                 type="password"
                                 name="confirmPassword"
-                                placeholder="Re-enter your password"
+                                placeholder={t("confirmPasswordPlaceholder")}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 autoComplete="new-password"
@@ -227,13 +237,13 @@ export default function Register() {
                             <span className="mb-2 block text-sm font-medium text-brand-dark">
                                 <div className="flex items-center gap-2">
                                     <MapPin size={16} />
-                                    Home Location
+                                    {t("homeLocation")}
                                 </div>
                             </span>
                             <div className="relative">
                                 <input
                                     type="text"
-                                    placeholder="Search for a place or street (e.g. 123 Sunnyside Road, Centurion)"
+                                    placeholder={t("homeLocationPlaceholder")}
                                     value={locationQuery}
                                     onChange={(e) => handleLocationSearchChange(e.target.value)}
                                     className="w-full rounded-3xl border border-brand-mid bg-brand-light/90 px-4 py-3 text-base text-brand-dark outline-none transition placeholder:text-brand-dark/70 focus:border-brand-dark focus:ring-2 focus:ring-brand-dark/20"
@@ -286,7 +296,7 @@ export default function Register() {
 
                             {selectedLocation && (
                                 <p className="mt-2 text-sm text-brand-dark/70">
-                                    Selected: {selectedLocation.name}
+                                    {t("selectedLocation", { name: selectedLocation.name })}
                                 </p>
                             )}
                         </label>
@@ -298,16 +308,16 @@ export default function Register() {
                             disabled={loading}
                             className="rounded-3xl bg-brand-dark px-4 py-3 text-base font-semibold text-white transition hover:bg-[#312a51] disabled:cursor-not-allowed disabled:opacity-70"
                         >
-                            {loading ? "Creating account..." : "Create Account"}
+                            {loading ? t("creatingAccount") : t("createAccount")}
                         </button>
 
                         <p className="text-center text-sm text-slate-600">
-                            Already have an account?{" "}
+                            {t("alreadyHaveAccount")}{" "}
                             <Link
                                 href="/login"
                                 className="font-semibold text-brand-dark underline-offset-4 hover:underline"
                             >
-                                Sign in
+                                {t("signIn")}
                             </Link>
                         </p>
                     </form>

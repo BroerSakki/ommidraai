@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 interface UserGroupDetails {
   user_id: number;
   group_id: number;
@@ -10,6 +12,7 @@ interface UserGroupDetails {
 
 interface GroupDetails {
   name: string;
+  role?: string;
 }
 
 export interface GroupItem {
@@ -19,6 +22,7 @@ export interface GroupItem {
 
 type GroupCardProps = {
   name?: string;
+  role?: string;
   groupItem?: GroupItem;
   actionLabel: string;
   actionVariant?: "danger" | "warning";
@@ -35,10 +39,12 @@ export function GroupCard({
   onAction,
   onOpen,
 }: GroupCardProps) {
+  const t = useTranslations("common");
+
   // Get the group name from groupItem if it exists.
   // Otherwise use the name prop.
-  const groupName = groupItem?.Group?.name ?? name ?? "Unnamed Group";
-  const groupRole = groupItem?.Group?.role ?? role ?? "Unknown Role";
+  const groupName = groupItem?.Group?.name ?? name ?? t("unnamedGroup");
+  const groupRole = groupItem?.Group?.role ?? role ?? t("unknownRole");
 
 
   const buttonClasses =
@@ -73,7 +79,7 @@ export function GroupCard({
           onClick={onOpen}
           className="flex-1 rounded-md bg-blue-600 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
         >
-          Open
+          {t("open")}
         </button>
 
         {/* Delete / Leave button */}
