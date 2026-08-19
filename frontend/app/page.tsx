@@ -167,9 +167,17 @@ export default function Home() {
                 </button>
               </div>
 
-              <div className="grid gap-4">
-                <LoadMoreGroups items={groupOwnedItems}/>
-              </div>
+          <div className="grid gap-4">
+                <LoadMoreGroups
+                    items={groupOwnedItems}
+                    onOpen={(item) => {
+                        const groupName = item.Group.name;
+                        const groupId = item.User_Group.group_id;
+                        const role = item.User_Group.role;
+                        router.push(`/group/${encodeURIComponent(groupName)}?groupId=${groupId}&role=${role}`);
+                    }}
+                />
+            </div>
 
             </section>
 
@@ -226,7 +234,15 @@ export default function Home() {
                   id="member-groups-list"
                   className="grid gap-4"
               >
-                <LoadMoreGroups items={groupJoinedItems}/>
+                <LoadMoreGroups
+                  items={groupJoinedItems}
+                  onOpen={(item) => {
+                      const groupName = item.Group.name;
+                      const groupId = item.User_Group.group_id;
+                      const role = item.User_Group.role;
+                      router.push(`/group/${encodeURIComponent(groupName)}?groupId=${groupId}&role=${role}`);
+                  }}
+              />
               </div>
 
             </section>

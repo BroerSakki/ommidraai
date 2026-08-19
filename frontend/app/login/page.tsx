@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import Image from "next/image"
-import logo from "./Image/ommidraai-mark.png"
+import logo from "@/app/components/Image/ommidraai-mark.png"
 import Link from "next/link"
 import { useRouter } from 'next/navigation';
 

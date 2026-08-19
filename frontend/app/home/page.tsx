@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader } from "./components/page-header";
-import { MyGroups } from "./components/my-group";
-import { MemberGroups } from "./components/member-group";
-import { AddGroupModal } from "./components/model/add-model";
+import { PageHeader } from "../components/homepage/page-header";
+import { MyGroups } from "../components/homepage/my-group";
+import { MemberGroups } from "../components/homepage/member-group";
+import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 
 export default function HomePage() {
   const [myGroups, setMyGroups] = useState<string[]>([]);

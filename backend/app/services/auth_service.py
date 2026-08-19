@@ -3,6 +3,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 from fastapi import Depends, HTTPException
 # ---
 
