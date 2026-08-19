@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { AddGroupModal } from "@/app/home/components/model/add-model";
+import { useState, useEffect } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 
 type Role = "owner" | "admin" | "member";
 
@@ -18,91 +18,109 @@ type ModalType =
   | "new-owner"
   | null;
 
+type ApiUser = {
+  user: { username: string; email: string };
+  user_group: { is_passenger: boolean; car_capacity: number };
+  location: { latitude: number; longitude: number };
+};
+
+type ApiDestination = {
+  group_location: { display_name: string };
+  location: { latitude: number; longitude: number };
+};
+
+type ApiGroupData = {
+  users: ApiUser[];
+  destinations: ApiDestination[];
+  algorithm: unknown;
+};
+
+type ApiMeResponse = {
+  username: string;
+  email: string;
+};
+
 export default function GroupPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  /*
-   * Get the group name from the URL.
-   *
-   * Example:
-   * /group/Study%20Group
-   *
-   * becomes:
-   * Study Group
-   */
   const groupName = decodeURIComponent(
     Array.isArray(params.groupName)
       ? params.groupName[0]
       : params.groupName || "Group"
   );
 
-  /*
-   * Change this to:
-   *
-   * "owner"
-   * "admin"
-   * "member"
-   *
-   * to test the different group roles.
-   */
-  const currentUserRole: Role = "owner";
+  const groupId = searchParams.get("groupId");
+  const roleParam = searchParams.get("role") as Role | null;
+  const currentUserRole: Role = roleParam ?? "member";
 
-  /*
-   * -----------------------------
-   * MEMBERS
-   * -----------------------------
-   */
+  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [loading, setLoading] = useState(!!groupId);
+  const [fetchError, setFetchError] = useState<string | null>(
+    groupId ? null : "Group ID is missing. Please navigate from the home page."
+  );
 
-  const [members, setMembers] = useState<GroupMember[]>([
-    {
-      name: "Group Owner",
-      role: "owner",
-    },
-    {
-      name: "Admin 1",
-      role: "admin",
-    },
-    {
-      name: "Admin 2",
-      role: "admin",
-    },
-    {
-      name: "Member 1",
-      role: "member",
-    },
-    {
-      name: "Member 2",
-      role: "member",
-    },
-  ]);
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
 
-  /*
-   * -----------------------------
-   * LOCATIONS
-   * -----------------------------
-   */
+  useEffect(() => {
+    if (!groupId) {
+      return;
+    }
 
-  const [locations, setLocations] = useState<string[]>([
-    "Pretoria",
-    "Johannesburg",
-    "Cape Town",
-  ]);
+    let cancelled = false;
 
-  /*
-   * -----------------------------
-   * MODAL
-   * -----------------------------
-   */
+    async function fetchData() {
+      setLoading(true);
+      setFetchError(null);
 
-  const [activeModal, setActiveModal] =
-    useState<ModalType>(null);
+      try {
+        const meResponse = await fetch(`/api/backend/auth/me`);
+        if (!meResponse.ok) {
+          throw new Error("Failed to fetch current user");
+        }
+        const meData = (await meResponse.json()) as ApiMeResponse;
+        const currentUsername = meData.username;
 
-  /*
-   * -----------------------------
-   * INVITE MEMBER
-   * -----------------------------
-   */
+        const groupResponse = await fetch(`/api/backend/groups/${groupId}`);
+        if (!groupResponse.ok) {
+          throw new Error(
+            `Failed to fetch group data (status ${groupResponse.status})`
+          );
+        }
+        const groupData = (await groupResponse.json()) as ApiGroupData;
+
+        if (cancelled) return;
+
+        const apiMembers: GroupMember[] = groupData.users.map((u) => ({
+          name: u.user.username,
+          role: u.user.username === currentUsername ? currentUserRole : "member",
+        }));
+
+        setMembers(apiMembers);
+
+        const apiLocations = groupData.destinations.map(
+          (d) => d.group_location.display_name
+        );
+
+        setLocations(apiLocations);
+      } catch (err) {
+        if (cancelled) return;
+        setFetchError(
+          err instanceof Error ? err.message : "Failed to load group data"
+        );
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [groupId, currentUserRole]);
 
   function inviteMember(name: string) {
     const trimmedName = name.trim();
@@ -133,12 +151,6 @@ export default function GroupPage() {
     setActiveModal(null);
   }
 
-  /*
-   * -----------------------------
-   * KICK MEMBER
-   * -----------------------------
-   */
-
   function kickMember(name: string) {
     const trimmedName = name.trim();
 
@@ -157,9 +169,6 @@ export default function GroupPage() {
       return;
     }
 
-    /*
-     * The owner cannot be kicked.
-     */
     if (member.role === "owner") {
       alert("The owner cannot be kicked.");
       return;
@@ -175,12 +184,6 @@ export default function GroupPage() {
 
     setActiveModal(null);
   }
-
-  /*
-   * -----------------------------
-   * ADD LOCATION
-   * -----------------------------
-   */
 
   function addLocation(location: string) {
     const trimmedLocation = location.trim();
@@ -208,15 +211,6 @@ export default function GroupPage() {
     setActiveModal(null);
   }
 
-  /*
-   * -----------------------------
-   * TRANSFER OWNERSHIP
-   * -----------------------------
-   *
-   * The owner must choose an existing
-   * admin before leaving.
-   */
-
   function transferOwnership(newOwnerName: string) {
     const trimmedName = newOwnerName.trim();
 
@@ -240,9 +234,6 @@ export default function GroupPage() {
 
     setMembers((prev) =>
       prev.map((member) => {
-        /*
-         * Current owner becomes admin.
-         */
         if (member.role === "owner") {
           return {
             ...member,
@@ -250,9 +241,6 @@ export default function GroupPage() {
           };
         }
 
-        /*
-         * Selected admin becomes owner.
-         */
         if (
           member.name.toLowerCase() ===
           admin.name.toLowerCase()
@@ -270,69 +258,26 @@ export default function GroupPage() {
     setActiveModal(null);
   }
 
-  /*
-   * -----------------------------
-   * LEAVE GROUP
-   * -----------------------------
-   */
-
   function leaveGroup() {
-    /*
-     * If the current user is the owner,
-     * they must choose a new owner first.
-     */
     if (currentUserRole === "owner") {
       setActiveModal("new-owner");
       return;
     }
 
-    /*
-     * Admin/member can leave directly.
-     */
     router.back();
   }
 
-  /*
-   * -----------------------------
-   * DELETE GROUP
-   * -----------------------------
-   */
-
   function deleteGroup() {
-    const savedGroups =
-      localStorage.getItem("myGroups");
+    if (!groupId) return;
 
-    if (savedGroups) {
-      try {
-        const groups: string[] =
-          JSON.parse(savedGroups);
+    fetch(`/api/backend/groups/${groupId}/delete`, {
+      method: "DELETE",
+    })
+      .then((res) => res.json())
+      .catch(() => {})
 
-        const updatedGroups = groups.filter(
-          (group) =>
-            group.toLowerCase() !==
-            groupName.toLowerCase()
-        );
-
-        localStorage.setItem(
-          "myGroups",
-          JSON.stringify(updatedGroups)
-        );
-      } catch (error) {
-        console.error(
-          "Failed to update saved groups:",
-          error
-        );
-      }
-    }
-
-    router.push("/home");
+    router.push("/");
   }
-
-  /*
-   * -----------------------------
-   * SORT MEMBERS
-   * -----------------------------
-   */
 
   const ownerMembers = members.filter(
     (member) => member.role === "owner"
@@ -345,12 +290,6 @@ export default function GroupPage() {
   const normalMembers = members.filter(
     (member) => member.role === "member"
   );
-
-  /*
-   * -----------------------------
-   * MODAL SETTINGS
-   * -----------------------------
-   */
 
   const modalSettings = {
     invite: {
@@ -390,12 +329,6 @@ export default function GroupPage() {
     },
   };
 
-  /*
-   * -----------------------------
-   * HANDLE MODAL SUBMIT
-   * -----------------------------
-   */
-
   function handleModalCreate(value: string) {
     if (activeModal === "invite") {
       inviteMember(value);
@@ -418,14 +351,30 @@ export default function GroupPage() {
     }
   }
 
-  /*
-   * Get the settings for the currently
-   * open modal.
-   */
   const currentModal =
     activeModal !== null
       ? modalSettings[activeModal]
       : null;
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-10">
+        <div className="mx-auto max-w-7xl rounded-3xl bg-white p-6 shadow-2xl lg:p-10">
+          <p className="text-gray-500">Loading group data…</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-10">
+        <div className="mx-auto max-w-7xl rounded-3xl bg-white p-6 shadow-2xl lg:p-10">
+          <p className="text-red-600">{fetchError}</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-10">
