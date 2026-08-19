@@ -325,7 +325,7 @@ export default function GroupPage() {
       }
     }
 
-    router.push("/Home");
+    router.push("/home");
   }
 
   /*

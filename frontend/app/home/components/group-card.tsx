@@ -28,6 +28,7 @@ type GroupCardProps = {
 
 export function GroupCard({
   name,
+  role,
   groupItem,
   actionLabel,
   actionVariant = "danger",
@@ -37,6 +38,8 @@ export function GroupCard({
   // Get the group name from groupItem if it exists.
   // Otherwise use the name prop.
   const groupName = groupItem?.Group?.name ?? name ?? "Unnamed Group";
+  const groupRole = groupItem?.Group?.role ?? role ?? "Unknown Role";
+
 
   const buttonClasses =
     actionVariant === "warning"
@@ -44,10 +47,20 @@ export function GroupCard({
       : "bg-red-500 hover:bg-red-600";
 
   return (
-    <div className="flex h-40 w-40 flex-col justify-between rounded-xl border-2 border-green-600 bg-gray-900 p-4 shadow-lg">
+    <div className="flex h-40 w-40 flex-col justify-between rounded-xl border-2 border-green-600 bg-gray-100 p-4 shadow-lg">
       {/* Group name */}
       <div className="flex flex-1 items-center justify-center">
-        <h3 className="break-words text-center text-lg font-semibold text-white">
+        <div className="rounded-full bg-gray-100 px-2.5 py-1">
+          <h3 className="break-words text-center text-xs font-medium text-black">
+            <span className="inline-block mt-2 px-2.5 py-0.5 text-xs font-medium rounded-full bg-[#72ceb5] text-[#3d3461] capitalize">
+            {groupRole}
+            </span>
+          </h3>
+        </div>
+      </div>
+
+      <div className="flex flex-1 items-center justify-center">
+        <h3 className="break-words text-center text-lg font-semibold text-black">
           {groupName}
         </h3>
       </div>
