@@ -40,12 +40,22 @@ router = APIRouter(
 
 # Get User Groups
 # ---
-@router.get("/get", response_model=Page[UserGroupResponse])
-def get_user_groups(
+@router.get("/get/owned", response_model=Page[UserGroupResponse])
+def get_user_owned_groups(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return group_service.get_current_user_groups(
+    return groups_service.get_user_owned_groups(
+        db=db,
+        current_user=current_user,
+    )
+
+@router.get("/get/joined", response_model=Page[UserGroupResponse])
+def get_user_joined_groups(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return groups_service.get_user_joined_groups(
         db=db,
         current_user=current_user,
     )
