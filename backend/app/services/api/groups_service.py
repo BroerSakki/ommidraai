@@ -1,6 +1,7 @@
 # Base Imports
 # ---
 from fastapi import Depends, HTTPException
+from fastapi_pagination.ext.sqlalchemy import paginate
 # ---
 
 # Database Imports
@@ -13,6 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 # Import Models
 # ---
 from app.models.user import User
+from app.models.group import Group
 from app.models.user_group import User_Group
 # ---
 
@@ -30,11 +32,35 @@ from app.services.database import user_groups_table
 
 # Get User Groups
 # ---
-def get_user_groups(
+def get_user_owned_groups(
     db: Session,
     current_user: User,
 ):
-    pass
+    return paginate(db,
+        select(User_Group, Group)
+        .join(Group, Group.id == User_Group.group_id)
+        .where(
+            User_Group.user_id == current_user.id,
+            User_Group.role == user_roles.UserRole.owner,
+        )
+        .order_by(User_Group.group_id.desc())
+    )
+
+def get_user_joined_groups(
+    db: Session,
+    current_user: User,
+):
+    return paginate(db,
+        select(User_Group, Group)
+        .join(Group, Group.id == User_Group.group_id)
+        .where(
+            User_Group.user_id == current_user.id,
+            User_Group.role != user_roles.UserRole.owner,
+        )
+        .order_by(User_Group.group_id.desc())
+    )
+# ---
+
 # ---
 
 # Get Group Data
