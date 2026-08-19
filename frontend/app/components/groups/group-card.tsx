@@ -20,13 +20,13 @@ export interface GroupItem {
 type GroupCardProps = {
   name?: string;
   groupItem?: GroupItem;
-  actionLabel: string;
+  actionLabel?: string;
   actionVariant?: "danger" | "warning";
-  onAction: () => void;
-  onOpen: () => void;
+  onAction?: () => void;
+  onOpen?: () => void;
 };
 
-export function GroupCard({
+export default function GroupCard({
   name,
   groupItem,
   actionLabel,
