@@ -12,7 +12,8 @@ export default function Home() {
 
   const router = useRouter();
 
-  const [groupItems, setGroupItems] = useState<GroupItem[]>([]);
+  const [groupOwnedItems, setGroupOwnedItems] = useState<GroupItem[]>([]);
+  const [groupJoinedItems, setGroupJoinedItems] = useState<GroupItem[]>([]);
   const [page, setPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
@@ -20,12 +21,12 @@ export default function Home() {
   const pageSize = 12;
   const apiUrl = "/api/backend/groups/get";
 
-  const fetchGroups = async (currentPage: number, signal?: AbortSignal) => {
+  const fetchOwnedGroups = async (currentPage: number, signal?: AbortSignal) => {
     if (loading) return;
     setLoading(true);
 
     try {
-      const fullUrl = `${apiUrl}?page=${currentPage}&size=${pageSize}`;
+      const fullUrl = `${apiUrl}/owned?page=${currentPage}&size=${pageSize}`;
       
       // 2. Attach the signal to the standard fetch configuration block
       const response = await fetch(fullUrl, { signal });
@@ -36,7 +37,7 @@ export default function Home() {
         setHasMore(false);
       }
 
-      setGroupItems((prevItems) => [...prevItems, ...newItems]);
+      setGroupOwnedItems((prevItems) => [...prevItems, ...newItems]);
     } catch (error) {
       // Ignore errors caused intentionally by aborting the request
       if (error instanceof Error && error.name !== "AbortError") {
@@ -47,10 +48,39 @@ export default function Home() {
     }
   };
 
+    const fetchJoinedGroups = async (currentPage: number, signal?: AbortSignal) => {
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      const fullUrl = `${apiUrl}/joined?page=${currentPage}&size=${pageSize}`;
+      
+      // 2. Attach the signal to the standard fetch configuration block
+      const response = await fetch(fullUrl, { signal });
+      const data = await response.json();
+
+      const newItems = data.items || [];
+      if (newItems.length < pageSize) {
+        setHasMore(false);
+      }
+
+      setGroupJoinedItems((prevItems) => [...prevItems, ...newItems]);
+    } catch (error) {
+      // Ignore errors caused intentionally by aborting the request
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("Error fetching dashboard items:", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
-    fetchGroups(1, signal);
+    fetchOwnedGroups(1, signal);
+    fetchJoinedGroups(1, signal)
 
     return () => {
       controller.abort();
@@ -60,7 +90,7 @@ export default function Home() {
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchGroups(nextPage);
+    fetchOwnedGroups(nextPage);
   };
 
   const createGroup = async (groupName: string) => {
@@ -138,7 +168,7 @@ export default function Home() {
               </div>
 
               <div className="grid gap-4">
-                <LoadMoreGroups items={groupItems} isOwnerType={true}/>
+                <LoadMoreGroups items={groupOwnedItems}/>
               </div>
 
             </section>
@@ -196,7 +226,7 @@ export default function Home() {
                   id="member-groups-list"
                   className="grid gap-4"
               >
-                <LoadMoreGroups items={groupItems} isOwnerType={false}/>
+                <LoadMoreGroups items={groupJoinedItems}/>
               </div>
 
             </section>
@@ -217,7 +247,7 @@ export default function Home() {
                   </button>
                 )}
 
-                {!hasMore && groupItems.length > 0 && (
+                {!hasMore && groupJoinedItems.length > 0 && (
                   <p className="text-gray-400 text-sm">All available groups have been fetched.</p>
                 )}
               </div>
