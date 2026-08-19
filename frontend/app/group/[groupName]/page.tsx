@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
+import { LanguageSwitcher } from "@/app/components/navigation/language-switcher";
 
 type Role = "owner" | "admin" | "member";
 
@@ -44,6 +46,8 @@ export default function GroupPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("group");
+  const tCommon = useTranslations("common");
 
   const groupName = decodeURIComponent(
     Array.isArray(params.groupName)
@@ -59,7 +63,7 @@ export default function GroupPage() {
   const [locations, setLocations] = useState<string[]>([]);
   const [loading, setLoading] = useState(!!groupId);
   const [fetchError, setFetchError] = useState<string | null>(
-    groupId ? null : "Group ID is missing. Please navigate from the home page."
+    groupId ? null : t("missingGroupId")
   );
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
@@ -108,7 +112,7 @@ export default function GroupPage() {
       } catch (err) {
         if (cancelled) return;
         setFetchError(
-          err instanceof Error ? err.message : "Failed to load group data"
+          err instanceof Error ? err.message : tCommon("somethingWentWrong")
         );
       } finally {
         if (!cancelled) setLoading(false);
@@ -136,7 +140,7 @@ export default function GroupPage() {
     );
 
     if (alreadyExists) {
-      alert("A member with that name already exists.");
+      alert(t("memberAlreadyExists"));
       return;
     }
 
@@ -165,12 +169,12 @@ export default function GroupPage() {
     );
 
     if (!member) {
-      alert("Member not found.");
+      alert(t("memberNotFound"));
       return;
     }
 
     if (member.role === "owner") {
-      alert("The owner cannot be kicked.");
+      alert(t("ownerCannotBeKicked"));
       return;
     }
 
@@ -199,7 +203,7 @@ export default function GroupPage() {
     );
 
     if (alreadyExists) {
-      alert("That location has already been added.");
+      alert(t("locationAlreadyAdded"));
       return;
     }
 
@@ -227,7 +231,7 @@ export default function GroupPage() {
 
     if (!admin) {
       alert(
-        "You must enter the name of an existing admin."
+        t("enterExistingAdmin")
       );
       return;
     }
@@ -293,39 +297,39 @@ export default function GroupPage() {
 
   const modalSettings = {
     invite: {
-      title: "Invite Member",
+      title: t("inviteMemberTitle"),
       description:
-        "Enter the name of the person you want to invite.",
-      label: "Member Name",
-      placeholder: "Enter member name",
-      confirmText: "Invite",
+        t("inviteMemberDescription"),
+      label: t("memberName"),
+      placeholder: t("memberNamePlaceholder"),
+      confirmText: tCommon("invite"),
     },
 
     kick: {
-      title: "Kick Member",
+      title: t("kickMemberTitle"),
       description:
-        "Enter the name of the member you want to kick.",
-      label: "Member Name",
-      placeholder: "Enter member name",
-      confirmText: "Kick",
+        t("kickMemberDescription"),
+      label: t("memberName"),
+      placeholder: t("memberNamePlaceholder"),
+      confirmText: tCommon("kick"),
     },
 
     location: {
-      title: "Add Location",
+      title: t("addLocationTitle"),
       description:
-        "Enter the name of the location you want to add.",
-      label: "Location",
-      placeholder: "Enter location",
-      confirmText: "Add",
+        t("addLocationDescription"),
+      label: t("location"),
+      placeholder: t("locationPlaceholder"),
+      confirmText: tCommon("add"),
     },
 
     "new-owner": {
-      title: "Transfer Ownership",
+      title: t("transferOwnershipTitle"),
       description:
-        "Enter the name of an existing admin who should become the new owner.",
-      label: "New Owner",
-      placeholder: "Enter admin name",
-      confirmText: "Transfer",
+        t("transferOwnershipDescription"),
+      label: t("newOwner"),
+      placeholder: t("newOwnerPlaceholder"),
+      confirmText: tCommon("transfer"),
     },
   };
 
@@ -360,7 +364,7 @@ export default function GroupPage() {
     return (
       <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-10">
         <div className="mx-auto max-w-7xl rounded-3xl bg-white p-6 shadow-2xl lg:p-10">
-          <p className="text-gray-500">Loading group data…</p>
+          <p className="text-gray-500">{t("loading")}</p>
         </div>
       </main>
     );
@@ -378,6 +382,10 @@ export default function GroupPage() {
 
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-10">
+      <div className="absolute right-4 top-4 z-50">
+        <LanguageSwitcher />
+      </div>
+      
       <div className="mx-auto max-w-7xl rounded-3xl bg-white p-6 shadow-2xl lg:p-10">
 
         {/* ====================================== */}
@@ -385,18 +393,22 @@ export default function GroupPage() {
         {/* ====================================== */}
 
         <header className="mb-8 border-b border-gray-200 pb-6">
-          <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-            {groupName}
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
+                {groupName}
+              </h1>
 
-          <p className="mt-2 text-gray-500">
-            Welcome to the {groupName} group
-          </p>
+              <p className="mt-2 text-gray-500">
+                {t("welcome", { groupName })}
+              </p>
 
-          <div className="mt-3">
-            <span className="rounded-full bg-green-100 px-4 py-2 text-sm font-semibold text-green-700">
-              Your role: {currentUserRole}
-            </span>
+              <div className="mt-3">
+                <span className="rounded-full bg-green-100 px-4 py-2 text-sm font-semibold text-green-700">
+                  {t("yourRole", { role: currentUserRole })}
+                </span>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -413,7 +425,7 @@ export default function GroupPage() {
           <section className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
-                Locations
+                {t("locations")}
               </h2>
 
               {currentUserRole !== "member" && (
@@ -431,7 +443,7 @@ export default function GroupPage() {
 
             {locations.length === 0 ? (
               <p className="text-sm text-gray-500">
-                No locations added.
+                {t("noLocations")}
               </p>
             ) : (
               <ul className="space-y-3">
@@ -461,11 +473,11 @@ export default function GroupPage() {
                 </div>
 
                 <h2 className="text-2xl font-bold text-gray-700">
-                  World Map
+                  {t("worldMap")}
                 </h2>
 
                 <p className="mt-2 text-gray-500">
-                  Map will go here
+                  {t("worldMapPlaceholder")}
                 </p>
               </div>
             </div>
@@ -480,11 +492,11 @@ export default function GroupPage() {
 
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900">
-              Members
+              {t("members")}
             </h2>
 
             <span className="rounded-full bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700">
-              {members.length} members
+              {members.length} {t("memberCount", { count: members.length })}
             </span>
           </div>
 
@@ -494,7 +506,7 @@ export default function GroupPage() {
 
           <div className="mb-6">
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-green-700">
-              Owner
+              {t("owner")}
             </h3>
 
             <div className="space-y-2">
@@ -509,7 +521,7 @@ export default function GroupPage() {
                     </span>
 
                     <span className="rounded-full bg-green-600 px-3 py-1 text-xs font-bold text-white">
-                      Owner
+                      {t("owner")}
                     </span>
                   </div>
                 )
@@ -523,13 +535,13 @@ export default function GroupPage() {
 
           <div className="mb-6">
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-700">
-              Admins
+              {t("admins")}
             </h3>
 
             <div className="space-y-2">
               {adminMembers.length === 0 ? (
                 <p className="text-sm text-gray-500">
-                  No admins.
+                  {t("noAdmins")}
                 </p>
               ) : (
                 adminMembers.map(
@@ -543,8 +555,8 @@ export default function GroupPage() {
                       </span>
 
                       <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">
-                        Admin
-                      </span>
+                      {t("adminBadge")}
+                    </span>
                     </div>
                   )
                 )
@@ -558,13 +570,13 @@ export default function GroupPage() {
 
           <div>
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-600">
-              Members
+              {t("members")}
             </h3>
 
             <div className="space-y-2">
               {normalMembers.length === 0 ? (
                 <p className="text-sm text-gray-500">
-                  No members.
+                  {t("noMembers")}
                 </p>
               ) : (
                 normalMembers.map(
@@ -578,7 +590,7 @@ export default function GroupPage() {
                       </span>
 
                       <span className="rounded-full bg-gray-300 px-3 py-1 text-xs font-bold text-gray-700">
-                        Member
+                        {t("memberBadge")}
                       </span>
                     </div>
                   )
@@ -601,7 +613,7 @@ export default function GroupPage() {
             onClick={() => router.back()}
             className="rounded-lg bg-gray-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-gray-700"
           >
-            ← Back
+                        ← {tCommon("back")}
           </button>
 
           {/* RIGHT SIDE ACTIONS */}
@@ -616,12 +628,10 @@ export default function GroupPage() {
               <>
                 <button
                   type="button"
-                  onClick={() =>
-                    setActiveModal("invite")
-                  }
+                  onClick={() => setActiveModal("invite")}
                   className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
-                  Invite
+                  {tCommon("invite")}
                 </button>
 
                 <button
@@ -629,7 +639,7 @@ export default function GroupPage() {
                   onClick={leaveGroup}
                   className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
                 >
-                  Leave
+                  {tCommon("leave")}
                 </button>
               </>
             )}
@@ -642,22 +652,18 @@ export default function GroupPage() {
               <>
                 <button
                   type="button"
-                  onClick={() =>
-                    setActiveModal("invite")
-                  }
+                  onClick={() => setActiveModal("invite")}
                   className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
-                  Invite
+                  {tCommon("invite")}
                 </button>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setActiveModal("kick")
-                  }
+                  onClick={() => setActiveModal("kick")}
                   className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
                 >
-                  Kick
+                  {tCommon("kick")}
                 </button>
 
                 <button
@@ -665,7 +671,7 @@ export default function GroupPage() {
                   onClick={leaveGroup}
                   className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
                 >
-                  Leave
+                  {tCommon("leave")}
                 </button>
               </>
             )}
@@ -678,22 +684,18 @@ export default function GroupPage() {
               <>
                 <button
                   type="button"
-                  onClick={() =>
-                    setActiveModal("invite")
-                  }
+                  onClick={() => setActiveModal("invite")}
                   className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
-                  Invite
+                  {tCommon("invite")}
                 </button>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setActiveModal("kick")
-                  }
+                  onClick={() => setActiveModal("kick")}
                   className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
                 >
-                  Kick
+                  {tCommon("kick")}
                 </button>
 
                 <button
@@ -701,7 +703,7 @@ export default function GroupPage() {
                   onClick={leaveGroup}
                   className="rounded-lg bg-yellow-500 px-5 py-3 font-semibold text-black shadow transition hover:bg-yellow-600"
                 >
-                  Leave
+                  {tCommon("leave")}
                 </button>
 
                 <button
@@ -709,7 +711,7 @@ export default function GroupPage() {
                   onClick={deleteGroup}
                   className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
                 >
-                  Delete Group
+                  {t("deleteGroup")}
                 </button>
               </>
             )}

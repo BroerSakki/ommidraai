@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export function PageHeader() {
   const [showNotifications, setShowNotifications] = useState(false);
+  const t = useTranslations("home");
+  const tHomePage = useTranslations("homePage");
 
   const notifications = [
-    "John joined Study Group"
+    tHomePage("sampleNotification")
   ];
 
   return (
@@ -14,11 +17,11 @@ export function PageHeader() {
       {/* Left */}
       <div>
         <h1 className="text-3xl text-black font-bold tracking-tight">
-          Groups
+          {t("groups")}
         </h1>
 
         <p className="mt-2 text-sm text-black">
-          Manage the groups you own and the groups you belong to.
+          {t("manageSubtitle")}
         </p>
       </div>
 
@@ -40,12 +43,12 @@ export function PageHeader() {
         {showNotifications && (
           <div className="absolute right-0 mt-2 w-72 rounded-lg border border-gray-300 text-black bg-white shadow-lg z-50">
             <div className="border-b p-3 font-semibold">
-              Notifications
+              {tHomePage("notifications")}
             </div>
 
             {notifications.length === 0 ? (
               <p className="p-4 text-sm text-gray-500">
-                No notifications.
+                {tHomePage("noNotifications")}
               </p>
             ) : (
               <ul className="max-h-64 overflow-y-auto">

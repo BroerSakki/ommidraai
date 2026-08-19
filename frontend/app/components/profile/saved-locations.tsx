@@ -1,11 +1,16 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { LocationMap } from "./location-map";
 
 export function SavedLocations() {
+    const t = useTranslations("profile");
+
     return (
         <section className="mt-12">
 
             <h2 className="mb-6 text-3xl font-bold text-[#3d3461]">
-                Saved Locations
+                {t("savedLocations")}
             </h2>
 
             <div

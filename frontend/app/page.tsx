@@ -6,6 +6,8 @@ import LoadMoreGroups from "@/app/components/groups/load-groups";
 import { GroupItem } from "@/app/components/groups/group-card";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "@/app/components/navigation/language-switcher";
 
 export default function Home() {
   const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false);
@@ -17,6 +19,7 @@ export default function Home() {
   const [page, setPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
+  const t = useTranslations("home");
 
   const pageSize = 12;
   const apiUrl = "/api/backend/groups/get";
@@ -122,6 +125,10 @@ export default function Home() {
 
   return (
       <main className="min-h-screen bg-gradient-to-b from-[#b6cfc6] to-white py-10">
+        <div className="absolute right-4 top-4 z-50">
+          <LanguageSwitcher />
+        </div>
+
         <div className="mx-auto max-w-6xl px-6">
 
           {/* Header */}
@@ -129,11 +136,11 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-4xl font-bold text-white">
-                  Groups
+                  {t("groups")}
                 </h1>
 
                 <p className="mt-2 text-gray-200">
-                  Manage the groups you own and the groups you belong to.
+                  {t("manageSubtitle")}
                 </p>
               </div>
 
@@ -148,11 +155,11 @@ export default function Home() {
 
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-[#3d3461]">
-                  My Groups
+                  {t("myGroups")}
                 </h2>
 
                 <p className="mt-1 text-gray-500">
-                  Create and manage your own groups.
+                  {t("myGroupsSubtitle")}
                 </p>
               </div>
 
@@ -163,7 +170,7 @@ export default function Home() {
                     onClick={() => setIsAddGroupModalOpen(true)}
                     className="w-full rounded-xl bg-[#3d3461] px-6 py-3 font-semibold text-white transition hover:bg-[#544a85]"
                 >
-                  Add Group
+                  {t("addGroup")}
                 </button>
               </div>
 
@@ -193,11 +200,11 @@ export default function Home() {
                     id="member-groups-title"
                     className="text-2xl font-bold text-[#3d3461]"
                 >
-                  Member Groups
+                  {t("memberGroups")}
                 </h2>
 
                 <p className="mt-1 text-gray-500">
-                  Groups you've joined.
+                  {t("memberGroupsSubtitle")}
                 </p>
               </div>
 
@@ -210,14 +217,14 @@ export default function Home() {
                     htmlFor="join-group-name"
                     className="sr-only"
                 >
-                  Group to join
+                  {t("groupToJoin")}
                 </label>
 
                 <input
                     id="join-group-name"
                     type="text"
                     required
-                    placeholder="Group to join"
+                    placeholder={t("groupToJoin")}
                     className="text-black flex-1 rounded-xl border-2 border-[#b6cfc6] px-4 py-3 outline-none transition focus:border-[#3d3461]"
                 />
 
@@ -225,7 +232,7 @@ export default function Home() {
                     type="submit"
                     className="rounded-xl bg-[#a8be8f] px-6 py-3 font-semibold text-[#3d3461] transition hover:bg-[#b6cfc6]"
                 >
-                  Join Group
+                  {t("joinGroup")}
                 </button>
 
               </form>
@@ -252,19 +259,19 @@ export default function Home() {
                 aria-labelledby="load-more-title"
             >
               <div className="flex flex-col items-center justify-center pt-6">
-                {loading && <p className="text-gray-500 animate-pulse text-sm">Loading next batch...</p>}
+                {loading && <p className="text-gray-500 animate-pulse text-sm">{t("loadingNextBatch")}</p>}
 
                 {hasMore && !loading && (
                   <button
                     onClick={handleLoadMore}
                     className="px-6 py-2.5 bg-[#3d3461] text-white font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition shadow-sm text-sm"
                   >
-                    Load More Groups
+                    {t("loadMoreGroups")}
                   </button>
                 )}
 
                 {!hasMore && groupJoinedItems.length > 0 && (
-                  <p className="text-gray-400 text-sm">All available groups have been fetched.</p>
+                  <p className="text-gray-400 text-sm">{t("allGroupsFetched")}</p>
                 )}
               </div>
             </section>

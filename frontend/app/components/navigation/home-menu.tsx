@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface HomeButtonProps {
     className?: string;
 }
 
 export function HomeButton({ className = "" }: HomeButtonProps) {
+    const t = useTranslations("navigation");
+
     return (
         <Link
             href="/"
             className={`inline-flex items-center justify-center rounded-xl bg-[#3d3461] p-3 text-white transition hover:scale-105 hover:bg-[#544a85] ${className}`}
-            aria-label="Go to Home"
-            title="Home"
+            aria-label={t("goToHome")}
+            title={t("home")}
         >
             <svg
                 className="h-6 w-6"

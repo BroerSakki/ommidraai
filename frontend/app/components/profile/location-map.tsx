@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker as LeafletMarker } from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
 
@@ -39,6 +40,8 @@ export function LocationMap() {
     const [results, setResults] = useState<SearchResult[]>([]);
     const [searching, setSearching] = useState(false);
     const [searchError, setSearchError] = useState("");
+    const t = useTranslations("map");
+    const tCommon = useTranslations("common");
 
     useEffect(() => {
         let cancelled = false;
@@ -139,11 +142,14 @@ export function LocationMap() {
             if (data.length > 0) {
                 goToResult(data[0]);
             } else {
-                setSearchError("No places found for that search.");
+                setSearchError(t("noPlacesFound"));
             }
         } catch (err) {
             setSearchError(
-                `Search failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+                t("searchFailed", {
+                    error:
+                        err instanceof Error ? err.message : tCommon("unknownError"),
+                }),
             );
         } finally {
             setSearching(false);
@@ -181,10 +187,13 @@ export function LocationMap() {
                 throw new Error(`Request failed with status ${response.status}`);
             }
 
-            setMessage("Location saved.");
+            setMessage(t("locationSaved"));
         } catch (err) {
             setMessage(
-                `Save failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+                t("saveFailed", {
+                    error:
+                        err instanceof Error ? err.message : tCommon("unknownError"),
+                }),
             );
         } finally {
             setSaving(false);
@@ -198,7 +207,7 @@ export function LocationMap() {
                     type="text"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search for a place (e.g. Centurion, Pretoria)"
+                    placeholder={t("searchPlaceholder")}
                     className="flex-1 rounded border border-[#b6cfc6] bg-white px-3 py-2 text-sm text-[#3d3461] outline-none focus:border-[#3d3461]"
                 />
                 <button
@@ -206,7 +215,7 @@ export function LocationMap() {
                     disabled={searching || !query.trim()}
                     className="rounded bg-black px-5 py-2 text-sm text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                    {searching ? "Searching…" : "Search"}
+                    {searching ? tCommon("searching") : tCommon("search")}
                 </button>
             </form>
 
@@ -243,11 +252,14 @@ export function LocationMap() {
             <div className="mt-4 flex flex-wrap items-center gap-4">
                 {selected ? (
                     <p className="text-sm text-[#3d3461]">
-                        Selected: {selected.latitude.toFixed(6)}, {selected.longitude.toFixed(6)}
+                        {t("selectedCoords", {
+                            latitude: selected.latitude.toFixed(6),
+                            longitude: selected.longitude.toFixed(6),
+                        })}
                     </p>
                 ) : (
                     <p className="text-sm text-[#3d3461]">
-                        Search above or click anywhere on the map to pick a location.
+                        {t("selectHint")}
                     </p>
                 )}
 
@@ -256,7 +268,7 @@ export function LocationMap() {
                     disabled={!selected || saving}
                     className="ml-auto rounded bg-black px-8 py-3 text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                    {saving ? "Saving…" : "Save"}
+                    {saving ? tCommon("saving") : tCommon("save")}
                 </button>
             </div>
 

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface Props {
     username: string;
@@ -17,13 +18,14 @@ export function ProfileInfo({
 
     const [name, setName] = useState(username);
     const [editing, setEditing] = useState(false);
+    const t = useTranslations("profile");
 
     return (
         <section className="mt-8">
 
             <Image
                 src={avatarUrl}
-                alt="Profile"
+                alt={t("avatarAlt")}
                 width={140}
                 height={140}
                 className="rounded-full border-4 border-[#a8be8f] shadow-xl"
@@ -50,7 +52,7 @@ export function ProfileInfo({
                         className="w-80 cursor-pointer rounded-lg bg-[#eef5f1] px-4 py-3 transition hover:bg-[#dcebe3]"
                     >
                         <h2 className="text-3xl font-bold text-[#3d3461]">
-                            {name || "Click to enter username"}
+                            {name || t("clickToEnterUsername")}
                         </h2>
                     </div>
                 )}
