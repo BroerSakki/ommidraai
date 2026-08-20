@@ -4,15 +4,22 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useTranslations } from "next-intl";
+import Cookies from 'js-cookie';
 
 export function ProfileMenu() {
     const [open, setOpen] = useState(false);
+    const [username, setUsername] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const t = useTranslations("navigation");
     const tCommon = useTranslations("common");
 
     useEffect(() => {
+        const user = Cookies.get('username');
+        if (user) {
+          setUsername(user);
+        }
+
         function handleClickOutside(event: MouseEvent) {
             if (
                 menuRef.current &&
@@ -74,7 +81,7 @@ export function ProfileMenu() {
                     hover:scale-105
                 "
             >
-                U
+                {username ? username.charAt(0).toUpperCase() : "U"}
             </button>
 
             {open && (
@@ -92,6 +99,20 @@ export function ProfileMenu() {
                         overflow-hidden
                     "
                 >
+                    <div
+                        className="
+                            block
+                            px-5
+                            py-3
+                            text-gray-500
+                            bg-gray-100
+                        "
+                    >
+                      {username ? t("loggedInAs") + username : t("usernameError")}
+                    </div>
+
+                    <hr />
+
                     <Link
                         href="/user/profile"
                         className="

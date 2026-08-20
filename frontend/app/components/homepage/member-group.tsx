@@ -1,51 +1,41 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { GroupCard } from "./group-card";
+import { GroupCard, GroupItem } from "./group-card";
 
 type MemberGroupsProps = {
-  groups: string[];
-  onLeave: (index: number) => void;
+  groups: GroupItem[];
+  onOpen?: (group: GroupItem) => void;
+  onLeave?: (group: GroupItem) => void;
 };
 
 export function MemberGroups({
   groups,
+  onOpen,
   onLeave,
 }: MemberGroupsProps) {
-  const router = useRouter();
   const t = useTranslations("home");
 
-  function openGroup(group: string) {
-    router.push(`/group/${encodeURIComponent(group)}`);
+  if (groups.length === 0) {
+    return (
+      <div className="p-6 text-center border border-dashed rounded-xl bg-gray-50 text-gray-400 text-sm">
+        {t("noGroupsInSection")}
+      </div>
+    );
   }
 
   return (
-    <section className="rounded-xl border p-6 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-xl font-semibold text-black">
-          {t("memberGroups")}
-        </h2>
-      </div>
-
-      {groups.length === 0 ? (
-        <p className="mt-4 text-gray-500">
-          {t("memberGroupsEmpty")}
-        </p>
-      ) : (
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {groups.map((group, index) => (
-            <GroupCard
-              key={`${group}-${index}`}
-              name={group}
-              actionLabel={t("leave")}
-              actionVariant="warning"
-              onAction={() => onLeave(index)}
-              onOpen={() => openGroup(group)}
-            />
-          ))}
-        </div>
-      )}
-    </section>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {groups.map((group) => (
+        <GroupCard
+          key={group.User_Group.group_id}
+          actionLabel={t("leave")}
+          actionVariant="warning"
+          groupItem={group}
+          onAction={onLeave ? () => onLeave(group) : undefined}
+          onOpen={onOpen ? () => onOpen(group) : undefined}
+        />
+      ))}
+    </div>
   );
 }

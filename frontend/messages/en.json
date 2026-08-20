@@ -2,6 +2,8 @@
   "navigation": {
     "home": "Home",
     "goToHome": "Go to Home",
+    "loggedInAs": "Logged in as: ",
+    "usernameError": "Unable to retrieve username",
     "profile": "Profile",
     "logout": "Logout"
   },
@@ -81,7 +83,6 @@
     "joinGroup": "Join Group",
     "loadingNextBatch": "Loading the next batch of groups...",
     "loadMoreGroups": "Load More Groups",
-    "allGroupsFetched": "All available groups have been loaded.",
     "myGroupsEmpty": "No groups yet.",
     "memberGroupsEmpty": "You haven't joined any groups yet.",
     "noGroupsInSection": "No groups found in this section.",

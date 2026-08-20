@@ -2,8 +2,8 @@
 
 import { ProfileMenu } from "@/app/components/navigation/profile-menu";
 import { AddGroupModal } from "@/app/components/homepage/add-group-modal";
-import LoadMoreGroups from "@/app/components/groups/load-groups";
-import { GroupItem } from "@/app/components/groups/group-card";
+import { MyGroups } from "./components/homepage/my-group";
+import { MemberGroups } from "./components/homepage/member-group";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -16,17 +16,20 @@ export default function Home() {
 
   const [groupOwnedItems, setGroupOwnedItems] = useState<GroupItem[]>([]);
   const [groupJoinedItems, setGroupJoinedItems] = useState<GroupItem[]>([]);
-  const [page, setPage] = useState<number>(1);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [ownedPage, setOwnedPage] = useState<number>(1);
+  const [ownedLoading, setOwnedLoading] = useState<boolean>(false);
+  const [ownedHasMore, setOwnedHasMore] = useState<boolean>(true);
+  const [joinedPage, setJoinedPage] = useState<number>(1);
+  const [joinedLoading, setJoinedLoading] = useState<boolean>(false);
+  const [joinedHasMore, setJoinedHasMore] = useState<boolean>(true);
   const t = useTranslations("home");
 
-  const pageSize = 12;
+  const pageSize = 6;
   const apiUrl = "/api/backend/groups/get";
 
   const fetchOwnedGroups = async (currentPage: number, signal?: AbortSignal) => {
-    if (loading) return;
-    setLoading(true);
+    if (ownedLoading) return;
+    setOwnedLoading(true);
 
     try {
       const fullUrl = `${apiUrl}/owned?page=${currentPage}&size=${pageSize}`;
@@ -37,7 +40,7 @@ export default function Home() {
 
       const newItems = data.items || [];
       if (newItems.length < pageSize) {
-        setHasMore(false);
+        setOwnedHasMore(false);
       }
 
       setGroupOwnedItems((prevItems) => [...prevItems, ...newItems]);
@@ -47,13 +50,13 @@ export default function Home() {
         console.error("Error fetching dashboard items:", error);
       }
     } finally {
-      setLoading(false);
+      setOwnedLoading(false);
     }
   };
 
-    const fetchJoinedGroups = async (currentPage: number, signal?: AbortSignal) => {
-    if (loading) return;
-    setLoading(true);
+  const fetchJoinedGroups = async (currentPage: number, signal?: AbortSignal) => {
+    if (joinedLoading) return;
+    setJoinedLoading(true);
 
     try {
       const fullUrl = `${apiUrl}/joined?page=${currentPage}&size=${pageSize}`;
@@ -64,7 +67,7 @@ export default function Home() {
 
       const newItems = data.items || [];
       if (newItems.length < pageSize) {
-        setHasMore(false);
+        setJoinedHasMore(false);
       }
 
       setGroupJoinedItems((prevItems) => [...prevItems, ...newItems]);
@@ -74,7 +77,7 @@ export default function Home() {
         console.error("Error fetching dashboard items:", error);
       }
     } finally {
-      setLoading(false);
+      setJoinedLoading(false);
     }
   };
 
@@ -90,10 +93,16 @@ export default function Home() {
     };
   }, []);
 
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
+  const handleLoadMoreOwned = () => {
+    const nextPage = ownedPage + 1;
+    setOwnedPage(nextPage);
     fetchOwnedGroups(nextPage);
+  };
+
+  const handleLoadMoreJoined = () => {
+    const nextPage = joinedPage + 1;
+    setJoinedPage(nextPage);
+    fetchJoinedGroups(nextPage);
   };
 
   const createGroup = async (groupName: string) => {
@@ -175,15 +184,27 @@ export default function Home() {
               </div>
 
           <div className="grid gap-4">
-                <LoadMoreGroups
-                    items={groupOwnedItems}
-                    onOpen={(item) => {
-                        const groupName = item.Group.name;
-                        const groupId = item.User_Group.group_id;
-                        const role = item.User_Group.role;
+                <MyGroups
+                    groups={groupOwnedItems}
+                    onOpen={(group) => {
+                        const groupName = group.Group.name;
+                        const groupId = group.User_Group.group_id;
+                        const role = group.User_Group.role;
                         router.push(`/group/${encodeURIComponent(groupName)}?groupId=${groupId}&role=${role}`);
                     }}
+                    // Add onDelete later
                 />
+
+                {ownedLoading && <p className="text-gray-500 animate-pulse text-sm">{t("loadingNextBatch")}</p>}
+
+                {ownedHasMore && !ownedLoading && (
+                  <button
+                    onClick={handleLoadMoreOwned}
+                    className="px-6 py-2.5 bg-[#3d3461] text-white font-medium rounded-lg active:bg-[#544a85] hover:bg-[#544a85] transition shadow-sm text-sm"
+                  >
+                    {t("loadMoreGroups")}
+                  </button>
+                )}
             </div>
 
             </section>
@@ -241,41 +262,30 @@ export default function Home() {
                   id="member-groups-list"
                   className="grid gap-4"
               >
-                <LoadMoreGroups
-                  items={groupJoinedItems}
-                  onOpen={(item) => {
-                      const groupName = item.Group.name;
-                      const groupId = item.User_Group.group_id;
-                      const role = item.User_Group.role;
-                      router.push(`/group/${encodeURIComponent(groupName)}?groupId=${groupId}&role=${role}`);
-                  }}
-              />
+                  <MemberGroups
+                      groups={groupJoinedItems}
+                      onOpen={(group) => {
+                          const groupName = group.Group.name;
+                          const groupId = group.User_Group.group_id;
+                          const role = group.User_Group.role;
+                          router.push(`/group/${encodeURIComponent(groupName)}?groupId=${groupId}&role=${role}`);
+                      }}
+                      //Add onLeave later
+                  />
+
+                  {joinedLoading && <p className="text-gray-500 animate-pulse text-sm">{t("loadingNextBatch")}</p>}
+
+                  {joinedHasMore && !joinedLoading && (
+                    <button
+                      onClick={handleLoadMoreJoined}
+                      className="px-6 py-2.5 bg-[#3d3461] text-white font-medium rounded-lg active:bg-[#544a85] hover:bg-[#544a85] transition shadow-sm text-sm"
+                    >
+                      {t("loadMoreGroups")}
+                    </button>
+                  )}
               </div>
 
             </section>
-
-            <section
-                className="rounded-3xl bg-white p-8 shadow-xl border border-[#b6cfc6]"
-                aria-labelledby="load-more-title"
-            >
-              <div className="flex flex-col items-center justify-center pt-6">
-                {loading && <p className="text-gray-500 animate-pulse text-sm">{t("loadingNextBatch")}</p>}
-
-                {hasMore && !loading && (
-                  <button
-                    onClick={handleLoadMore}
-                    className="px-6 py-2.5 bg-[#3d3461] text-white font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition shadow-sm text-sm"
-                  >
-                    {t("loadMoreGroups")}
-                  </button>
-                )}
-
-                {!hasMore && groupJoinedItems.length > 0 && (
-                  <p className="text-gray-400 text-sm">{t("allGroupsFetched")}</p>
-                )}
-              </div>
-            </section>
-
           </div>
         </div>
 

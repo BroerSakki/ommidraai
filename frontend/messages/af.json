@@ -2,6 +2,8 @@
   "navigation": {
     "home": "Tuis",
     "goToHome": "Gaan na Tuis",
+    "loggedInAs": "Ingeteken as: ",
+    "usernameError": "Kon nie gebruikersnaam kry nie",
     "profile": "Profiel",
     "logout": "Teken uit"
   },
@@ -81,7 +83,6 @@
     "joinGroup": "Sluit by die Groep aan",
     "loadingNextBatch": "Besig om die volgende groepe te laai...",
     "loadMoreGroups": "Laai meer Groepe",
-    "allGroupsFetched": "Alle beskikbare groepe is gelaai.",
     "myGroupsEmpty": "Nog geen groepe nie.",
     "memberGroupsEmpty": "Jy het nog by geen groepe aangesluit nie.",
     "noGroupsInSection": "Geen groepe in hierdie afdeling gevind nie.",
