@@ -21,6 +21,7 @@ export interface GroupItem {
 
 type GroupCardProps = {
   name?: string;
+  role?: string;
   groupItem?: GroupItem;
   actionLabel?: string;
   actionVariant?: "danger" | "warning";
@@ -30,6 +31,7 @@ type GroupCardProps = {
 
 export default function GroupCard({
   name,
+  role,
   groupItem,
   actionLabel,
   actionVariant = "danger",
@@ -41,15 +43,27 @@ export default function GroupCard({
   const groupName =
     groupItem?.Group?.name ?? name ?? t("unnamedGroup");
 
+  const userRole =
+    groupItem?.User_Group?.role ?? role ?? t("unknownRole");
+
   const buttonClasses =
     actionVariant === "warning"
       ? "bg-yellow-500 hover:bg-yellow-600"
       : "bg-red-500 hover:bg-red-600";
 
   return (
-    <div className="flex h-40 w-40 flex-col justify-between rounded-xl border-2 border-green-600 bg-gray-900 p-4 shadow-lg">
+    <div className="flex h-40 w-40 flex-col justify-between rounded-xl border-2 border-blue-900 bg-[#a8be8f] p-4 shadow-lg">
+      
+      <span className="rounded-full bg-gray-100 px-2 py-1 shadow-sm">
+        <div className="flex flex-1 items-center justify-center">       
+          <h3 className="break-words text-center text-lg text-black text-sm">
+            {role ?? "OnbekendeRole"}
+          </h3>
+        </div>
+      </span>
+
       {/* Group name */}
-      <div className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">       
         <h3 className="break-words text-center text-lg font-semibold text-white">
           {groupName}
         </h3>
@@ -73,6 +87,7 @@ export default function GroupCard({
           className={`flex-1 rounded-md py-2 text-sm font-medium text-black transition ${buttonClasses}`}
         >
           {actionLabel}
+          
         </button>
       </div>
     </div>
