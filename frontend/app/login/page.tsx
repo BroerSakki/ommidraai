@@ -49,7 +49,7 @@ export default function Login() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-dark via-brand-mid to-brand-light px-4 py-10">
-      <div className="absolute right-4 top-4 z-50">
+      <div className="fixed absolute right-4 top-4 z-50">
         <LanguageSwitcher />
       </div>
 
