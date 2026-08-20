@@ -12,7 +12,7 @@ export function ProfileHeader() {
 
             <HomeButton />
 
-            <div className="absolute right-4 top-4 z-50">
+            <div className="fixed absolute right-4 top-4 z-50">
               <LanguageSwitcher />
             </div>
 

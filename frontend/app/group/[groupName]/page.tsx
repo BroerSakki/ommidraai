@@ -382,7 +382,7 @@ export default function GroupPage() {
 
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-10">
-      <div className="absolute right-4 top-4 z-50">
+      <div className="fixed absolute right-4 top-4 z-50">
         <LanguageSwitcher />
       </div>
       

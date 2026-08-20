@@ -125,7 +125,7 @@ export default function Home() {
 
   return (
       <main className="min-h-screen bg-gradient-to-b from-[#b6cfc6] to-white py-10">
-        <div className="absolute right-4 top-4 z-50">
+        <div className="fixed absolute right-4 top-4 z-50">
           <LanguageSwitcher />
         </div>
 
