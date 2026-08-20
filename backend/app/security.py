@@ -27,6 +27,7 @@ ACCESS_TOKEN_LIFETIME = timedelta(minutes=15)
 REFRESH_TOKEN_LIFETIME = timedelta(days=30)
 ACCESS_COOKIE_NAME = "access_token"
 REFRESH_COOKIE_NAME = "refresh_token"
+USERNAME_COOKIE_NAME = "username"
 # ---
 
 # Hash

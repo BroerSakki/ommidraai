@@ -2,6 +2,8 @@
   "navigation": {
     "home": "Home",
     "goToHome": "Go to Home",
+    "loggedInAs": "Logged in as: ",
+    "usernameError": "Unable to retrieve username",
     "profile": "Profile",
     "logout": "Logout"
   },

@@ -2,6 +2,8 @@
   "navigation": {
     "home": "Tuis",
     "goToHome": "Gaan na Tuis",
+    "loggedInAs": "Ingeteken as: ",
+    "usernameError": "Kon nie gebruikersnaam kry nie",
     "profile": "Profiel",
     "logout": "Teken uit"
   },

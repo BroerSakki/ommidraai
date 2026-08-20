@@ -10,7 +10,7 @@ from typing import Optional
 from app.models.user import User
 from app.services import auth_service
 from app.database import engine, get_db
-from app.security import get_current_user, ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME
+from app.security import get_current_user, ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME, USERNAME_COOKIE_NAME
 # ---
 
 # Import Schemas
@@ -58,7 +58,7 @@ def login(
 ):
     # Create Access Token
     # ---
-    access_token, refresh_token = auth_service.login(
+    access_token, refresh_token, username = auth_service.login(
         db=db,
         credentials=credentials,
     )
@@ -79,6 +79,14 @@ def login(
         key=REFRESH_COOKIE_NAME,
         value=refresh_token,
         httponly=True,
+        secure=False,
+        samesite="lax",
+    )
+
+    response.set_cookie(
+        key=USERNAME_COOKIE_NAME,
+        value=username,
+        httponly=False,
         secure=False,
         samesite="lax",
     )
@@ -142,6 +150,11 @@ def logout(
     )
     response.delete_cookie(
         key=REFRESH_COOKIE_NAME,
+        secure=False,
+        samesite="lax",
+    )
+    response.delete_cookie(
+        key=USERNAME_COOKIE_NAME,
         secure=False,
         samesite="lax",
     )

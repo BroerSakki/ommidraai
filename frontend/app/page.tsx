@@ -2,7 +2,6 @@
 
 import { ProfileMenu } from "@/app/components/navigation/profile-menu";
 import { AddGroupModal } from "@/app/components/homepage/add-group-modal";
-import { GroupItem } from "@/app/components/groups/group-card";
 import { MyGroups } from "./components/homepage/my-group";
 import { MemberGroups } from "./components/homepage/member-group";
 import { useState, useEffect } from "react";
