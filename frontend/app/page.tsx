@@ -2,8 +2,9 @@
 
 import { ProfileMenu } from "@/app/components/navigation/profile-menu";
 import { AddGroupModal } from "@/app/components/homepage/add-group-modal";
-import LoadMoreGroups from "@/app/components/groups/load-groups";
 import { GroupItem } from "@/app/components/groups/group-card";
+import { MyGroups } from "./components/homepage/my-group";
+import { MemberGroups } from "./components/homepage/member-group";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -175,14 +176,15 @@ export default function Home() {
               </div>
 
           <div className="grid gap-4">
-                <LoadMoreGroups
-                    items={groupOwnedItems}
-                    onOpen={(item) => {
-                        const groupName = item.Group.name;
-                        const groupId = item.User_Group.group_id;
-                        const role = item.User_Group.role;
+                <MyGroups
+                    groups={groupOwnedItems}
+                    onOpen={(group) => {
+                        const groupName = group.Group.name;
+                        const groupId = group.User_Group.group_id;
+                        const role = group.User_Group.role;
                         router.push(`/group/${encodeURIComponent(groupName)}?groupId=${groupId}&role=${role}`);
                     }}
+                    // Add onDelete later
                 />
             </div>
 
@@ -241,15 +243,16 @@ export default function Home() {
                   id="member-groups-list"
                   className="grid gap-4"
               >
-                <LoadMoreGroups
-                  items={groupJoinedItems}
-                  onOpen={(item) => {
-                      const groupName = item.Group.name;
-                      const groupId = item.User_Group.group_id;
-                      const role = item.User_Group.role;
-                      router.push(`/group/${encodeURIComponent(groupName)}?groupId=${groupId}&role=${role}`);
-                  }}
-              />
+                  <MemberGroups
+                      groups={groupJoinedItems}
+                      onOpen={(group) => {
+                          const groupName = group.Group.name;
+                          const groupId = group.User_Group.group_id;
+                          const role = group.User_Group.role;
+                          router.push(`/group/${encodeURIComponent(groupName)}?groupId=${groupId}&role=${role}`);
+                      }}
+                      //Add onLeave later
+                  />
               </div>
 
             </section>

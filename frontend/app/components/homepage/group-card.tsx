@@ -12,7 +12,6 @@ interface UserGroupDetails {
 
 interface GroupDetails {
   name: string;
-  role?: string;
 }
 
 export interface GroupItem {
@@ -22,17 +21,17 @@ export interface GroupItem {
 
 type GroupCardProps = {
   name?: string;
-  role?: string;
+  addRoleSection?: boolean;
   groupItem?: GroupItem;
   actionLabel: string;
   actionVariant?: "danger" | "warning";
-  onAction: () => void;
-  onOpen: () => void;
+  onAction?: () => void;
+  onOpen?: () => void;
 };
 
 export function GroupCard({
   name,
-  role,
+  addRoleSection = true,
   groupItem,
   actionLabel,
   actionVariant = "danger",
@@ -43,27 +42,31 @@ export function GroupCard({
 
   // Get the group name from groupItem if it exists.
   // Otherwise use the name prop.
-  const groupName = groupItem?.Group?.name ?? name ?? t("unnamedGroup");
-  const groupRole = groupItem?.Group?.role ?? role ?? t("unknownRole");
+  const groupName = name ?? groupItem?.Group?.name ?? t("unnamedGroup");
+  const userRole = groupItem?.User_Group?.role ?? t("unknownRole");
 
 
   const buttonClasses =
     actionVariant === "warning"
-      ? "bg-yellow-500 hover:bg-yellow-600"
-      : "bg-red-500 hover:bg-red-600";
+      ? "bg-[#a8be8f] hover:bg-[#b6cfc6]"
+      : "bg-[#a8be8f] hover:bg-[#b6cfc6]";
+
+  const roleSection = 
+    addRoleSection === true
+      ? <div className="flex flex-1 items-center justify-center">
+          <div className="rounded-full bg-gray-100 px-2.5 py-1">
+            <h3 className="break-words text-center text-xs font-medium text-black">
+              <span className="inline-block mt-2 px-2.5 py-0.5 text-xs font-medium rounded-full bg-[#a8be8f] text-[#3d3461] capitalize">
+              {userRole}
+              </span>
+            </h3>
+          </div>
+        </div>
+      : ""
 
   return (
-    <div className="flex h-40 w-40 flex-col justify-between rounded-xl border-2 border-green-600 bg-gray-100 p-4 shadow-lg">
-      {/* Group name */}
-      <div className="flex flex-1 items-center justify-center">
-        <div className="rounded-full bg-gray-100 px-2.5 py-1">
-          <h3 className="break-words text-center text-xs font-medium text-black">
-            <span className="inline-block mt-2 px-2.5 py-0.5 text-xs font-medium rounded-full bg-[#72ceb5] text-[#3d3461] capitalize">
-            {groupRole}
-            </span>
-          </h3>
-        </div>
-      </div>
+    <div className="flex h-40 w-40 flex-col justify-between rounded-xl border-2 border-[#3d3461] bg-gray-100 p-4 shadow-lg">
+      {roleSection}
 
       <div className="flex flex-1 items-center justify-center">
         <h3 className="break-words text-center text-lg font-semibold text-black">
@@ -77,7 +80,7 @@ export function GroupCard({
         <button
           type="button"
           onClick={onOpen}
-          className="flex-1 rounded-md bg-blue-600 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          className="flex-1 rounded-md bg-[#3d3461] py-2 text-sm font-medium text-white transition hover:bg-[#544a85]"
         >
           {t("open")}
         </button>
