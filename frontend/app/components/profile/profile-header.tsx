@@ -12,15 +12,11 @@ export function ProfileHeader() {
 
             <HomeButton />
 
-            <div className="fixed absolute right-4 top-4 z-50">
-              <LanguageSwitcher />
-            </div>
+            <LanguageSwitcher isGreen={true} />
 
-            <div className="flex items-center gap-3">
-                <button className="rounded-lg bg-[#a8be8f] px-5 py-2 font-semibold text-[#3d3461] transition hover:scale-105 hover:bg-[#b6cfc6]">
-                    {t("inviteFriends")}
-                </button>
-            </div>
+            <button className="rounded-lg bg-[#a8be8f] px-5 py-2 font-semibold text-[#3d3461] transition hover:scale-105 hover:bg-[#b6cfc6]">
+                {t("inviteFriends")}
+            </button>
 
         </header>
     );

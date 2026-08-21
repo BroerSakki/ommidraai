@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
-import { LanguageSwitcher } from "@/app/components/navigation/language-switcher";
 
 type Role = "owner" | "admin" | "member";
 
@@ -382,10 +381,6 @@ export default function GroupPage() {
 
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-10">
-      <div className="fixed absolute right-4 top-4 z-50">
-        <LanguageSwitcher />
-      </div>
-      
       <div className="mx-auto max-w-7xl rounded-3xl bg-white p-6 shadow-2xl lg:p-10">
 
         {/* ====================================== */}
