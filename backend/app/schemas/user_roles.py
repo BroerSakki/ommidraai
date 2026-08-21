@@ -3,13 +3,18 @@
 from enum import Enum
 # ---
 
-# Class
+# Classes
 # ---
 class UserRole(str, Enum):
 	owner = "owner"
 	admin = "admin"
 	member = "member"
 	guest = "guest"
+
+class InviteRole(str, Enum):
+    admin = "admin"
+    member = "member"
+    guest = "guest"
 # ---
 
 # Helper Functions
