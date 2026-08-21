@@ -1,14 +1,13 @@
 # Imports
 # ---
-from enum import Enum
 from pydantic import BaseModel
 from app.schemas import user_roles
 # ---
 
-# Classes
+# Class
 # ---
-class InviteCreate(BaseModel):
-    user_id: int
+class Invite_Code_Create(BaseModel):
+    code: int
     origin_id: int
     group_id: int
     role: user_roles.InviteRole
