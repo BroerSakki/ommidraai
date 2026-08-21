@@ -30,10 +30,17 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_LIFETIME = timedelta(
     minutes=int(os.getenv("ACCESS_TOKEN_LIFETIME_MINUTES", 15))
 )
-
 REFRESH_TOKEN_LIFETIME = timedelta(
     days=int(os.getenv("REFRESH_TOKEN_LIFETIME_DAYS", 30))
 )
+if SECRET_KEY is None:
+    raise RuntimeError("SECRET_KEY is not set")
+if ALGORITHM is None:
+    raise RuntimeError("ALGORITHM is not set")
+if ACCESS_TOKEN_LIFETIME is None:
+    raise RuntimeError("ACCESS_TOKEN_LIFETIME_MINUTES is not set")
+if REFRESH_TOKEN_LIFETIME is None:
+    raise RuntimeError("REFRESH_TOKEN_LIFETIME_DAYS is not set")
 ACCESS_COOKIE_NAME = "access_token"
 REFRESH_COOKIE_NAME = "refresh_token"
 USERNAME_COOKIE_NAME = "username"
