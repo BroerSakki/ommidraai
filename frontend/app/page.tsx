@@ -7,7 +7,6 @@ import { MemberGroups } from "./components/homepage/member-group";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { LanguageSwitcher } from "@/app/components/navigation/language-switcher";
 
 export default function Home() {
   const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false);
@@ -134,10 +133,6 @@ export default function Home() {
 
   return (
       <main className="min-h-screen bg-gradient-to-b from-[#b6cfc6] to-white py-10">
-        <div className="fixed absolute right-4 top-4 z-50">
-          <LanguageSwitcher />
-        </div>
-
         <div className="mx-auto max-w-6xl px-6">
 
           {/* Header */}

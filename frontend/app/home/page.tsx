@@ -5,7 +5,6 @@ import { PageHeader } from "../components/homepage/page-header";
 import { MyGroups } from "../components/homepage/my-group";
 import { MemberGroups } from "../components/homepage/member-group";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
-import { LanguageSwitcher } from "@/app/components/navigation/language-switcher";
 
 export default function HomePage() {
   const [myGroups, setMyGroups] = useState<string[]>([]);
@@ -94,10 +93,6 @@ export default function HomePage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-dark via-brand-mid to-brand-light py-8 pb-28">
-      <div className="fixed absolute right-4 top-4 z-50">
-        <LanguageSwitcher />
-      </div>
-      
       <div className="relative z-10 mx-auto w-full max-w-6xl rounded-3xl bg-white p-10 shadow-2xl">
         <PageHeader />
 
