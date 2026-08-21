@@ -5,6 +5,9 @@ from pwdlib import PasswordHash
 from fastapi import Depends, HTTPException, Request, Cookie, Header
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
+from dotenv import load_dotenv
+import os
+
 # ---
 
 # Import Local Libraries
@@ -19,12 +22,18 @@ from app.models.user import User
 password_hash = PasswordHash.recommended()
 # ---
 
-# Local Constants
+# Load Constants
 # ---
-SECRET_KEY = "test-thingymadoodle"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_LIFETIME = timedelta(minutes=15)
-REFRESH_TOKEN_LIFETIME = timedelta(days=30)
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_LIFETIME = timedelta(
+    minutes=int(os.getenv("ACCESS_TOKEN_LIFETIME_MINUTES", 15))
+)
+
+REFRESH_TOKEN_LIFETIME = timedelta(
+    days=int(os.getenv("REFRESH_TOKEN_LIFETIME_DAYS", 30))
+)
 ACCESS_COOKIE_NAME = "access_token"
 REFRESH_COOKIE_NAME = "refresh_token"
 USERNAME_COOKIE_NAME = "username"
