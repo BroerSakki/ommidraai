@@ -14,6 +14,7 @@ from app.services import invite_service
 from app.security import get_current_user
 from app.models.user import User
 from app.schemas import invite
+from app.schemas import user_roles
 # ---
 
 # Setup API Router
@@ -71,7 +72,7 @@ def accept_invite(
 def invite_user(
     group_id: int,
     username: str,
-    role: invite.InviteRole,
+    role: user_roles.InviteRole,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

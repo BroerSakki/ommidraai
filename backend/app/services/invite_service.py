@@ -26,7 +26,7 @@ def create_invite(
     current_user: User,
     group_id: int,
     username: str,
-    role: invite.InviteRole
+    role: user_roles.InviteRole
 ):
     user_group: User_Group = db.scalar(
         select(User_Group)

@@ -57,7 +57,7 @@ def get_user(
         # Database Error
         # ---
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="Could not retrieve user",
         )
         # ---
@@ -94,7 +94,7 @@ def get_user_id(
         # Database Error
         # ---
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="Could not retrieve user id",
         )
         # ---
@@ -136,7 +136,7 @@ def create_user(
         # ---
         db.rollback()
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="Email already in use",
         )
         # ---
@@ -167,7 +167,7 @@ def change_username(
         # ---
         db.rollback()
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="Could not change username",
         )
         # ---
@@ -200,7 +200,7 @@ def change_password(
         # ---
         db.rollback()
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="Could not change password",
         )
         # ---
@@ -228,7 +228,7 @@ def change_email(
         # ---
         db.rollback()
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="Could not change email",
         )
         # ---
@@ -256,7 +256,7 @@ def change_default_location(
         # ---
         db.rollback()
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="Could not change default location",
         )
         # ---
@@ -290,7 +290,7 @@ def delete_user(
         # ---
         db.rollback()
         raise HTTPException(
-            status_code=400,
+            status_code=500,
             detail="User was not deleted",
         )
         # ---
