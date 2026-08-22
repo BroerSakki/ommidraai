@@ -30,7 +30,8 @@
     "unnamedGroup": "Unnamed Group",
     "unknownRole": "Unknown Role",
     "somethingWentWrong": "Something went wrong",
-    "unknownError": "Unknown error"
+    "unknownError": "Unknown error",
+    "deleting": "Deleting"
   },
   "login": {
     "logoAlt": "Ommidraai logo",
@@ -147,7 +148,9 @@
     "memberNotFound": "Member not found.",
     "ownerCannotBeKicked": "The owner cannot be kicked.",
     "locationAlreadyAdded": "That location has already been added.",
-    "enterExistingAdmin": "You must enter the name of an existing admin."
+    "enterExistingAdmin": "You must enter the name of an existing admin.",
+    "deleteGroupTitle": "Delete this group?",
+    "deleteGroupDescription": "Are you sure you want to delete \"{groupName}\"? This will remove all members and locations. This action cannot be undone."
   },
   "map": {
     "searchPlaceholder": "Search for a place (e.g. Centurion, Pretoria)",

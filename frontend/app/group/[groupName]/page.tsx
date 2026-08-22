@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
+import { DeleteGroupModal } from "@/app/components/groups/delete-group-modal";
 
 type Role = "owner" | "admin" | "member";
 
@@ -66,6 +67,8 @@ export default function GroupPage() {
   );
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!groupId) {
@@ -270,16 +273,35 @@ export default function GroupPage() {
     router.back();
   }
 
-  function deleteGroup() {
-    if (!groupId) return;
+  async function deleteGroup() {
+    if (!groupId || isDeleting) return;
 
-    fetch(`/api/backend/groups/${groupId}/delete`, {
-      method: "DELETE",
-    })
-      .then((res) => res.json())
-      .catch(() => {})
+    setIsDeleting(true);
 
-    router.push("/");
+    try {
+      const response = await fetch(
+        `/api/backend/groups/${groupId}/delete?group_name=${encodeURIComponent(groupName)}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(
+          data?.detail || tCommon("somethingWentWrong")
+        );
+      }
+
+      setShowDeleteModal(false);
+      router.push("/");
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : tCommon("somethingWentWrong")
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   const ownerMembers = members.filter(
@@ -703,7 +725,8 @@ export default function GroupPage() {
 
                 <button
                   type="button"
-                  onClick={deleteGroup}
+                  onClick={() => setShowDeleteModal(true)}
+                  disabled={isDeleting}
                   className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
                 >
                   {t("deleteGroup")}
@@ -730,6 +753,18 @@ export default function GroupPage() {
           confirmText={currentModal.confirmText}
         />
       )}
+
+      {/* ====================================== */}
+      {/* DELETE GROUP CONFIRM MODAL */}
+      {/* ====================================== */}
+
+      <DeleteGroupModal
+        isOpen={showDeleteModal}
+        groupName={groupName}
+        isDeleting={isDeleting}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={deleteGroup}
+      />
     </main>
   );
 }

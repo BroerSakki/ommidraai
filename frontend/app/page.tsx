@@ -4,6 +4,7 @@ import { ProfileMenu } from "@/app/components/navigation/profile-menu";
 import { AddGroupModal } from "@/app/components/homepage/add-group-modal";
 import { MyGroups } from "./components/homepage/my-group";
 import { MemberGroups } from "./components/homepage/member-group";
+import { GroupItem } from "./components/homepage/group-card";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";

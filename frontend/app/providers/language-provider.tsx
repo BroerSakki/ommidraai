@@ -95,7 +95,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   return (
     <LanguageContext.Provider value={{ locale, changeLocale }}>
-      <NextIntlClientProvider locale={locale} messages={messages}>
+      <NextIntlClientProvider
+        locale={locale}
+        messages={messages}
+        timeZone="Africa/Johannesburg"
+      >
         {children}
       </NextIntlClientProvider>
     </LanguageContext.Provider>

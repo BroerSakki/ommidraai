@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { Map as LeafletMap, Marker as LeafletMarker } from "leaflet";
+import { useEffect, useRef, useState, useCallback } from "react";
+import type { Map as LeafletMap, Marker as LeafletMarker, LayerGroup } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslations } from "next-intl";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
 
 const DEFAULT_CENTER: [number, number] = [-25.8587, 28.1891];
 const DEFAULT_ZOOM = 12;
@@ -23,12 +21,19 @@ type SearchResult = {
     display_name: string;
 };
 
+type SavedLocation = {
+    name: string;
+    latitude: number;
+    longitude: number;
+};
+
 type LeafletModule = typeof import("leaflet");
 
 export function LocationMap() {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<LeafletMap | null>(null);
     const markerRef = useRef<LeafletMarker | null>(null);
+    const savedMarkersRef = useRef<LayerGroup | null>(null);
     const leafletRef = useRef<LeafletModule | null>(null);
 
     const [ready, setReady] = useState(false);
@@ -42,6 +47,8 @@ export function LocationMap() {
     const [searchError, setSearchError] = useState("");
     const t = useTranslations("map");
     const tCommon = useTranslations("common");
+
+    const [savedLocations, setSavedLocations] = useState<SavedLocation[]>([]);
 
     useEffect(() => {
         let cancelled = false;
@@ -83,6 +90,8 @@ export function LocationMap() {
 
         initMap();
 
+        fetchSavedLocations();
+
         return () => {
             cancelled = true;
             if (mapRef.current) {
@@ -91,6 +100,52 @@ export function LocationMap() {
             }
         };
     }, []);
+
+    async function fetchSavedLocations() {
+        try {
+            const response = await fetch(`/api/backend/user/locations`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch locations (status ${response.status})`);
+            }
+            const data = (await response.json()) as SavedLocation[];
+            setSavedLocations(data);
+        } catch (err) {
+            console.error("Failed to fetch saved locations:", err);
+        }
+    }
+
+    const addSavedLocationMarkers = useCallback(() => {
+        const map = mapRef.current;
+        const L = leafletRef.current;
+        if (!map || !L) return;
+
+        if (savedMarkersRef.current) {
+            savedMarkersRef.current.clearLayers();
+        }
+
+        const layerGroup = L.layerGroup().addTo(map);
+        savedMarkersRef.current = layerGroup;
+
+        savedLocations.forEach((loc) => {
+            const icon = L.divIcon({
+                className: "",
+                html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="#3498db" stroke="#ffffff" stroke-width="1">
+                    <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/>
+                    <circle cx="12" cy="9" r="3" fill="#ffffff" stroke="none"/>
+                </svg>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 24],
+            });
+
+            L.marker([loc.latitude, loc.longitude], { icon }).addTo(layerGroup).bindPopup(
+                `<div style="font-size: 13px;"><strong>${loc.name}</strong><br/>${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}</div>`
+            );
+        });
+    }, [savedLocations]);
+
+    useEffect(() => {
+        addSavedLocationMarkers();
+    }, [addSavedLocationMarkers]);
 
     function dropMarker(map: LeafletMap, latitude: number, longitude: number) {
         const L = leafletRef.current;
@@ -176,18 +231,33 @@ export function LocationMap() {
         setSaving(true);
         setMessage("");
 
+        const locationName = prompt("Enter a name for this location:");
+        if (!locationName || !locationName.trim()) {
+            setSaving(false);
+            return;
+        }
+
         try {
-            const response = await fetch(`${API_URL}/locations/add`, {
+            const response = await fetch(`/api/backend/user/location/add`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(selected),
+                body: JSON.stringify({
+                    name: locationName.trim(),
+                    location: {
+                        latitude: selected.latitude,
+                        longitude: selected.longitude,
+                    },
+                }),
             });
 
             if (!response.ok) {
-                throw new Error(`Request failed with status ${response.status}`);
+                const errData = await response.json();
+                throw new Error(`${errData.detail || "Request failed"} (status ${response.status})`);
             }
 
             setMessage(t("locationSaved"));
+            setMessage("Location saved.");
+            await fetchSavedLocations();
         } catch (err) {
             setMessage(
                 t("saveFailed", {
@@ -226,7 +296,7 @@ export function LocationMap() {
             {results.length > 0 && (
                 <ul className="mb-4 space-y-1">
                     {results.map((result) => (
-                        <li key={result.display_name}>
+                        <li key={result.lat + result.lon}>
                             <button
                                 type="button"
                                 onClick={() => goToResult(result)}
@@ -271,6 +341,19 @@ export function LocationMap() {
                     {saving ? tCommon("saving") : tCommon("save")}
                 </button>
             </div>
+
+            {savedLocations.length > 0 && (
+                <div className="mt-4">
+                    <p className="text-sm font-medium text-[#3d3461] mb-2">Saved Locations</p>
+                    <ul className="space-y-1">
+                        {savedLocations.map((loc) => (
+                            <li key={loc.name} className="text-sm text-[#3d3461]">
+                                {loc.name} ({loc.latitude.toFixed(6)}, {loc.longitude.toFixed(6)})
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             {message && <p className="mt-2 text-sm font-medium text-[#3d3461]">{message}</p>}
         </div>

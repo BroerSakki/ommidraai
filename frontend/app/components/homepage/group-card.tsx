@@ -84,15 +84,6 @@ export function GroupCard({
         >
           {t("open")}
         </button>
-
-        {/* Delete / Leave button */}
-        <button
-          type="button"
-          onClick={onAction}
-          className={`flex-1 rounded-md py-2 text-sm font-medium text-black transition ${buttonClasses}`}
-        >
-          {actionLabel}
-        </button>
       </div>
     </div>
   );

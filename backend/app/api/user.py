@@ -4,6 +4,7 @@ from fastapi import (
     APIRouter,
     Depends
 )
+from typing import List
 from sqlalchemy.orm import Session
 # ---
 
@@ -21,7 +22,8 @@ from app.models.user import User
 
 # Import Schemas
 # ---
-from app.schemas.user_location import UserLocationCreate
+from app.schemas.user_location import UserLocationCreate, UserLocationResponse
+from app.schemas.location import LocationCreate
 # ---
 
 # Router Setup
@@ -34,7 +36,7 @@ router = APIRouter(
 
 # Get Current User Locations
 # ---
-@router.get("/locations")
+@router.get("/locations", response_model=List[UserLocationResponse])
 def get_current_user_locations(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
