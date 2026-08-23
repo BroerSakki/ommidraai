@@ -15,11 +15,12 @@ from app.services import locations_service
 # ---
 from app.models.user import User
 from app.models.user_location import User_Location
+from app.models.location import Location
 # ---
 
 # Import Schemas
 # ---
-from app.schemas.user_location import UserLocationCreate
+from app.schemas.user_location import UserLocationCreate, UserLocationResponse
 from app.schemas.location import LocationCreate
 # ---
 
@@ -29,13 +30,22 @@ def get_current_user_locations(
     db: Session,
     current_user: User,
 ):
-    user_locations = db.scalars(
-        select(User_Location)
+    results = db.execute(
+        select(User_Location, Location)
+        .join(Location, Location.id == User_Location.location_id)
         .where(
             User_Location.user_id == current_user.id
         )
     ).all()
-    return user_locations
+
+    return [
+        UserLocationResponse(
+            name=ul.name,
+            latitude=loc.latitude,
+            longitude=loc.longitude,
+        )
+        for ul, loc in results
+    ]
 # ---
 
 # Add User Location

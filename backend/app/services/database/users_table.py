@@ -8,7 +8,7 @@ from pydantic import EmailStr
 # ---
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 # ---
 
 # Security Imports
@@ -147,7 +147,7 @@ def create_user(
 def change_username(
     db: Session,
     user: User,
-    new_user_name: UserCreate,
+    new_user_name: str,
 ) -> str:
     try:
         # Update Database

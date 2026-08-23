@@ -15,7 +15,7 @@ from app.security import get_current_user, ACCESS_COOKIE_NAME, REFRESH_COOKIE_NA
 
 # Import Schemas
 # ---
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.schemas.auth import LoginRequest, Token, RefreshRequest
 from app.schemas.location import LocationCreate
 # ---
@@ -35,6 +35,21 @@ def me(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
+# ---
+
+# Update Username
+# ---
+@router.put("/update", response_model=UserResponse)
+def update_user(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return auth_service.update_username(
+        db=db,
+        current_user=current_user,
+        user_update=user_update,
+    )
 # ---
 
 # Register

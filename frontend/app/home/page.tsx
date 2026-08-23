@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "../components/homepage/page-header";
 import { MyGroups } from "../components/homepage/my-group";
 import { MemberGroups } from "../components/homepage/member-group";
+import { GroupItem } from "../components/homepage/group-card";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 
 export default function HomePage() {
-  const [myGroups, setMyGroups] = useState<string[]>([]);
-  const [memberGroups, setMemberGroups] = useState<string[]>([]);
+  const [myGroups, setMyGroups] = useState<GroupItem[]>([]);
+  const [memberGroups, setMemberGroups] = useState<GroupItem[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   // Controls the Add Group modal
@@ -62,7 +63,8 @@ export default function HomePage() {
     // Prevent duplicate group names
     const alreadyExists = myGroups.some(
       (group) =>
-        group.toLowerCase() === trimmedName.toLowerCase()
+        group.Group.name.toLowerCase() ===
+        trimmedName.toLowerCase()
     );
 
     if (alreadyExists) {
@@ -71,23 +73,35 @@ export default function HomePage() {
     }
 
     // Add the new group
-    setMyGroups((prev) => [...prev, trimmedName]);
+    setMyGroups((prev) => [
+      ...prev,
+      {
+        Group: { name: trimmedName },
+        User_Group: {
+          user_id: 0,
+          group_id: 0,
+          role: "owner",
+          car_capacity: 0,
+          is_passenger: false,
+        },
+      },
+    ]);
 
     // Close modal
     setShowAddGroupModal(false);
   }
 
   // Delete group
-  function deleteGroup(index: number) {
+  function deleteGroup(group: GroupItem) {
     setMyGroups((prev) =>
-      prev.filter((_, i) => i !== index)
+      prev.filter((item) => item !== group)
     );
   }
 
   // Leave member group
-  function leaveGroup(index: number) {
+  function leaveGroup(group: GroupItem) {
     setMemberGroups((prev) =>
-      prev.filter((_, i) => i !== index)
+      prev.filter((item) => item !== group)
     );
   }
 

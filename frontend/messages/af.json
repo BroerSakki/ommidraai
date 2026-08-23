@@ -30,7 +30,8 @@
     "unnamedGroup": "Naamlose groep",
     "unknownRole": "Onbekende rol",
     "somethingWentWrong": "Iets het verkeerd geloop",
-    "unknownError": "Onbekende fout"
+    "unknownError": "Onbekende fout",
+    "deleting": "Verwyder"
   },
   "login": {
     "logoAlt": "Ommidraai-logo",
@@ -147,7 +148,9 @@
     "memberNotFound": "Lid is nie gevind nie.",
     "ownerCannotBeKicked": "Die eienaar kan nie uit geskop word nie.",
     "locationAlreadyAdded": "Daardie plek is reeds bygevoeg.",
-    "enterExistingAdmin": "Jy moet die naam van 'n bestaande admin invoer."
+    "enterExistingAdmin": "Jy moet die naam van 'n bestaande admin invoer.",
+    "deleteGroupTitle": "Verwyder hierdie groep?",
+    "deleteGroupDescription": "Is jy seker jy wil \"{groupName}\" verwyder? Dit sal alle lede en liggings verwyder. Hierdie aksie kan nie teruggedraai word nie."
   },
   "map": {
     "searchPlaceholder": "Soek vir 'n plek (bv. Centurion, Pretoria)",

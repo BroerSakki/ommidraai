@@ -25,7 +25,8 @@ from app.security import (
 # ---
 from app.schemas.location import LocationCreate
 from app.schemas.auth import LoginRequest
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate
+from app.services.database.users_table import change_username
 # ---
 
 # Register Service
@@ -132,5 +133,19 @@ def get_user_by_id(
 ) -> User | None:
     return db.scalar(
         select(User).where(User.id == user_id)
+    )
+# ---
+
+# Update User Username
+# ---
+def update_username(
+    db: Session,
+    current_user: User,
+    user_update: UserUpdate,
+) -> User:
+    return change_username(
+        db=db,
+        user=current_user,
+        new_user_name=user_update.username,
     )
 # ---
