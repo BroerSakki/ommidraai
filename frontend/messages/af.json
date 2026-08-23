@@ -80,7 +80,6 @@
     "addGroup": "Voeg Groep by",
     "memberGroups": "Lidgroepe",
     "memberGroupsSubtitle": "Groepe waarby jy aangesluit het.",
-    "groupToJoin": "Groep om by aan te sluit",
     "joinGroup": "Sluit by die Groep aan",
     "loadingNextBatch": "Besig om die volgende groepe te laai...",
     "loadMoreGroups": "Laai meer Groepe",
@@ -89,7 +88,8 @@
     "noGroupsInSection": "Geen groepe in hierdie afdeling gevind nie.",
     "open": "Maak oop",
     "delete": "Verwyder",
-    "leave": "Verlaat"
+    "leave": "Verlaat",
+    "groupCodeToJoin": "Groep aansluit kode"
   },
   "homePage": {
     "addGroup": "+ Voeg Groep by",
