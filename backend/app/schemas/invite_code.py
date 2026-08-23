@@ -10,8 +10,8 @@ import os
 # Load Constants
 # ---
 load_dotenv()
-INVITE_CODE_MIN = os.getenv("INVITE_CODE_MIN")
-INVITE_CODE_MAX = os.getenv("INVITE_CODE_MAX")
+INVITE_CODE_MIN: int = int(os.getenv("INVITE_CODE_MIN"))
+INVITE_CODE_MAX: int = int(os.getenv("INVITE_CODE_MAX"))
 if INVITE_CODE_MIN is None:
     raise RuntimeError("INVITE_CODE_MIN is not set")
 if INVITE_CODE_MAX is None:
