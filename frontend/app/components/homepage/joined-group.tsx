@@ -3,17 +3,17 @@
 import { useTranslations } from "next-intl";
 import { GroupCard, GroupItem } from "./group-card";
 
-type MemberGroupsProps = {
+type JoinedGroupsProps = {
   groups: GroupItem[];
   onOpen?: (group: GroupItem) => void;
   onLeave?: (group: GroupItem) => void;
 };
 
-export function MemberGroups({
+export function JoinedGroups({
   groups,
   onOpen,
   onLeave,
-}: MemberGroupsProps) {
+}: JoinedGroupsProps) {
   const t = useTranslations("home");
 
   if (groups.length === 0) {
