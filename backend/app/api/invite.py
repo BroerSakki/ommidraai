@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 # ---
 from app.database import get_db
 from app.services import invite_service
+from app.services.api import invites_service
 from app.security import get_current_user
 from app.models.user import User
 from app.schemas import invite
@@ -82,5 +83,37 @@ def invite_user(
         group_id=group_id,
         username=username,
         role=role
+    )
+# ---
+
+# Create Invite Code
+# ---
+@router.post("/code/generate")
+def generate_invite_code(
+    group_id: int,
+    role: user_roles.InviteRole,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return invites_service.create_invite_code(
+        db=db,
+        current_user=current_user,
+        group_id=group_id,
+        role=role,
+    )
+# ---
+
+# Join With Invite Code
+# ---
+@router.post("/code/join/{join_code}")
+def join_with_invite_code(
+    join_code: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return invites_service.join_with_invite_code(
+        db=db,
+        current_user=current_user,
+        code=join_code,
     )
 # ---

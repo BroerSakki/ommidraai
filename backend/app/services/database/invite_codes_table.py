@@ -49,7 +49,7 @@ def get_sent_codes(
         # Database Error
         # ---
         raise HTTPException(
-            code=400,
+            status_code=400,
             detail="Could not retrieve invitation codes",
         )
         # ---
@@ -147,7 +147,7 @@ def add_invite_code(
             if "invite_codes_pkey" in str(e.orig):
                 continue
             raise HTTPException(
-                code=409,
+                status_code=409,
                 detail="Invite code violates a database constraint",
             )
 
@@ -156,8 +156,8 @@ def add_invite_code(
             # ---
             db.rollback()
             raise HTTPException(
-                code=500,
-                detail="Invite code was nont created",
+                status_code=500,
+                detail="Invite code was not created",
             )
             # ---
 # ---

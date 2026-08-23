@@ -40,6 +40,24 @@ def create_invite_code(
     role: user_roles.InviteRole
 ) -> Invite_Code:
     try:
+        # Check Permissions
+        # ---
+        if user_roles.can_manage_user(
+            actor=user_groups_table.get_user_group(
+                db=db,
+                user_group_select=user_group_schemas.UserGroupSelect(
+                    group_id=group_id,
+                    user_id=current_user.id,
+                )
+            ),
+            target=role,
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Permission denied",
+            )
+        # ---
+
         # Create Schema
         # ---
         invite_code_create = invite_codes_table.create_invite_code(
@@ -88,10 +106,11 @@ def join_with_invite_code(
         # ---
         user_group = user_groups_table.add_user(
             db=db,
-            user_group_create=user_group_schemas.UserGroupCreate(
+            user_group_create=user_groups_table.user_group_schema(
+                db=db,
                 user_id=current_user.id,
                 group_id=invite_code.group_id,
-                role=invite_code.role
+                role=invite_code.role,
             )
         )
         # ---

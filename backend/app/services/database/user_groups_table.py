@@ -20,6 +20,7 @@ from app.models.user_group import User_Group
 # Import Schemas
 # ---
 from app.schemas import user_group as user_group_schemas
+from app.schemas import user_roles
 # ---
 
 # Import Services
@@ -197,6 +198,23 @@ def search_user_group(
             detail="User group was not retrieved",
         )
         # ---
+# ---
+
+# Create User Group Schema
+# ---
+def user_group_schema(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    role: user_roles.UserRole,
+) -> user_group_schemas.UserGroupCreate:
+    return user_group_schemas.UserGroupCreate(
+        user_id=user_id,
+        group_id=group_id,
+        role=role,
+        car_capacity=0,
+        is_passenger=False,
+    )
 # ---
 
 # Add User
