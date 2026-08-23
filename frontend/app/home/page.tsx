@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "../components/homepage/page-header";
 import { MyGroups } from "../components/homepage/my-group";
-import { MemberGroups } from "../components/homepage/member-group";
+import { MemberGroups } from "../components/homepage/joined-group";
 import { GroupItem } from "../components/homepage/group-card";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 
