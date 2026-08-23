@@ -120,7 +120,7 @@ export default function HomePage() {
 
         {/* Member Groups */}
         <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-md">
-          <MemberGroups
+          <JoinedGroups
             groups={memberGroups}
             onLeave={leaveGroup}
           />
