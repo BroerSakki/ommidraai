@@ -114,6 +114,6 @@ def join_with_invite_code(
     return invites_service.join_with_invite_code(
         db=db,
         current_user=current_user,
-        code=join_code,
+        code=int(join_code),
     )
 # ---
