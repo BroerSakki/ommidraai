@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "../components/homepage/page-header";
 import { MyGroups } from "../components/homepage/my-group";
-import { MemberGroups } from "../components/homepage/member-group";
+import { JoinedGroups } from "../components/homepage/joined-group";
 import { GroupItem } from "../components/homepage/group-card";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 
@@ -120,7 +120,7 @@ export default function HomePage() {
 
         {/* Member Groups */}
         <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-md">
-          <MemberGroups
+          <JoinedGroups
             groups={memberGroups}
             onLeave={leaveGroup}
           />

@@ -80,7 +80,7 @@
     "addGroup": "Add Group",
     "memberGroups": "Member Groups",
     "memberGroupsSubtitle": "Groups you've joined.",
-    "groupToJoin": "Group to join",
+    "groupCodeToJoin": "Group join code",
     "joinGroup": "Join Group",
     "loadingNextBatch": "Loading the next batch of groups...",
     "loadMoreGroups": "Load More Groups",
