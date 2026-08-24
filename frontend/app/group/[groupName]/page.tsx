@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 import { DeleteGroupModal } from "@/app/components/groups/delete-group-modal";
+import { WorldMap } from "@/app/components/groups/world-map";
 
 type Role = "owner" | "admin" | "member";
 
@@ -31,15 +32,43 @@ type ApiDestination = {
   location: { latitude: number; longitude: number };
 };
 
+type ApiAlgorithmRoute = {
+  distance: number;
+  geometry: string;
+  path: string[];
+};
+
+type ApiAlgorithmEntry = {
+  destination: string;
+  bottleneck: number;
+  routes: Record<string, ApiAlgorithmRoute>;
+};
+
 type ApiGroupData = {
   users: ApiUser[];
   destinations: ApiDestination[];
-  algorithm: unknown;
+  algorithm: ApiAlgorithmEntry[] | string;
 };
 
 type ApiMeResponse = {
   username: string;
   email: string;
+};
+
+type WorldMapPoint = {
+  label: string;
+  latitude: number;
+  longitude: number;
+};
+
+type WorldMapRouteInput = {
+  id: string;
+  ranking: number;
+  destination: string;
+  distance: number | null;
+  geometry: string | null;
+  start: WorldMapPoint | null;
+  end: WorldMapPoint | null;
 };
 
 export default function GroupPage() {
@@ -61,6 +90,10 @@ export default function GroupPage() {
 
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
+  const [users, setUsers] = useState<ApiUser[]>([]);
+  const [destinations, setDestinations] = useState<ApiDestination[]>([]);
+  const [algorithm, setAlgorithm] = useState<ApiAlgorithmEntry[] | null>(null);
+  const [currentUsername, setCurrentUsername] = useState("");
   const [loading, setLoading] = useState(!!groupId);
   const [fetchError, setFetchError] = useState<string | null>(
     groupId ? null : t("missingGroupId")
@@ -87,7 +120,8 @@ export default function GroupPage() {
           throw new Error("Failed to fetch current user");
         }
         const meData = (await meResponse.json()) as ApiMeResponse;
-        const currentUsername = meData.username;
+        const username = meData.username;
+        setCurrentUsername(username);
 
         const groupResponse = await fetch(`/api/backend/groups/${groupId}`);
         if (!groupResponse.ok) {
@@ -101,10 +135,15 @@ export default function GroupPage() {
 
         const apiMembers: GroupMember[] = groupData.users.map((u) => ({
           name: u.user.username,
-          role: u.user.username === currentUsername ? currentUserRole : "member",
+          role: u.user.username === username ? currentUserRole : "member",
         }));
 
         setMembers(apiMembers);
+        setUsers(groupData.users);
+        setDestinations(groupData.destinations);
+        setAlgorithm(
+          Array.isArray(groupData.algorithm) ? groupData.algorithm : []
+        );
 
         const apiLocations = groupData.destinations.map(
           (d) => d.group_location.display_name
@@ -316,6 +355,61 @@ export default function GroupPage() {
     (member) => member.role === "member"
   );
 
+  // Collect the destinations this user can drive to. The algorithm response
+  // already ranks every destination from best to worst, so the entry index
+  // (+1) becomes the ranking number shown in the dropdown. Only entries that
+  // contain this user's username in `routes` are usable by them.
+  const routes = useMemo(() => {
+    if (!algorithm || algorithm.length === 0) {
+      return [];
+    }
+
+    const resultRoutes: WorldMapRouteInput[] = [];
+
+    algorithm.forEach((entry, index) => {
+      const driverRoute = entry.routes[currentUsername];
+
+      if (!driverRoute) {
+        return;
+      }
+
+      const path = driverRoute.path || [];
+      const startName = path[0] ?? null;
+      const endName = path[path.length - 1] ?? null;
+
+      const startUser =
+        users.find((u) => u.user.username === startName) ?? null;
+      const endDestination =
+        destinations.find(
+          (d) => d.group_location.display_name === endName
+        ) ?? null;
+
+      resultRoutes.push({
+        id: entry.destination,
+        ranking: index + 1,
+        destination: entry.destination,
+        distance: driverRoute.distance ?? null,
+        geometry: driverRoute.geometry ?? null,
+        start: startUser
+          ? {
+              label: startUser.user.username,
+              latitude: startUser.location.latitude,
+              longitude: startUser.location.longitude,
+            }
+          : null,
+        end: endDestination
+          ? {
+              label: endDestination.group_location.display_name,
+              latitude: endDestination.location.latitude,
+              longitude: endDestination.location.longitude,
+            }
+          : null,
+      });
+    });
+
+    return resultRoutes;
+  }, [algorithm, users, destinations, currentUsername]);
+
   const modalSettings = {
     invite: {
       title: t("inviteMemberTitle"),
@@ -482,22 +576,8 @@ export default function GroupPage() {
           {/* WORLD MAP */}
           {/* ---------------------------------- */}
 
-          <section className="flex h-[350px] items-center justify-center rounded-2xl border border-gray-300 bg-gray-200">
-            <div className="flex h-[300px] w-full max-w-[600px] items-center justify-center rounded-2xl border-2 border-dashed border-gray-400 bg-gray-100">
-              <div className="text-center">
-                <div className="mb-3 text-5xl">
-                  🌍
-                </div>
-
-                <h2 className="text-2xl font-bold text-gray-700">
-                  {t("worldMap")}
-                </h2>
-
-                <p className="mt-2 text-gray-500">
-                  {t("worldMapPlaceholder")}
-                </p>
-              </div>
-            </div>
+          <section className="overflow-hidden rounded-2xl border border-gray-300">
+            <WorldMap routes={routes} />
           </section>
         </div>
 
