@@ -67,8 +67,7 @@ type WorldMapRouteInput = {
   destination: string;
   distance: number | null;
   geometry: string | null;
-  start: WorldMapPoint | null;
-  end: WorldMapPoint | null;
+  points: WorldMapPoint[];
 };
 
 export default function GroupPage() {
@@ -355,10 +354,17 @@ export default function GroupPage() {
     (member) => member.role === "member"
   );
 
+  // Whether the current user is a passenger who will be picked up by a driver.
+  const isCurrentUserPassenger =
+    users.find((u) => u.user.username === currentUsername)?.user_group
+      .is_passenger ?? false;
+
   // Collect the destinations this user can drive to. The algorithm response
   // already ranks every destination from best to worst, so the entry index
-  // (+1) becomes the ranking number shown in the dropdown. Only entries that
-  // contain this user's username in `routes` are usable by them.
+  // (+1) becomes the ranking number shown in the dropdown. Only routes whose
+  // starting node is the current user are usable by them, and each route
+  // carries every node along the path (start, any passengers, destination)
+  // so the map can drop a pin for each one.
   const routes = useMemo(() => {
     if (!algorithm || algorithm.length === 0) {
       return [];
@@ -374,15 +380,41 @@ export default function GroupPage() {
       }
 
       const path = driverRoute.path || [];
-      const startName = path[0] ?? null;
-      const endName = path[path.length - 1] ?? null;
 
-      const startUser =
-        users.find((u) => u.user.username === startName) ?? null;
-      const endDestination =
-        destinations.find(
-          (d) => d.group_location.display_name === endName
-        ) ?? null;
+      if (path[0] !== currentUsername) {
+        return;
+      }
+
+      // Resolve every path node (user or destination) into a map pin.
+      const points = path
+        .map((name) => {
+          const userNode = users.find(
+            (u) => u.user.username === name
+          );
+
+          if (userNode) {
+            return {
+              label: userNode.user.username,
+              latitude: userNode.location.latitude,
+              longitude: userNode.location.longitude,
+            };
+          }
+
+          const destNode = destinations.find(
+            (d) => d.group_location.display_name === name
+          );
+
+          if (destNode) {
+            return {
+              label: destNode.group_location.display_name,
+              latitude: destNode.location.latitude,
+              longitude: destNode.location.longitude,
+            };
+          }
+
+          return null;
+        })
+        .filter((point): point is WorldMapPoint => point !== null);
 
       resultRoutes.push({
         id: entry.destination,
@@ -390,25 +422,35 @@ export default function GroupPage() {
         destination: entry.destination,
         distance: driverRoute.distance ?? null,
         geometry: driverRoute.geometry ?? null,
-        start: startUser
-          ? {
-              label: startUser.user.username,
-              latitude: startUser.location.latitude,
-              longitude: startUser.location.longitude,
-            }
-          : null,
-        end: endDestination
-          ? {
-              label: endDestination.group_location.display_name,
-              latitude: endDestination.location.latitude,
-              longitude: endDestination.location.longitude,
-            }
-          : null,
+        points,
       });
     });
 
     return resultRoutes;
   }, [algorithm, users, destinations, currentUsername]);
+
+  // When the current user is a passenger, find the driver (the start node of
+  // the route containing them) who will pick them up.
+  const passengerDriver = useMemo(() => {
+    if (!isCurrentUserPassenger || !algorithm) {
+      return null;
+    }
+
+    for (const entry of algorithm) {
+      for (const route of Object.values(entry.routes)) {
+        const path = route.path || [];
+
+        if (
+          path.includes(currentUsername) &&
+          path[0] !== currentUsername
+        ) {
+          return path[0];
+        }
+      }
+    }
+
+    return null;
+  }, [algorithm, currentUsername, isCurrentUserPassenger]);
 
   const modalSettings = {
     invite: {
@@ -577,7 +619,7 @@ export default function GroupPage() {
           {/* ---------------------------------- */}
 
           <section className="overflow-hidden rounded-2xl border border-gray-300">
-            <WorldMap routes={routes} />
+            <WorldMap routes={routes} passengerDriver={passengerDriver} />
           </section>
         </div>
 

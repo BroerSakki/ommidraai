@@ -123,6 +123,7 @@
     "worldMapPlaceholder": "The interactive map will appear here.",
     "worldMapNoRoute": "No route available to display for this group yet.",
     "worldMapDestination": "Destination",
+    "worldMapPassenger": "You are a passenger. You will be picked up by: {driver}",
     "members": "Members",
     "memberCount": "{count} members",
     "owner": "Owner",
