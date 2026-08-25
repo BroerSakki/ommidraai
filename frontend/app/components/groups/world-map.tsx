@@ -12,11 +12,188 @@ const DEFAULT_ZOOM = 6;
 // OSRM polylines are encoded with precision 5 by default.
 const POLYLINE_PRECISION = 5;
 
+type Position = [number, number];
+
+type MapNode = {
+    latitude: number;
+    longitude: number;
+};
+
 const ROUTE_STYLE = {
     color: "#3b82f6",
     weight: 5,
     opacity: 0.7,
 };
+
+// One colour per leg of the journey. Because every leg is drawn in its own
+// colour, a road that is travelled more than once appears as distinct bands
+// (and arrow sets) instead of a single overlapping line.
+const LEG_COLORS = [
+    "#3b82f6",
+    "#10b981",
+    "#f59e0b",
+    "#ef4444",
+    "#8b5cf6",
+    "#06b6d4",
+];
+
+const ARROW_HTML = (color: string, rotation: number) => `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+        style="transform: rotate(${rotation}deg); transform-origin: 12px 4px; display: block;">
+        <path d="M3 20 L21 20 L12 4 Z"
+            fill="${color}" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+`;
+
+// Bearing between two points in degrees (0 = north, clockwise), used to
+// orient each direction arrow.
+function bearingDeg(
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number
+): number {
+    const toRad = (deg: number): number => (deg * Math.PI) / 180;
+    const toDeg = (rad: number): number => (rad * 180) / Math.PI;
+
+    const phi1 = toRad(lat1);
+    const phi2 = toRad(lat2);
+    const dLng = toRad(lng2 - lng1);
+
+    const y = Math.sin(dLng) * Math.cos(phi2);
+    const x =
+        Math.cos(phi1) * Math.sin(phi2) -
+        Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLng);
+
+    return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+function squaredDistance(
+    position: Position,
+    latitude: number,
+    longitude: number
+): number {
+    const dLat = position[0] - latitude;
+    const dLng = position[1] - longitude;
+    return dLat * dLat + dLng * dLng;
+}
+
+// Finds the decoded-shape-point index closest to a route node, so a path's
+// stop order can be mapped onto the continuous OSRM geometry.
+function nearestIndex(
+    positions: Position[],
+    latitude: number,
+    longitude: number
+): number {
+    let bestIndex = 0;
+    let bestDistance = Infinity;
+
+    for (let i = 0; i < positions.length; i++) {
+        const distance = squaredDistance(
+            positions[i],
+            latitude,
+            longitude
+        );
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestIndex = i;
+        }
+    }
+
+    return bestIndex;
+}
+
+// Splits the decoded geometry into one polyline leg per consecutive pair of
+// route nodes (start -> pickup_1 -> ... -> pickup_n -> destination). This is
+// what lets repeated roads be shown as separate coloured bands.
+function buildLegs(positions: Position[], points: MapNode[]): Position[][] {
+    const legs: Position[][] = [];
+
+    if (points.length < 2) {
+        return legs;
+    }
+
+    // Without geometry, fall back to straight lines between the nodes.
+    if (!positions || positions.length === 0) {
+        for (let i = 0; i < points.length - 1; i++) {
+            legs.push([
+                [points[i].latitude, points[i].longitude],
+                [points[i + 1].latitude, points[i + 1].longitude],
+            ]);
+        }
+        return legs;
+    }
+
+    // Map each route node onto the decoded geometry, enforcing monotonic
+    // stop order along the line.
+    const nodeIndexes: number[] = [];
+    let previousIndex = -1;
+
+    for (let i = 0; i < points.length; i++) {
+        let index = nearestIndex(
+            positions,
+            points[i].latitude,
+            points[i].longitude
+        );
+
+        if (index < previousIndex) {
+            index = previousIndex;
+        }
+
+        index = Math.min(index, positions.length - 1);
+        nodeIndexes.push(index);
+        previousIndex = index;
+    }
+
+    for (let i = 0; i < nodeIndexes.length - 1; i++) {
+        const start = nodeIndexes[i];
+        let end = nodeIndexes[i + 1];
+
+        // Guard against consecutive nodes snapping to the same shape point.
+        if (end <= start) {
+            if (end + 1 < positions.length) {
+                end = start + 1;
+            } else {
+                continue;
+            }
+        }
+
+        legs.push(positions.slice(start, end + 1));
+    }
+
+    return legs;
+}
+
+// Adds arrowheads along a single leg to indicate the direction of travel.
+function addArrows(
+    L: LeafletModule,
+    leg: Position[],
+    color: string,
+    layer: LayerGroup
+): void {
+    if (leg.length < 2) {
+        return;
+    }
+
+    // Aim for roughly three arrows along the leg, regardless of its length.
+    const step = Math.max(1, Math.floor(leg.length / 3));
+
+    for (let i = step; i < leg.length; i += step) {
+        const [lat1, lng1] = leg[i - 1];
+        const [lat2, lng2] = leg[i];
+        const rotation = bearingDeg(lat1, lng1, lat2, lng2);
+
+        L.marker([lat2, lng2], {
+            icon: L.divIcon({
+                className: "",
+                html: ARROW_HTML(color, rotation),
+                iconSize: [24, 24],
+                iconAnchor: [12, 4],
+            }),
+            interactive: false,
+        }).addTo(layer);
+    }
+}
 
 const START_MARKER_HTML = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#16a34a" stroke="#ffffff" stroke-width="1">
@@ -161,12 +338,33 @@ export function WorldMap({ routes, passengerDriver }: WorldMapProps) {
 
         layer.clearLayers();
 
+        const positions = routePositions ?? [];
         const points = selectedRoute?.points ?? [];
 
-        if (routePositions && routePositions.length > 0) {
-            const routeLine = L.polyline(routePositions, ROUTE_STYLE);
-            routeLine.addTo(layer);
+        // A faint underlay of the whole journey keeps overall continuity.
+        if (positions.length > 0) {
+            L.polyline(positions, {
+                color: ROUTE_STYLE.color,
+                weight: 6,
+                opacity: 0.25,
+            }).addTo(layer);
         }
+
+        // Draw each leg in its own colour (so a road travelled more than once
+        // appears as distinct bands) and add arrowheads showing direction.
+        const legs = buildLegs(positions, points);
+
+        legs.forEach((leg, index) => {
+            const color = LEG_COLORS[index % LEG_COLORS.length];
+
+            L.polyline(leg, {
+                color,
+                weight: 5,
+                opacity: 0.9,
+            }).addTo(layer);
+
+            addArrows(L, leg, color, layer);
+        });
 
         // Drop a pin for every node along the path: start (green), any
         // passengers picked up in between (amber), and the destination (red).
@@ -190,11 +388,11 @@ export function WorldMap({ routes, passengerDriver }: WorldMapProps) {
             }).addTo(layer);
         });
 
-        const hasGeometry = routePositions && routePositions.length > 0;
+        const hasGeometry = positions.length > 0;
         const hasPoints = points.length > 0;
 
         if (hasGeometry) {
-            const bounds = L.latLngBounds(routePositions);
+            const bounds = L.latLngBounds(positions);
             if (bounds.isValid()) {
                 mapRef.current.fitBounds(bounds, { padding: [40, 40] });
             }
