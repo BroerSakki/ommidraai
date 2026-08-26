@@ -2,114 +2,86 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Modal } from "@/app/components/ui/modal";
 
 interface AddGroupModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onCreate: (groupName: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onCreate: (groupName: string) => void;
 }
 
 export function AddGroupModal({
-                                  isOpen,
-                                  onClose,
-                                  onCreate,
-                              }: AddGroupModalProps) {
-    const [groupName, setGroupName] = useState("");
-    const t = useTranslations("modal");
-    const tCommon = useTranslations("common");
+  isOpen,
+  onClose,
+  onCreate,
+}: AddGroupModalProps) {
+  const [groupName, setGroupName] = useState("");
+  const t = useTranslations("modal");
+  const tCommon = useTranslations("common");
 
-    if (!isOpen) {
-        return null;
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!groupName.trim()) {
+      return;
     }
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    onCreate(groupName.trim());
+    setGroupName("");
+  };
 
-        if (!groupName.trim()) {
-            return;
-        }
+  const handleClose = () => {
+    setGroupName("");
+    onClose();
+  };
 
-        onCreate(groupName.trim());
-        setGroupName("");
-    };
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={t("createGroupTitle")}
+      description={t("createGroupDescription")}
+      closeLabel={t("closeModal")}
+    >
+      <form onSubmit={handleSubmit}>
+        <div className="mb-6">
+          <label
+            htmlFor="modal-group-name"
+            className="mb-2 block font-semibold text-[#3d3461]"
+          >
+            {t("groupName")}
+          </label>
 
-    const handleClose = () => {
-        setGroupName("");
-        onClose();
-    };
-
-    return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-            onClick={handleClose}
-        >
-            <div
-                className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl"
-                onClick={(event) => event.stopPropagation()}
-            >
-                {/* Modal Header */}
-                <div className="mb-6 flex items-start justify-between">
-                    <div>
-                        <h2 className="text-2xl font-bold text-[#3d3461]">
-                            {t("createGroupTitle")}
-                        </h2>
-
-                        <p className="mt-1 text-gray-500">
-                            {t("createGroupDescription")}
-                        </p>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={handleClose}
-                        className="rounded-xl px-3 py-2 text-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-                        aria-label={t("closeModal")}
-                    >
-                        ×
-                    </button>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-6">
-                        <label
-                            htmlFor="modal-group-name"
-                            className="mb-2 block font-semibold text-[#3d3461]"
-                        >
-                            {t("groupName")}
-                        </label>
-
-                        <input
-                            id="modal-group-name"
-                            type="text"
-                            value={groupName}
-                            onChange={(event) => setGroupName(event.target.value)}
-                            placeholder={t("groupNamePlaceholder")}
-                            required
-                            autoFocus
-                            className="w-full rounded-xl border-2 border-[#b6cfc6] px-4 py-3 text-gray-700 outline-none transition focus:border-[#3d3461]"
-                        />
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex justify-end gap-3">
-                        <button
-                            type="button"
-                            onClick={handleClose}
-                            className="rounded-xl border-2 border-[#b6cfc6] px-6 py-3 font-semibold text-[#3d3461] transition hover:bg-[#eef5f1]"
-                        >
-                            {tCommon("cancel")}
-                        </button>
-
-                        <button
-                            type="submit"
-                            className="rounded-xl bg-[#3d3461] px-6 py-3 font-semibold text-white transition hover:bg-[#544a85]"
-                        >
-                            {t("createGroup")}
-                        </button>
-                    </div>
-                </form>
-            </div>
+          <input
+            id="modal-group-name"
+            type="text"
+            value={groupName}
+            onChange={(event) => setGroupName(event.target.value)}
+            placeholder={t("groupNamePlaceholder")}
+            required
+            autoFocus
+            className="w-full rounded-xl border-2 border-[#b6cfc6] px-4 py-3 text-gray-700 outline-none transition focus:border-[#3d3461]"
+          />
         </div>
-    );
+
+        {/* Buttons */}
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="rounded-xl border-2 border-[#b6cfc6] px-6 py-3 font-semibold text-[#3d3461] transition hover:bg-[#eef5f1]"
+          >
+            {tCommon("cancel")}
+          </button>
+
+          <button
+            type="submit"
+            className="rounded-xl bg-[#3d3461] px-6 py-3 font-semibold text-white transition hover:bg-[#544a85]"
+          >
+            {t("createGroup")}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
 }
