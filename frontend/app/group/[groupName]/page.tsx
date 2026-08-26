@@ -513,7 +513,7 @@ export default function GroupPage() {
             </h2>
 
             <span className="rounded-full bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700">
-              {members.length} {t("memberCount", { count: members.length })}
+              {t("memberCount", { count: members.length })}
             </span>
           </div>
 
