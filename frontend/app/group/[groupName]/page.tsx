@@ -646,7 +646,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModal("invite")}
-                  className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("invite")}
                 </button>
@@ -654,7 +654,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={leaveGroup}
-                  className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
                 >
                   {tCommon("leave")}
                 </button>
@@ -670,7 +670,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModal("invite")}
-                  className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("invite")}
                 </button>
@@ -678,7 +678,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModal("kick")}
-                  className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
+                  className="rounded-lg bg-orange-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
                 >
                   {tCommon("kick")}
                 </button>
@@ -686,7 +686,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={leaveGroup}
-                  className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
                 >
                   {tCommon("leave")}
                 </button>
@@ -702,7 +702,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModal("invite")}
-                  className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("invite")}
                 </button>
@@ -710,7 +710,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModal("kick")}
-                  className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
+                  className="rounded-lg bg-orange-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
                 >
                   {tCommon("kick")}
                 </button>
@@ -718,7 +718,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={leaveGroup}
-                  className="rounded-lg bg-yellow-500 px-5 py-3 font-semibold text-black shadow transition hover:bg-yellow-600"
+                  className="rounded-lg bg-yellow-500/80 px-5 py-3 font-semibold text-black shadow transition hover:bg-yellow-600"
                 >
                   {tCommon("leave")}
                 </button>
@@ -727,7 +727,7 @@ export default function GroupPage() {
                   type="button"
                   onClick={() => setShowDeleteModal(true)}
                   disabled={isDeleting}
-                  className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
                 >
                   {t("deleteGroup")}
                 </button>
