@@ -5,6 +5,8 @@ import type { Map as LeafletMap, LayerGroup } from "leaflet";
 import polyline from "@mapbox/polyline";
 import "leaflet/dist/leaflet.css";
 import { useTranslations } from "next-intl";
+import ArrowIcon from "./ui/Arrow";
+import { renderToString } from "react-dom/server";
 
 const DEFAULT_CENTER: [number, number] = [-25.8587, 28.1891];
 const DEFAULT_ZOOM = 6;
@@ -36,14 +38,6 @@ const LEG_COLORS = [
     "#8b5cf6",
     "#06b6d4",
 ];
-
-const ARROW_HTML = (color: string, rotation: number) => `
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-        style="transform: rotate(${rotation}deg); transform-origin: 12px 4px; display: block;">
-        <path d="M3 20 L21 20 L12 4 Z"
-            fill="${color}" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
-    </svg>
-`;
 
 // Bearing between two points in degrees (0 = north, clockwise), used to
 // orient each direction arrow.
@@ -186,9 +180,9 @@ function addArrows(
         L.marker([lat2, lng2], {
             icon: L.divIcon({
                 className: "",
-                html: ARROW_HTML(color, rotation),
-                iconSize: [24, 24],
-                iconAnchor: [12, 4],
+                html: renderToString(<ArrowIcon rotation={rotation} color={color} className="w-8 h-8"/>),
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
             }),
             interactive: false,
         }).addTo(layer);
