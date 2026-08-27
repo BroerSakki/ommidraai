@@ -26,8 +26,6 @@ export default function ArrowIcon({
         display: 'inline-block',
         ...style,
       }}
-      width={14}
-      height={15.5}
       {...props}
     >
       <g strokeWidth={0} />

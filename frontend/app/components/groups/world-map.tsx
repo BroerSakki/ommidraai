@@ -7,6 +7,8 @@ import "leaflet/dist/leaflet.css";
 import { useTranslations } from "next-intl";
 import ArrowIcon from "./ui/Arrow";
 import { renderToString } from "react-dom/server";
+import DriverIcon from "./ui/Driver";
+import PassengerIcon from "./ui/Passenger";
 
 const DEFAULT_CENTER: [number, number] = [-25.8587, 28.1891];
 const DEFAULT_ZOOM = 6;
@@ -366,17 +368,25 @@ export function WorldMap({ routes, passengerDriver }: WorldMapProps) {
             const isStart = index === 0;
             const isEnd = index === points.length - 1;
             const markerHtml = isStart
-                ? START_MARKER_HTML
+                ? renderToString(<DriverIcon color="#16a34a"/>)
                 : isEnd
-                  ? END_MARKER_HTML
-                  : PICKUP_MARKER_HTML;
+                  : renderToString(<PassengerIcon color="#f59e0b"/>);
+            const markerConfig = isEnd
+                ? {
+                    size: [48, 44.5] as [number, number],       // Proportional bounding size (un-squashed)
+                    anchor: [24, 35.15] as [number, number],  // [Width / 2, Height * 0.77] points perfectly to the bottom tip
+                  }
+                : {
+                    size: [30, 47.5] as [number, number],     // Original profile for Driver / Passenger
+                    anchor: [15, 23.75] as [number, number], 
+                  };
 
             L.marker([point.latitude, point.longitude], {
                 icon: L.divIcon({
                     html: markerHtml,
                     className: "",
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 30],
+                    iconSize: markerConfig.size,
+                    iconAnchor: markerConfig.anchor,
                 }),
                 title: point.label,
             }).addTo(layer);
