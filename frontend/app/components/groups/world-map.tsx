@@ -182,31 +182,17 @@ function addArrows(
         L.marker([lat2, lng2], {
             icon: L.divIcon({
                 className: "",
-                html: renderToString(<ArrowIcon rotation={rotation} color={color} className="w-8 h-8"/>),
-                iconSize: [32, 32],
-                iconAnchor: [16, 16],
+                html: renderToString(<ArrowIcon rotation={rotation} color={color} className="w-5 h-5"/>),
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
             }),
             interactive: false,
         }).addTo(layer);
     }
 }
 
-const START_MARKER_HTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#16a34a" stroke="#ffffff" stroke-width="1">
-        <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/>
-        <circle cx="12" cy="9" r="3" fill="#ffffff" stroke="none"/>
-    </svg>
-`;
-
 const END_MARKER_HTML = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#e74c3c" stroke="#ffffff" stroke-width="1">
-        <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/>
-        <circle cx="12" cy="9" r="3" fill="#ffffff" stroke="none"/>
-    </svg>
-`;
-
-const PICKUP_MARKER_HTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#f59e0b" stroke="#ffffff" stroke-width="1">
         <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/>
         <circle cx="12" cy="9" r="3" fill="#ffffff" stroke="none"/>
     </svg>
