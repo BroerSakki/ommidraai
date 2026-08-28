@@ -14,10 +14,6 @@ export function ProfileHeader() {
 
             <LanguageSwitcher isGreen={true} />
 
-            <button className="rounded-lg bg-[#a8be8f] px-5 py-2 font-semibold text-[#3d3461] transition hover:scale-105 hover:bg-[#b6cfc6]">
-                {t("inviteFriends")}
-            </button>
-
         </header>
     );
 }
