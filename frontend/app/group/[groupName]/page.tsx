@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 import { DeleteGroupModal } from "@/app/components/groups/delete-group-modal";
+import { WorldMap } from "@/app/components/groups/world-map";
 
 type Role = "owner" | "admin" | "member";
 
@@ -31,15 +32,42 @@ type ApiDestination = {
   location: { latitude: number; longitude: number };
 };
 
+type ApiAlgorithmRoute = {
+  distance: number;
+  geometry: string;
+  path: string[];
+};
+
+type ApiAlgorithmEntry = {
+  destination: string;
+  bottleneck: number;
+  routes: Record<string, ApiAlgorithmRoute>;
+};
+
 type ApiGroupData = {
   users: ApiUser[];
   destinations: ApiDestination[];
-  algorithm: unknown;
+  algorithm: ApiAlgorithmEntry[] | string;
 };
 
 type ApiMeResponse = {
   username: string;
   email: string;
+};
+
+type WorldMapPoint = {
+  label: string;
+  latitude: number;
+  longitude: number;
+};
+
+type WorldMapRouteInput = {
+  id: string;
+  ranking: number;
+  destination: string;
+  distance: number | null;
+  geometry: string | null;
+  points: WorldMapPoint[];
 };
 
 export default function GroupPage() {
@@ -61,6 +89,10 @@ export default function GroupPage() {
 
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
+  const [users, setUsers] = useState<ApiUser[]>([]);
+  const [destinations, setDestinations] = useState<ApiDestination[]>([]);
+  const [algorithm, setAlgorithm] = useState<ApiAlgorithmEntry[] | null>(null);
+  const [currentUsername, setCurrentUsername] = useState("");
   const [loading, setLoading] = useState(!!groupId);
   const [fetchError, setFetchError] = useState<string | null>(
     groupId ? null : t("missingGroupId")
@@ -87,7 +119,8 @@ export default function GroupPage() {
           throw new Error("Failed to fetch current user");
         }
         const meData = (await meResponse.json()) as ApiMeResponse;
-        const currentUsername = meData.username;
+        const username = meData.username;
+        setCurrentUsername(username);
 
         const groupResponse = await fetch(`/api/backend/groups/${groupId}`);
         if (!groupResponse.ok) {
@@ -101,10 +134,15 @@ export default function GroupPage() {
 
         const apiMembers: GroupMember[] = groupData.users.map((u) => ({
           name: u.user.username,
-          role: u.user.username === currentUsername ? currentUserRole : "member",
+          role: u.user.username === username ? currentUserRole : "member",
         }));
 
         setMembers(apiMembers);
+        setUsers(groupData.users);
+        setDestinations(groupData.destinations);
+        setAlgorithm(
+          Array.isArray(groupData.algorithm) ? groupData.algorithm : []
+        );
 
         const apiLocations = groupData.destinations.map(
           (d) => d.group_location.display_name
@@ -316,6 +354,104 @@ export default function GroupPage() {
     (member) => member.role === "member"
   );
 
+  // Whether the current user is a passenger who will be picked up by a driver.
+  const isCurrentUserPassenger =
+    users.find((u) => u.user.username === currentUsername)?.user_group
+      .is_passenger ?? false;
+
+  // Collect the destinations this user can drive to. The algorithm response
+  // already ranks every destination from best to worst, so the entry index
+  // (+1) becomes the ranking number shown in the dropdown. Only routes whose
+  // starting node is the current user are usable by them, and each route
+  // carries every node along the path (start, any passengers, destination)
+  // so the map can drop a pin for each one.
+  const routes = useMemo(() => {
+    if (!algorithm || algorithm.length === 0) {
+      return [];
+    }
+
+    const resultRoutes: WorldMapRouteInput[] = [];
+
+    algorithm.forEach((entry, index) => {
+      const driverRoute = entry.routes[currentUsername];
+
+      if (!driverRoute) {
+        return;
+      }
+
+      const path = driverRoute.path || [];
+
+      if (path[0] !== currentUsername) {
+        return;
+      }
+
+      // Resolve every path node (user or destination) into a map pin.
+      const points = path
+        .map((name) => {
+          const userNode = users.find(
+            (u) => u.user.username === name
+          );
+
+          if (userNode) {
+            return {
+              label: userNode.user.username,
+              latitude: userNode.location.latitude,
+              longitude: userNode.location.longitude,
+            };
+          }
+
+          const destNode = destinations.find(
+            (d) => d.group_location.display_name === name
+          );
+
+          if (destNode) {
+            return {
+              label: destNode.group_location.display_name,
+              latitude: destNode.location.latitude,
+              longitude: destNode.location.longitude,
+            };
+          }
+
+          return null;
+        })
+        .filter((point): point is WorldMapPoint => point !== null);
+
+      resultRoutes.push({
+        id: entry.destination,
+        ranking: index + 1,
+        destination: entry.destination,
+        distance: driverRoute.distance ?? null,
+        geometry: driverRoute.geometry ?? null,
+        points,
+      });
+    });
+
+    return resultRoutes;
+  }, [algorithm, users, destinations, currentUsername]);
+
+  // When the current user is a passenger, find the driver (the start node of
+  // the route containing them) who will pick them up.
+  const passengerDriver = useMemo(() => {
+    if (!isCurrentUserPassenger || !algorithm) {
+      return null;
+    }
+
+    for (const entry of algorithm) {
+      for (const route of Object.values(entry.routes)) {
+        const path = route.path || [];
+
+        if (
+          path.includes(currentUsername) &&
+          path[0] !== currentUsername
+        ) {
+          return path[0];
+        }
+      }
+    }
+
+    return null;
+  }, [algorithm, currentUsername, isCurrentUserPassenger]);
+
   const modalSettings = {
     invite: {
       title: t("inviteMemberTitle"),
@@ -482,22 +618,8 @@ export default function GroupPage() {
           {/* WORLD MAP */}
           {/* ---------------------------------- */}
 
-          <section className="flex h-[350px] items-center justify-center rounded-2xl border border-gray-300 bg-gray-200">
-            <div className="flex h-[300px] w-full max-w-[600px] items-center justify-center rounded-2xl border-2 border-dashed border-gray-400 bg-gray-100">
-              <div className="text-center">
-                <div className="mb-3 text-5xl">
-                  🌍
-                </div>
-
-                <h2 className="text-2xl font-bold text-gray-700">
-                  {t("worldMap")}
-                </h2>
-
-                <p className="mt-2 text-gray-500">
-                  {t("worldMapPlaceholder")}
-                </p>
-              </div>
-            </div>
+          <section className="overflow-hidden rounded-2xl border border-gray-300">
+            <WorldMap routes={routes} passengerDriver={passengerDriver} />
           </section>
         </div>
 

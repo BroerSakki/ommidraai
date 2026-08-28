@@ -22,6 +22,36 @@ def query_osrm_table(all_coords, source_indices, dest_indices, osrm_host="osrm:5
     
     return response["distances"]
 
+def query_osrm_route(coords, osrm_host="osrm:5000"):
+    """
+    Sends a query to the OSRM Route Service endpoint and returns the full
+    driving geometry for an ordered list of waypoints.
+
+    coords: ordered list of (latitude, longitude) tuples.
+    Returns: (encoded_polyline, distance_meters).
+
+    `overview=full` and `geometries=polyline` ensure OSRM returns the exact
+    driving path (every shape point) as an encoded polyline instead of a
+    simplified line or only breadcrumb-style waypoints.
+    """
+    coord_str = ";".join([f"{lon},{lat}" for lat, lon in coords])
+    url = f"http://{osrm_host}/route/v1/driving/{coord_str}"
+    params = {
+        "overview": "full",
+        "geometries": "polyline",
+        "steps": "false"
+    }
+
+    response = requests.get(url, params=params).json()
+    if response.get("code") != "Ok" or not response.get("routes"):
+        raise Exception("OSRM Route Query Failed")
+
+    route = response["routes"][0]
+    geometry = route.get("geometry", "")
+    distance = route.get("distance", 0)
+
+    return geometry, distance
+
 def evaluate_destinations_with_osrm(starts_data, starting_capacities, passengers_data, destinations_data, osrm_host="osrm:5000"):
     """
     Computes optimal destination rankings by minimizing maximum individual distance.
@@ -37,6 +67,7 @@ def evaluate_destinations_with_osrm(starts_data, starting_capacities, passengers
     all_coords = [starts_data[k] if k in starts_data else (passengers_data[k] if k in passengers_data else destinations_data[k]) for k in all_keys]
     
     key_to_idx = {key: idx for idx, key in enumerate(all_keys)}
+    key_to_coord = {key: coord for key, coord in zip(all_keys, all_coords)}
     source_keys = start_nodes + passengers
     dest_keys = passengers + destinations
     
@@ -137,10 +168,25 @@ def evaluate_destinations_with_osrm(starts_data, starting_capacities, passengers
         find_combinations(0, 0, 0, {})
         
         if min_destination_bottleneck != float('inf'):
+            # Fetch the exact driving geometry from OSRM for every assigned route
+            routes_with_geometry = {}
+            for s, route_details in best_assignment_details.items():
+                path_coords = [key_to_coord[k] for k in route_details["path"]]
+                try:
+                    geometry, _route_distance = query_osrm_route(path_coords, osrm_host)
+                except Exception:
+                    geometry = None
+
+                routes_with_geometry[s] = {
+                    "distance": route_details["distance"],
+                    "geometry": geometry,
+                    "path": route_details["path"]
+                }
+
             ranking.append({
                 "destination": d,
                 "bottleneck": min_destination_bottleneck,
-                "routes": best_assignment_details
+                "routes": routes_with_geometry
             })
             
     ranking.sort(key=lambda x: x["bottleneck"])
