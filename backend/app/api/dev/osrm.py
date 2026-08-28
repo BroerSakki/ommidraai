@@ -17,7 +17,7 @@ router = APIRouter(
 # ---
 @router.get("/test")
 async def routing_test():
-    url = "http://osrm:5000/route/v1/driving/4.897,52.377;4.904,52.369?steps=true&geometries=geojson"
+    url = "http://osrm:5000/route/v1/driving/13.33686282844628,52.59413890226844;13.342355992293388,52.54656282080115?steps=false&geometries=polyline&overview=full"
     async with httpx.AsyncClient() as client:
         response = await client.get(url, timeout=10)
         response.raise_for_status()
