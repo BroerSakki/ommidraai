@@ -124,6 +124,8 @@
     "worldMapNoRoute": "Nog geen roete om vir hierdie groep te wys nie.",
     "worldMapDestination": "Bestemming",
     "worldMapPassenger": "Jy is 'n passasier. Jy sal opgelaai word deur: {driver}",
+    "worldMapShowAllRoutes": "Wys alle roetes",
+    "worldMapShowMyRoute": "Wys my roete",
     "members": "Lede",
     "memberCount": "{count} lede",
     "owner": "Eienaar",

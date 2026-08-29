@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Map as LeafletMap, LayerGroup } from "leaflet";
+import type { Map as LeafletMap, LatLngBounds, LayerGroup } from "leaflet";
 import polyline from "@mapbox/polyline";
 import "leaflet/dist/leaflet.css";
 import { useTranslations } from "next-intl";
@@ -39,6 +39,20 @@ const LEG_COLORS = [
     "#ef4444",
     "#8b5cf6",
     "#06b6d4",
+    "#ec4899",
+    "#84cc16",
+];
+
+// One colour per driver, used when the owner enables "show all routes".
+const DRIVER_COLORS = [
+    "#10b981",
+    "#3b82f6",
+    "#f59e0b",
+    "#ef4444",
+    "#8b5cf6",
+    "#06b6d4",
+    "#ec4899",
+    "#84cc16",
 ];
 
 // Bearing between two points in degrees (0 = north, clockwise), used to
@@ -199,6 +213,7 @@ type MapPoint = {
 
 type WorldMapRoute = {
     id: string;
+    driver: string;
     ranking: number;
     destination: string;
     distance: number | null;
@@ -209,12 +224,19 @@ type WorldMapRoute = {
 
 type WorldMapProps = {
     routes: WorldMapRoute[];
+    allRoutes: WorldMapRoute[];
     passengerDriver: string | null;
+    isOwner: boolean;
 };
 
 type LeafletModule = typeof import("leaflet");
 
-export function WorldMap({ routes, passengerDriver }: WorldMapProps) {
+export function WorldMap({
+    routes,
+    allRoutes,
+    passengerDriver,
+    isOwner,
+}: WorldMapProps) {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<LeafletMap | null>(null);
     const routeLayerRef = useRef<LayerGroup | null>(null);
@@ -223,6 +245,7 @@ export function WorldMap({ routes, passengerDriver }: WorldMapProps) {
     const [ready, setReady] = useState(false);
     const [prevRoutes, setPrevRoutes] = useState(routes);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [showAllRoutes, setShowAllRoutes] = useState(false);
     const t = useTranslations("group");
 
     // A passenger has no route of their own to draw, so show a notice instead.
@@ -240,19 +263,84 @@ export function WorldMap({ routes, passengerDriver }: WorldMapProps) {
 
     const selectedRoute = routes[selectedIndex] ?? null;
 
-    // Decode the selected route's encoded OSRM polyline into
-    // [latitude, longitude] pairs.
-    const routePositions = useMemo(() => {
-        if (!selectedRoute?.geometry) {
-            return null;
+    // The routes to draw: either just the current user's route to the
+    // selected destination, or every driver's route to that destination
+    // (the owner's "show all routes" toggle).
+    const renderList = useMemo(() => {
+        if (showAllRoutes) {
+            const destination =
+                selectedRoute?.destination ?? allRoutes[0]?.destination ?? null;
+
+            if (!destination) {
+                return [];
+            }
+
+            return allRoutes.filter(
+                (route) => route.destination === destination
+            );
         }
 
-        try {
-            return polyline.decode(selectedRoute.geometry, POLYLINE_PRECISION);
-        } catch {
-            return null;
+        return selectedRoute ? [selectedRoute] : [];
+    }, [showAllRoutes, allRoutes, selectedRoute]);
+
+    // Decode every route that is currently being drawn into
+    // [latitude, longitude] pairs.
+    const decodedByRoute = useMemo(() => {
+        const decoded = new Map<string, Position[]>();
+
+        for (const route of renderList) {
+            if (!route.geometry) {
+                decoded.set(route.id, []);
+                continue;
+            }
+
+            try {
+                decoded.set(
+                    route.id,
+                    polyline.decode(route.geometry, POLYLINE_PRECISION)
+                );
+            } catch {
+                decoded.set(route.id, []);
+            }
         }
-    }, [selectedRoute]);
+
+        return decoded;
+    }, [renderList]);
+
+    // Give every driver a stable colour. The current user always gets the
+    // first colour so their own route stays easy to spot in the overview.
+    const driverColors = useMemo(() => {
+        const colors = new Map<string, string>();
+        const currentDriver = routes[0]?.driver;
+
+        if (currentDriver) {
+            colors.set(currentDriver, DRIVER_COLORS[0]);
+        }
+
+        for (const route of renderList) {
+            if (colors.has(route.driver)) {
+                continue;
+            }
+
+            colors.set(
+                route.driver,
+                DRIVER_COLORS[colors.size % DRIVER_COLORS.length]
+            );
+        }
+
+        return colors;
+    }, [renderList, routes]);
+
+    const hasVisibleRoute =
+        renderList.length > 0 &&
+        renderList.some((route) => {
+            const positions = decodedByRoute.get(route.id);
+
+            return (
+                (positions && positions.length > 0) ||
+                (route.points && route.points.length > 0)
+            );
+        });
 
     useEffect(() => {
         let cancelled = false;
@@ -313,99 +401,174 @@ export function WorldMap({ routes, passengerDriver }: WorldMapProps) {
 
         layer.clearLayers();
 
-        const positions = routePositions ?? [];
-        const points = selectedRoute?.points ?? [];
+        let combinedBounds: LatLngBounds | null = null;
 
-        // A faint underlay of the whole journey keeps overall continuity.
-        if (positions.length > 0) {
-            L.polyline(positions, {
-                color: ROUTE_STYLE.color,
-                weight: 6,
-                opacity: 0.25,
-            }).addTo(layer);
-        }
+        renderList.forEach((route) => {
+            const positions = decodedByRoute.get(route.id) ?? [];
+            const points = route.points ?? [];
+            let driverIconColor = LEG_COLORS[0];
 
-        // Draw each leg in its own colour (so a road travelled more than once
-        // appears as distinct bands) and add arrowheads showing direction.
-        const legs = buildLegs(positions, points);
+            let bounds: LatLngBounds | null = null;
 
-        legs.forEach((leg, index) => {
-            const color = LEG_COLORS[index % LEG_COLORS.length];
+            if (positions.length > 0) {
+                bounds = L.latLngBounds(positions);
+            } else if (points.length >= 2) {
+                bounds = L.latLngBounds(
+                    points.map((point) => [
+                        point.latitude,
+                        point.longitude,
+                    ])
+                );
+            }
 
-            L.polyline(leg, {
-                color,
-                weight: 5,
-                opacity: 0.9,
-            }).addTo(layer);
+            if (showAllRoutes) {
+                // Overview mode: draw the whole route in the driver's colour
+                // so every driver can be told apart at a glance.
+                const color =
+                    driverColors.get(route.driver) ?? ROUTE_STYLE.color;
 
-            addArrows(L, leg, color, layer);
+                driverIconColor = color;
+                const drawable =
+                    positions.length > 1
+                        ? positions
+                        : points.length >= 2
+                          ? (points.map(
+                                (point) =>
+                                    [point.latitude, point.longitude] as Position
+                            ) as Position[])
+                          : ([] as Position[]);
+
+                if (drawable.length > 1) {
+                    L.polyline(drawable, {
+                        color,
+                        weight: 5,
+                        opacity: 0.9,
+                    }).addTo(layer);
+
+                    addArrows(L, drawable, color, layer);
+                }
+            } else {
+                // Single-user mode: a faint underlay of the whole journey
+                // keeps overall continuity.
+                if (positions.length > 0) {
+                    L.polyline(positions, {
+                        color: ROUTE_STYLE.color,
+                        weight: 6,
+                        opacity: 0.25,
+                    }).addTo(layer);
+                }
+
+                // Draw each leg in its own colour (so a road travelled more
+                // than once appears as distinct bands) and add arrows showing
+                // the direction of travel.
+                const legs = buildLegs(positions, points);
+
+                legs.forEach((leg, index) => {
+                    const color = LEG_COLORS[index % LEG_COLORS.length];
+
+                    L.polyline(leg, {
+                        color,
+                        weight: 5,
+                        opacity: 0.9,
+                    }).addTo(layer);
+
+                    addArrows(L, leg, color, layer);
+                });
+            }
+
+            // Drop a pin for every node along the path: start (green), any
+            // passengers picked up in between (amber), and the destination (red).
+            points.forEach((point, index) => {
+                const isStart = index === 0;
+                const isEnd = index === points.length - 1;
+                const markerHtml = isStart
+                    ? renderToString(<DriverIcon color={driverIconColor}/>)
+                    : isEnd
+                      ? renderToString(<LocationIcon color="#e74c3c"/>)
+                      : renderToString(<LocationIcon color="#f59e0b"/>);
+
+                L.marker([point.latitude, point.longitude], {
+                    icon: L.divIcon({
+                        html: markerHtml,
+                        className: "",
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30],
+                    }),
+                    title: point.label,
+                }).addTo(layer);
+            });
+
+            if (bounds && bounds.isValid()) {
+                combinedBounds = combinedBounds
+                    ? combinedBounds.extend(bounds)
+                    : bounds;
+            }
         });
 
-        // Drop a pin for every node along the path: start (green), any
-        // passengers picked up in between (amber), and the destination (red).
-        points.forEach((point, index) => {
-            const isStart = index === 0;
-            const isEnd = index === points.length - 1;
-            const markerHtml = isStart
-                ? renderToString(<DriverIcon color="#16a34a"/>)
-                : isEnd
-                  ? renderToString(<LocationIcon color="#e74c3c"/>)
-                  : renderToString(<LocationIcon color="#f59e0b"/>);
-
-            L.marker([point.latitude, point.longitude], {
-                icon: L.divIcon({
-                    html: markerHtml,
-                    className: "",
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 30],
-                }),
-                title: point.label,
-            }).addTo(layer);
-        });
-
-        const hasGeometry = positions.length > 0;
-        const hasPoints = points.length > 0;
-
-        if (hasGeometry) {
-            const bounds = L.latLngBounds(positions);
-            if (bounds.isValid()) {
-                mapRef.current.fitBounds(bounds, { padding: [40, 40] });
-            }
-        } else if (hasPoints) {
-            const bounds = L.latLngBounds(
-                points.map((point) => [point.latitude, point.longitude])
-            );
-            if (bounds.isValid()) {
-                mapRef.current.fitBounds(bounds, { padding: [40, 40] });
-            }
+        if (combinedBounds) {
+            mapRef.current.fitBounds(combinedBounds, { padding: [40, 40] });
         }
-    }, [ready, selectedRoute, routePositions]);
+    }, [ready, renderList, decodedByRoute, driverColors, showAllRoutes]);
 
     return (
         <div className="relative flex h-[350px] w-full flex-col overflow-hidden rounded-2xl border border-gray-300">
-            {!passengerMessage && routes.length > 0 && (
+            {!passengerMessage && (routes.length > 0 || isOwner) && (
                 <div className="relative z-[500] flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2">
-                    <label
-                        htmlFor="world-map-destination"
-                        className="text-xs font-semibold text-gray-600"
-                    >
-                        {t("worldMapDestination")}
-                    </label>
+                    {routes.length > 0 && (
+                        <>
+                            <label
+                                htmlFor="world-map-destination"
+                                className="text-xs font-semibold text-gray-600"
+                            >
+                                {t("worldMapDestination")}
+                            </label>
 
-                    <select
-                        id="world-map-destination"
-                        value={selectedIndex}
-                        onChange={(event) =>
-                            setSelectedIndex(Number(event.target.value))
-                        }
-                        className="flex-1 rounded border border-[#c7c7cc] bg-white px-3 py-2 text-sm text-[#3d3461] outline-none focus:border-[#3d3461]"
-                    >
-                        {routes.map((route, index) => (
-                            <option key={route.id} value={index}>
-                                {route.ranking}. {route.destination}
-                            </option>
-                        ))}
-                    </select>
+                            <select
+                                id="world-map-destination"
+                                value={selectedIndex}
+                                onChange={(event) =>
+                                    setSelectedIndex(Number(event.target.value))
+                                }
+                                className="flex-1 rounded border border-[#c7c7cc] bg-white px-3 py-2 text-sm text-[#3d3461] outline-none focus:border-[#3d3461]"
+                            >
+                                {routes.map((route, index) => (
+                                    <option key={route.id} value={index}>
+                                        {route.ranking}. {route.destination}
+                                    </option>
+                                ))}
+                            </select>
+                        </>
+                    )}
+
+                    {isOwner && (
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={showAllRoutes}
+                            onClick={() => setShowAllRoutes((value) => !value)}
+                            className="ml-auto flex shrink-0 items-center gap-2 text-xs font-semibold text-gray-600"
+                        >
+                            <span
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                                    showAllRoutes
+                                        ? "bg-[#3d3461]"
+                                        : "bg-gray-300"
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                                        showAllRoutes
+                                            ? "translate-x-[22px]"
+                                            : "translate-x-1"
+                                    }`}
+                                />
+                            </span>
+
+                            {showAllRoutes
+                                ? t("worldMapShowMyRoute")
+                                : t("worldMapShowAllRoutes")}
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -422,10 +585,8 @@ export function WorldMap({ routes, passengerDriver }: WorldMapProps) {
                     </div>
                 )}
 
-                {ready &&
-                    !passengerMessage &&
-                    (!routePositions || routePositions.length === 0) && (
-                        <div className="absolute inset-0 z-[1000] flex items-center justify-center rounded-2xl bg-gray-100/80">
+                {ready && !passengerMessage && !hasVisibleRoute && (
+                    <div className="absolute inset-0 z-[1000] flex items-center justify-center rounded-2xl bg-gray-100/80">
                             <div className="text-center">
                                 <div className="mb-3 text-5xl">🌍</div>
 
