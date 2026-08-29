@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import ArrowIcon from "./ui/Arrow";
 import { renderToString } from "react-dom/server";
 import DriverIcon from "./ui/Driver";
-import PassengerIcon from "./ui/Passenger";
+import LocationIcon from "./ui/Location";
 
 const DEFAULT_CENTER: [number, number] = [-25.8587, 28.1891];
 const DEFAULT_ZOOM = 6;
@@ -33,8 +33,8 @@ const ROUTE_STYLE = {
 // colour, a road that is travelled more than once appears as distinct bands
 // (and arrow sets) instead of a single overlapping line.
 const LEG_COLORS = [
+	"#10b981",
     "#3b82f6",
-    "#10b981",
     "#f59e0b",
     "#ef4444",
     "#8b5cf6",
@@ -190,13 +190,6 @@ function addArrows(
         }).addTo(layer);
     }
 }
-
-const END_MARKER_HTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#e74c3c" stroke="#ffffff" stroke-width="1">
-        <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/>
-        <circle cx="12" cy="9" r="3" fill="#ffffff" stroke="none"/>
-    </svg>
-`;
 
 type MapPoint = {
     label: string;
@@ -356,23 +349,15 @@ export function WorldMap({ routes, passengerDriver }: WorldMapProps) {
             const markerHtml = isStart
                 ? renderToString(<DriverIcon color="#16a34a"/>)
                 : isEnd
-                  : renderToString(<PassengerIcon color="#f59e0b"/>);
-            const markerConfig = isEnd
-                ? {
-                    size: [48, 44.5] as [number, number],       // Proportional bounding size (un-squashed)
-                    anchor: [24, 35.15] as [number, number],  // [Width / 2, Height * 0.77] points perfectly to the bottom tip
-                  }
-                : {
-                    size: [30, 47.5] as [number, number],     // Original profile for Driver / Passenger
-                    anchor: [15, 23.75] as [number, number], 
-                  };
+                  ? renderToString(<LocationIcon color="#e74c3c"/>)
+                  : renderToString(<LocationIcon color="#f59e0b"/>);
 
             L.marker([point.latitude, point.longitude], {
                 icon: L.divIcon({
                     html: markerHtml,
                     className: "",
-                    iconSize: markerConfig.size,
-                    iconAnchor: markerConfig.anchor,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30],
                 }),
                 title: point.label,
             }).addTo(layer);
