@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 import { DeleteGroupModal } from "@/app/components/groups/delete-group-modal";
+import { AddLocationModal } from "@/app/components/groups/add-location-modal";
 import { WorldMap } from "@/app/components/groups/world-map";
 
 type Role = "owner" | "admin" | "member";
@@ -17,7 +18,6 @@ type GroupMember = {
 type ModalType =
   | "invite"
   | "kick"
-  | "location"
   | "new-owner"
   | null;
 
@@ -148,12 +148,68 @@ export default function GroupPage() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showAddLocationModal, setShowAddLocationModal] = useState(false);
   const [selectedAlgorithm, setSelectedAlgorithm] =
     useState<string>(DEFAULT_ALGORITHM);
   const [availableAlgorithms, setAvailableAlgorithms] = useState<
     ApiAlgorithmOption[]
   >([]);
   const [isAlgorithmLoading, setIsAlgorithmLoading] = useState(false);
+
+  // Loads the current user and the full group dataset (users, destinations,
+  // routing output). Throws on failure so each caller can decide how to surface
+  // the error — the initial load shows the full-page error state, while
+  // user-triggered reloads (algorithm switch, adding a location) alert instead.
+  const loadGroupData = useCallback(
+    async (algorithmName: string) => {
+      if (!groupId) return;
+
+      const meResponse = await fetch(`/api/backend/auth/me`);
+      if (!meResponse.ok) {
+        throw new Error("Failed to fetch current user");
+      }
+      const meData = (await meResponse.json()) as ApiMeResponse;
+      const username = meData.username;
+      setCurrentUsername(username);
+
+      const groupResponse = await fetch(
+        `/api/backend/groups/${groupId}?algorithm=${algorithmName}`
+      );
+      if (!groupResponse.ok) {
+        throw new Error(
+          `Failed to fetch group data (status ${groupResponse.status})`
+        );
+      }
+      const groupData = (await groupResponse.json()) as ApiGroupData;
+
+      const apiMembers: GroupMember[] = groupData.users.map((u) => ({
+        name: u.user.username,
+        role: u.user.username === username ? currentUserRole : "member",
+      }));
+
+      setMembers(apiMembers);
+      setUsers(groupData.users);
+      setDestinations(groupData.destinations);
+      setAlgorithm(
+        Array.isArray(groupData.algorithm) ? groupData.algorithm : []
+      );
+
+      const apiLocations = groupData.destinations.map(
+        (d) => d.group_location.display_name
+      );
+
+      setLocations(apiLocations);
+
+      if (typeof groupData.algorithm_name === "string") {
+        setSelectedAlgorithm(groupData.algorithm_name);
+      }
+
+      if (Array.isArray(groupData.available_algorithms)) {
+        setAvailableAlgorithms(groupData.available_algorithms);
+      }
+    },
+    [groupId, currentUserRole]
+  );
 
   useEffect(() => {
     if (!groupId) {
@@ -167,56 +223,15 @@ export default function GroupPage() {
       setFetchError(null);
 
       try {
-        const meResponse = await fetch(`/api/backend/auth/me`);
-        if (!meResponse.ok) {
-          throw new Error("Failed to fetch current user");
-        }
-        const meData = (await meResponse.json()) as ApiMeResponse;
-        const username = meData.username;
-        setCurrentUsername(username);
-
-        const groupResponse = await fetch(
-          `/api/backend/groups/${groupId}?algorithm=${DEFAULT_ALGORITHM}`
-        );
-        if (!groupResponse.ok) {
-          throw new Error(
-            `Failed to fetch group data (status ${groupResponse.status})`
+        await loadGroupData(DEFAULT_ALGORITHM);
+      } catch (err) {
+        if (!cancelled) {
+          setFetchError(
+            err instanceof Error
+              ? err.message
+              : tCommon("somethingWentWrong")
           );
         }
-        const groupData = (await groupResponse.json()) as ApiGroupData;
-
-        if (cancelled) return;
-
-        const apiMembers: GroupMember[] = groupData.users.map((u) => ({
-          name: u.user.username,
-          role: u.user.username === username ? currentUserRole : "member",
-        }));
-
-        setMembers(apiMembers);
-        setUsers(groupData.users);
-        setDestinations(groupData.destinations);
-        setAlgorithm(
-          Array.isArray(groupData.algorithm) ? groupData.algorithm : []
-        );
-
-        const apiLocations = groupData.destinations.map(
-          (d) => d.group_location.display_name
-        );
-
-        setLocations(apiLocations);
-
-        if (typeof groupData.algorithm_name === "string") {
-          setSelectedAlgorithm(groupData.algorithm_name);
-        }
-
-        if (Array.isArray(groupData.available_algorithms)) {
-          setAvailableAlgorithms(groupData.available_algorithms);
-        }
-      } catch (err) {
-        if (cancelled) return;
-        setFetchError(
-          err instanceof Error ? err.message : tCommon("somethingWentWrong")
-        );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -227,7 +242,7 @@ export default function GroupPage() {
     return () => {
       cancelled = true;
     };
-  }, [groupId, currentUserRole]);
+  }, [groupId, loadGroupData]);
 
   function inviteMember(name: string) {
     const trimmedName = name.trim();
@@ -288,32 +303,6 @@ export default function GroupPage() {
           trimmedName.toLowerCase()
       )
     );
-
-    setActiveModal(null);
-  }
-
-  function addLocation(location: string) {
-    const trimmedLocation = location.trim();
-
-    if (!trimmedLocation) {
-      return;
-    }
-
-    const alreadyExists = locations.some(
-      (item) =>
-        item.toLowerCase() ===
-        trimmedLocation.toLowerCase()
-    );
-
-    if (alreadyExists) {
-      alert(t("locationAlreadyAdded"));
-      return;
-    }
-
-    setLocations((prev) => [
-      ...prev,
-      trimmedLocation,
-    ]);
 
     setActiveModal(null);
   }
@@ -417,36 +406,25 @@ export default function GroupPage() {
     setIsAlgorithmLoading(true);
 
     try {
-      const groupResponse = await fetch(
-        `/api/backend/groups/${groupId}?algorithm=${encodeURIComponent(algorithmName)}`
-      );
-
-      if (!groupResponse.ok) {
-        throw new Error(
-          `Failed to fetch group data (status ${groupResponse.status})`
-        );
-      }
-
-      const groupData = (await groupResponse.json()) as ApiGroupData;
-
-      setUsers(groupData.users);
-      setDestinations(groupData.destinations);
-      setAlgorithm(
-        Array.isArray(groupData.algorithm) ? groupData.algorithm : []
-      );
-      setLocations(
-        groupData.destinations.map((d) => d.group_location.display_name)
-      );
-
-      if (typeof groupData.algorithm_name === "string") {
-        setSelectedAlgorithm(groupData.algorithm_name);
-      }
+      await loadGroupData(algorithmName);
     } catch (err) {
       alert(
         err instanceof Error ? err.message : tCommon("somethingWentWrong")
       );
     } finally {
       setIsAlgorithmLoading(false);
+    }
+  }
+
+  // Re-fetches the group data after a location was added so the locations
+  // section and the map show the new destination.
+  async function refreshAfterAddLocation() {
+    try {
+      await loadGroupData(selectedAlgorithm);
+    } catch (err) {
+      alert(
+        err instanceof Error ? err.message : tCommon("somethingWentWrong")
+      );
     }
   }
 
@@ -582,15 +560,6 @@ export default function GroupPage() {
       confirmText: tCommon("kick"),
     },
 
-    location: {
-      title: t("addLocationTitle"),
-      description:
-        t("addLocationDescription"),
-      label: t("location"),
-      placeholder: t("locationPlaceholder"),
-      confirmText: tCommon("add"),
-    },
-
     "new-owner": {
       title: t("transferOwnershipTitle"),
       description:
@@ -609,11 +578,6 @@ export default function GroupPage() {
 
     if (activeModal === "kick") {
       kickMember(value);
-      return;
-    }
-
-    if (activeModal === "location") {
-      addLocation(value);
       return;
     }
 
@@ -696,7 +660,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    setActiveModal("location")
+                    setShowAddLocationModal(true)
                   }
                   className="rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow transition hover:bg-green-700"
                 >
@@ -715,7 +679,7 @@ export default function GroupPage() {
                   (location, index) => (
                     <li
                       key={`${location}-${index}`}
-                      className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
+                      className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm text-gray-500"
                     >
                       {location}
                     </li>
@@ -1041,6 +1005,21 @@ export default function GroupPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={deleteGroup}
       />
+
+      {/* ====================================== */}
+      {/* ADD LOCATION MODAL */}
+      {/* ====================================== */}
+
+      {showAddLocationModal && groupId && (
+        <AddLocationModal
+          groupId={groupId}
+          onClose={() => setShowAddLocationModal(false)}
+          onSuccess={() => {
+            setShowAddLocationModal(false);
+            refreshAfterAddLocation();
+          }}
+        />
+      )}
     </main>
   );
 }
