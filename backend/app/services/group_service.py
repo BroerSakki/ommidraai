@@ -61,12 +61,12 @@ def _get_algorithm_function(algorithm_name: str):
     Unknown keys fall back to the default Dijkstra implementation so the group
     data endpoint keeps working even when an unexpected value is supplied.
     """
-    algorithm_key = algorithm_name.lower() if algorithm_name else "dijkstra"
+    algorithm_key = algorithm_name.lower() if algorithm_name else "greedy"
     spec = ALGORITHMS.get(algorithm_key)
 
     if spec is None:
-        algorithm_key = "dijkstra"
-        spec = ALGORITHMS["dijkstra"]
+        algorithm_key = "greedy"
+        spec = ALGORITHMS["greedy"]
 
     module = importlib.import_module(spec["module"])
     return algorithm_key, module.evaluate_destinations_with_osrm
@@ -264,7 +264,7 @@ def get_group_data(
     db: Session,
     current_user: User,
     group_id: int,
-    algorithm_name: str = "dijkstra",
+    algorithm_name: str = "greedy",
 ):
     is_member = db.scalar(
         select(exists().where(
@@ -313,9 +313,9 @@ def get_group_data(
         destinations_data[group_location.display_name] = (location.latitude, location.longitude)
 
     routing_data = []
-    selected_algorithm = algorithm_name.lower() if algorithm_name else "dijkstra"
+    selected_algorithm = algorithm_name.lower() if algorithm_name else "greedy"
     if selected_algorithm not in ALGORITHMS:
-        selected_algorithm = "dijkstra"
+        selected_algorithm = "greedy"
 
     if starts_data and destinations_data and (passenger_count <= 0):
         try:

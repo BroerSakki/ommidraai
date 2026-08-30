@@ -79,7 +79,7 @@ type WorldMapRouteInput = {
 };
 
 // Default routing algorithm used when the group data endpoint is first loaded.
-const DEFAULT_ALGORITHM = "dijkstra";
+const DEFAULT_ALGORITHM = "greedy";
 
 // Resolves every node along an algorithm path (users by username, destinations
 // by display name) into map pins, dropping any node that cannot be found.
