@@ -81,7 +81,7 @@ def get_group_name(
 @router.get("/{group_id}")
 def get_group_data(
     group_id: int,
-    algorithm: str = "dijkstra",
+    algorithm: str = "greedy",
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
