@@ -1,0 +1,41 @@
+Step 1:
+Get every connection between each starting point and each passenger using osrm where starting points have capacity bigger than 0. Example:
+S1:P1 = 13km
+S1:P2 = 15km
+S2:P1 = 9km
+S2:P2 = 10km
+
+S1 has 1 capacity
+S2 has 2 capacity
+
+Step 2:
+Look for the shortest connection from a starting point to a passenger. In our example it's:
+S2:P1 = 9km
+
+Now remove all incoming connections to P1 except the shortest one. Now consider that passenger as "picked up". Decrease the capacity for the driver and if not 0 get the connections from that passenger to other remaining passengers. Now our example matrix looks like this:
+Remember S2:P1 = 9km
+
+S1:P2 = 15km
+P1:P2 = 2km
+
+Step 3:
+Repeat step 2 until all passengers are "picked up". So after all loops the starting points that will pick up the passengers will look like:
+
+S1 will pick up up nobody for a total of 0km as Pickup group 1
+S2 will pick up P1 and P2 for a total of 11km as Pickup group 2
+
+Step 4:
+These are now considered "pickup groups". Connect each pickup group to each destination using osrm and taking into consideration how far each pickup group has already travelled. Now the matrix will look like this:
+
+group1:D1 = 12km
+group1:D2 = 16km
+group2:D1 = 17km
+group2:D2 = 19km
+
+Step 5:
+Use the minimise maximum distance function to rank each destination:
+
+D1 = max(12, 17) = 17km
+D2 = max(16, 19) = 19km
+
+So therefore the best destination is D1 and the second best is D2
