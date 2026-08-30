@@ -528,7 +528,7 @@ export function WorldMap({
 
     return (
         <div className="relative flex h-[350px] w-full flex-col overflow-hidden rounded-2xl border border-gray-300">
-            {!passengerMessage && (routes.length > 0 || isOwner) && (
+            {(routes.length > 0 || isOwner) && (
                 <div className="relative z-[500] flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2">
                     {routes.length > 0 && (
                         <>
@@ -603,14 +603,14 @@ export function WorldMap({
                 )}
 
                 {passengerMessage && (
-                    <div className="absolute inset-0 z-[1000] flex items-center justify-center rounded-2xl bg-gray-100/85 px-4">
-                        <p className="text-center text-[15px] font-medium text-gray-700">
+                    <div className="absolute inset-x-0 top-0 z-[1000] flex items-center justify-center rounded-t-2xl bg-[#3d3461]/90 px-4 py-2">
+                        <p className="text-center text-[13px] font-medium text-white">
                             {passengerMessage}
                         </p>
                     </div>
                 )}
 
-                {ready && !passengerMessage && !hasVisibleRoute && (
+                {ready && !hasVisibleRoute && (
                     <div className="absolute inset-0 z-[1000] flex items-center justify-center rounded-2xl bg-gray-100/80">
                             <div className="text-center">
                                 <div className="mb-3 text-5xl">🌍</div>

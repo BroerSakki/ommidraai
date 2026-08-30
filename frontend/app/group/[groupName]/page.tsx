@@ -477,21 +477,31 @@ export default function GroupPage() {
     const resultRoutes: WorldMapRouteInput[] = [];
 
     algorithm.forEach((entry, index) => {
-      const driverRoute = entry.routes[currentUsername];
+      // Drivers use their own route. A passenger has no route keyed by them,
+      // so they ride along with the driver whose path includes them — this
+      // still lets the map draw the journey they will be taken on.
+      let driverRoute = entry.routes[currentUsername];
+      let driverName = currentUsername;
 
-      if (!driverRoute) {
+      if (!driverRoute || driverRoute.path?.[0] !== currentUsername) {
+        const ridingRoute = Object.entries(entry.routes).find(
+          ([name, route]) =>
+            name !== currentUsername &&
+            (route.path || []).includes(currentUsername)
+        );
+
+        if (!ridingRoute) {
         return;
+      }
+
+        [driverName, driverRoute] = ridingRoute;
       }
 
       const path = driverRoute.path || [];
 
-      if (path[0] !== currentUsername) {
-        return;
-      }
-
       resultRoutes.push({
         id: entry.destination,
-        driver: currentUsername,
+        driver: driverName,
         ranking: index + 1,
         destination: entry.destination,
         distance: driverRoute.distance ?? null,
