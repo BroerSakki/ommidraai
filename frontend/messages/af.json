@@ -162,7 +162,10 @@
     "locationAlreadyAdded": "Daardie plek is reeds bygevoeg.",
     "enterExistingAdmin": "Jy moet die naam van 'n bestaande admin invoer.",
     "deleteGroupTitle": "Verwyder hierdie groep?",
-    "deleteGroupDescription": "Is jy seker jy wil \"{groupName}\" verwyder? Dit sal alle lede en liggings verwyder. Hierdie aksie kan nie teruggedraai word nie."
+    "deleteGroupDescription": "Is jy seker jy wil \"{groupName}\" verwyder? Dit sal alle lede en liggings verwyder. Hierdie aksie kan nie teruggedraai word nie.",
+    "deleteLocation": "Verwyder plek",
+    "deleteLocationTitle": "Verwyder plek?",
+    "deleteLocationDescription": "Is jy seker jy wil \"{location}\" van hierdie groep verwyder?"
   },
   "map": {
     "searchPlaceholder": "Soek vir 'n plek (bv. Centurion, Pretoria)",

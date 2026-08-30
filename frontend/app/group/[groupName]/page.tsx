@@ -5,8 +5,10 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 import { DeleteGroupModal } from "@/app/components/groups/delete-group-modal";
+import { DeleteLocationModal } from "@/app/components/groups/delete-location-modal";
 import { AddLocationModal } from "@/app/components/groups/add-location-modal";
 import { WorldMap } from "@/app/components/groups/world-map";
+import { TrashIcon } from "lucide-react";
 
 type Role = "owner" | "admin" | "member";
 
@@ -149,6 +151,9 @@ export default function GroupPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAddLocationModal, setShowAddLocationModal] = useState(false);
+  const [showDeleteLocationModal, setShowDeleteLocationModal] = useState(false);
+  const [locationToDelete, setLocationToDelete] = useState<string | null>(null);
+  const [isDeletingLocation, setIsDeletingLocation] = useState(false);
   const [selectedAlgorithm, setSelectedAlgorithm] =
     useState<string>(DEFAULT_ALGORITHM);
   const [availableAlgorithms, setAvailableAlgorithms] = useState<
@@ -428,6 +433,47 @@ export default function GroupPage() {
     }
   }
 
+  // Opens the confirmation modal for removing a location from the group.
+  function removeLocation(locationName: string) {
+    setLocationToDelete(locationName);
+    setShowDeleteLocationModal(true);
+  }
+
+  // Removes a destination from the group, then re-fetches the group data
+  // so the locations list and the world map no longer show the deleted
+  // location.
+  async function confirmDeleteLocation() {
+    if (!groupId || !locationToDelete || isDeletingLocation) return;
+
+    setIsDeletingLocation(true);
+
+    try {
+      const response = await fetch(
+        `/api/backend/groups/${groupId}/location/delete?location_name=${encodeURIComponent(locationToDelete)}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(
+          data?.detail || tCommon("somethingWentWrong")
+        );
+      }
+
+      setShowDeleteLocationModal(false);
+      setLocationToDelete(null);
+      await refreshAfterAddLocation();
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : tCommon("somethingWentWrong")
+      );
+    } finally {
+      setIsDeletingLocation(false);
+    }
+  }
+
   const adminMembers = members.filter(
     (member) => member.role === "admin"
   );
@@ -679,9 +725,20 @@ export default function GroupPage() {
                   (location, index) => (
                     <li
                       key={`${location}-${index}`}
-                      className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm text-gray-500"
+                      className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
                     >
-                      {location}
+                      <span className="text-gray-700">{location}</span>
+                      {currentUserRole !== "member" && (
+                        <button
+                          type="button"
+                          onClick={() => removeLocation(location)}
+                          disabled={isDeletingLocation}
+                          className="rounded-md p-1 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label={t("deleteLocation", { location })}
+                        >
+                          <TrashIcon/>
+                        </button>
+                      )}
                     </li>
                   )
                 )}
@@ -1005,6 +1062,23 @@ export default function GroupPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={deleteGroup}
       />
+
+      {/* ====================================== */}
+      {/* DELETE LOCATION CONFIRM MODAL */}
+      {/* ====================================== */}
+
+      {showDeleteLocationModal && locationToDelete && (
+        <DeleteLocationModal
+          isOpen={showDeleteLocationModal}
+          locationName={locationToDelete}
+          isDeleting={isDeletingLocation}
+          onClose={() => {
+            setShowDeleteLocationModal(false);
+            setLocationToDelete(null);
+          }}
+          onConfirm={confirmDeleteLocation}
+        />
+      )}
 
       {/* ====================================== */}
       {/* ADD LOCATION MODAL */}

@@ -162,7 +162,10 @@
     "locationAlreadyAdded": "That location has already been added.",
     "enterExistingAdmin": "You must enter the name of an existing admin.",
     "deleteGroupTitle": "Delete this group?",
-    "deleteGroupDescription": "Are you sure you want to delete \"{groupName}\"? This will remove all members and locations. This action cannot be undone."
+    "deleteGroupDescription": "Are you sure you want to delete \"{groupName}\"? This will remove all members and locations. This action cannot be undone.",
+    "deleteLocation": "Delete location",
+    "deleteLocationTitle": "Delete location?",
+    "deleteLocationDescription": "Are you sure you want to remove \"{location}\" from this group?"
   },
   "map": {
     "searchPlaceholder": "Search for a place (e.g. Centurion, Pretoria)",
