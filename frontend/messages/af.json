@@ -145,7 +145,9 @@
     "kickMemberTitle": "Skop Lid uit",
     "kickMemberDescription": "Voer die naam van die lid in wat jy wil uitskop.",
     "addLocationTitle": "Voeg Plek by",
-    "addLocationDescription": "Voer die naam van die plek in wat jy wil byvoeg.",
+    "addLocationDescription": "Kies 'n punt op die kaart en gee die plek 'n naam.",
+    "addLocationNoName": "Voer asseblief 'n naam vir die plek in.",
+    "addLocationNoSelection": "Kies asseblief eers 'n punt op die kaart.",
     "transferOwnershipTitle": "Dra eienaarskap oor",
     "transferOwnershipDescription": "Voer die naam van 'n bestaande admin in wat die nuwe eienaar moet word.",
     "memberName": "Lidnaam",
@@ -160,7 +162,10 @@
     "locationAlreadyAdded": "Daardie plek is reeds bygevoeg.",
     "enterExistingAdmin": "Jy moet die naam van 'n bestaande admin invoer.",
     "deleteGroupTitle": "Verwyder hierdie groep?",
-    "deleteGroupDescription": "Is jy seker jy wil \"{groupName}\" verwyder? Dit sal alle lede en liggings verwyder. Hierdie aksie kan nie teruggedraai word nie."
+    "deleteGroupDescription": "Is jy seker jy wil \"{groupName}\" verwyder? Dit sal alle lede en liggings verwyder. Hierdie aksie kan nie teruggedraai word nie.",
+    "deleteLocation": "Verwyder plek",
+    "deleteLocationTitle": "Verwyder plek?",
+    "deleteLocationDescription": "Is jy seker jy wil \"{location}\" van hierdie groep verwyder?"
   },
   "map": {
     "searchPlaceholder": "Soek vir 'n plek (bv. Centurion, Pretoria)",
