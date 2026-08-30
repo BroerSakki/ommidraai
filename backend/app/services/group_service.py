@@ -1,5 +1,6 @@
 # Import External Libraries
 # ---
+import importlib
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select, update, exists
@@ -12,7 +13,6 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 from app.services.user_service import get_user_by_name
 from app.services.locations_service import add_location
 from app.services.database.groups_table import get_group
-from app.algorithms.algoritm import evaluate_destinations_with_osrm
 # ---
 
 # Import Schemas
@@ -32,6 +32,44 @@ from app.models.group_location import Group_Location
 from app.models.user_location import User_Location
 from app.models.invite import Invite
 from app.models.location import Location
+# ---
+
+# Routing Algorithms
+# ---
+# Algorithms available to the group data endpoint. Every implementation exposes
+# the same `evaluate_destinations_with_osrm` entry point and returns an
+# identical ranking structure, so the frontend can swap them per request.
+ALGORITHMS = {
+    "dijkstra": {
+        "module": "app.algorithms.algoritm",
+        "name": "Dijkstra + Mask",
+    },
+    "greedy": {
+        "module": "app.algorithms.algorithm_greedy",
+        "name": "Greedy Loops",
+    },
+    "ortools": {
+        "module": "app.algorithms.algorithm_ortools",
+        "name": "Optimized (Google OR-Tools)",
+    },
+}
+
+
+def _get_algorithm_function(algorithm_name: str):
+    """Resolve an algorithm key to its evaluate_destinations_with_osrm callable.
+
+    Unknown keys fall back to the default Dijkstra implementation so the group
+    data endpoint keeps working even when an unexpected value is supplied.
+    """
+    algorithm_key = algorithm_name.lower() if algorithm_name else "dijkstra"
+    spec = ALGORITHMS.get(algorithm_key)
+
+    if spec is None:
+        algorithm_key = "dijkstra"
+        spec = ALGORITHMS["dijkstra"]
+
+    module = importlib.import_module(spec["module"])
+    return algorithm_key, module.evaluate_destinations_with_osrm
 # ---
 
 # Get current user groups
@@ -225,7 +263,8 @@ def get_group_name(
 def get_group_data(
     db: Session,
     current_user: User,
-    group_id: int
+    group_id: int,
+    algorithm_name: str = "dijkstra",
 ):
     is_member = db.scalar(
         select(exists().where(
@@ -274,8 +313,21 @@ def get_group_data(
         destinations_data[group_location.display_name] = (location.latitude, location.longitude)
 
     routing_data = []
+    selected_algorithm = algorithm_name.lower() if algorithm_name else "dijkstra"
+    if selected_algorithm not in ALGORITHMS:
+        selected_algorithm = "dijkstra"
+
     if starts_data and destinations_data and (passenger_count <= 0):
-        routing_data = evaluate_destinations_with_osrm(starts_data=starts_data, starting_capacities=starts_capacities, passengers_data=passengers_data, destinations_data=destinations_data)
+        try:
+            _, evaluate_destinations = _get_algorithm_function(selected_algorithm)
+            routing_data = evaluate_destinations(
+                starts_data=starts_data,
+                starting_capacities=starts_capacities,
+                passengers_data=passengers_data,
+                destinations_data=destinations_data,
+            )
+        except Exception as exc:
+            routing_data = f"Algorithm '{selected_algorithm}' failed: {exc}"
     else:
         routing_data = "Input data for routing not valid"
 
@@ -295,7 +347,12 @@ def get_group_data(
             }
             for gl, loc in coords
         ],
-        "algorithm": routing_data
+        "algorithm": routing_data,
+        "algorithm_name": selected_algorithm,
+        "available_algorithms": [
+            {"id": algorithm_id, "name": spec["name"]}
+            for algorithm_id, spec in ALGORITHMS.items()
+        ],
 	}
 # ---
 

@@ -126,6 +126,8 @@
     "worldMapPassenger": "Jy is 'n passasier. Jy sal opgelaai word deur: {driver}",
     "worldMapShowAllRoutes": "Wys alle roetes",
     "worldMapShowMyRoute": "Wys my roete",
+    "algorithm": "Algoritme",
+    "algorithmLoading": "Besig om algoritme te wissel…",
     "members": "Lede",
     "memberCount": "{count} lede",
     "owner": "Eienaar",

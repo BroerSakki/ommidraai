@@ -44,10 +44,17 @@ type ApiAlgorithmEntry = {
   routes: Record<string, ApiAlgorithmRoute>;
 };
 
+type ApiAlgorithmOption = {
+  id: string;
+  name: string;
+};
+
 type ApiGroupData = {
   users: ApiUser[];
   destinations: ApiDestination[];
   algorithm: ApiAlgorithmEntry[] | string;
+  algorithm_name?: string;
+  available_algorithms?: ApiAlgorithmOption[];
 };
 
 type ApiMeResponse = {
@@ -70,6 +77,9 @@ type WorldMapRouteInput = {
   geometry: string | null;
   points: WorldMapPoint[];
 };
+
+// Default routing algorithm used when the group data endpoint is first loaded.
+const DEFAULT_ALGORITHM = "dijkstra";
 
 // Resolves every node along an algorithm path (users by username, destinations
 // by display name) into map pins, dropping any node that cannot be found.
@@ -138,6 +148,12 @@ export default function GroupPage() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedAlgorithm, setSelectedAlgorithm] =
+    useState<string>(DEFAULT_ALGORITHM);
+  const [availableAlgorithms, setAvailableAlgorithms] = useState<
+    ApiAlgorithmOption[]
+  >([]);
+  const [isAlgorithmLoading, setIsAlgorithmLoading] = useState(false);
 
   useEffect(() => {
     if (!groupId) {
@@ -159,7 +175,9 @@ export default function GroupPage() {
         const username = meData.username;
         setCurrentUsername(username);
 
-        const groupResponse = await fetch(`/api/backend/groups/${groupId}`);
+        const groupResponse = await fetch(
+          `/api/backend/groups/${groupId}?algorithm=${DEFAULT_ALGORITHM}`
+        );
         if (!groupResponse.ok) {
           throw new Error(
             `Failed to fetch group data (status ${groupResponse.status})`
@@ -186,6 +204,14 @@ export default function GroupPage() {
         );
 
         setLocations(apiLocations);
+
+        if (typeof groupData.algorithm_name === "string") {
+          setSelectedAlgorithm(groupData.algorithm_name);
+        }
+
+        if (Array.isArray(groupData.available_algorithms)) {
+          setAvailableAlgorithms(groupData.available_algorithms);
+        }
       } catch (err) {
         if (cancelled) return;
         setFetchError(
@@ -382,6 +408,47 @@ export default function GroupPage() {
   const ownerMembers = members.filter(
     (member) => member.role === "owner"
   );
+
+  // Refetch the group data with a different routing algorithm and refresh the
+  // world map. The owner can switch between the algorithms the backend offers.
+  async function handleAlgorithmChange(algorithmName: string) {
+    if (!groupId || algorithmName === selectedAlgorithm) return;
+
+    setIsAlgorithmLoading(true);
+
+    try {
+      const groupResponse = await fetch(
+        `/api/backend/groups/${groupId}?algorithm=${encodeURIComponent(algorithmName)}`
+      );
+
+      if (!groupResponse.ok) {
+        throw new Error(
+          `Failed to fetch group data (status ${groupResponse.status})`
+        );
+      }
+
+      const groupData = (await groupResponse.json()) as ApiGroupData;
+
+      setUsers(groupData.users);
+      setDestinations(groupData.destinations);
+      setAlgorithm(
+        Array.isArray(groupData.algorithm) ? groupData.algorithm : []
+      );
+      setLocations(
+        groupData.destinations.map((d) => d.group_location.display_name)
+      );
+
+      if (typeof groupData.algorithm_name === "string") {
+        setSelectedAlgorithm(groupData.algorithm_name);
+      }
+    } catch (err) {
+      alert(
+        err instanceof Error ? err.message : tCommon("somethingWentWrong")
+      );
+    } finally {
+      setIsAlgorithmLoading(false);
+    }
+  }
 
   const adminMembers = members.filter(
     (member) => member.role === "admin"
@@ -653,12 +720,50 @@ export default function GroupPage() {
           {/* ---------------------------------- */}
 
           <section className="overflow-hidden rounded-2xl border border-gray-300">
-            <WorldMap
-              routes={routes}
-              allRoutes={allRoutes}
-              passengerDriver={passengerDriver}
-              isOwner={currentUserRole === "owner"}
-            />
+            {currentUserRole === "owner" && availableAlgorithms.length > 0 && (
+              <div className="flex items-center justify-end gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3">
+                <label
+                  htmlFor="algorithm-select"
+                  className="text-sm font-semibold text-gray-600"
+                >
+                  {t("algorithm")}
+                </label>
+
+                <select
+                  id="algorithm-select"
+                  value={selectedAlgorithm}
+                  onChange={(event) => handleAlgorithmChange(event.target.value)}
+                  disabled={isAlgorithmLoading}
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm outline-none transition focus:border-[#3d3461] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {availableAlgorithms.map((algo) => (
+                    <option key={algo.id} value={algo.id}>
+                      {algo.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="relative">
+              <WorldMap
+                routes={routes}
+                allRoutes={allRoutes}
+                passengerDriver={passengerDriver}
+                isOwner={currentUserRole === "owner"}
+              />
+
+              {isAlgorithmLoading && (
+                <div className="absolute inset-0 z-[1001] flex items-center justify-center bg-gray-100/70">
+                  <div className="flex items-center gap-3 rounded-xl bg-white px-5 py-4 shadow-lg">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#3d3461]" />
+                    <span className="text-sm font-semibold text-gray-700">
+                      {t("algorithmLoading")}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </section>
         </div>
 
