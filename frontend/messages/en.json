@@ -124,6 +124,8 @@
     "worldMapNoRoute": "No route available to display for this group yet.",
     "worldMapDestination": "Destination",
     "worldMapPassenger": "You are a passenger. You will be picked up by: {driver}",
+    "worldMapShowAllRoutes": "Show all routes",
+    "worldMapShowMyRoute": "Show my route",
     "members": "Members",
     "memberCount": "{count} members",
     "owner": "Owner",

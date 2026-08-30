@@ -63,12 +63,49 @@ type WorldMapPoint = {
 
 type WorldMapRouteInput = {
   id: string;
+  driver: string;
   ranking: number;
   destination: string;
   distance: number | null;
   geometry: string | null;
   points: WorldMapPoint[];
 };
+
+// Resolves every node along an algorithm path (users by username, destinations
+// by display name) into map pins, dropping any node that cannot be found.
+function resolvePathNodes(
+  path: string[],
+  users: ApiUser[],
+  destinations: ApiDestination[]
+): WorldMapPoint[] {
+  return path
+    .map((name) => {
+      const userNode = users.find((user) => user.user.username === name);
+
+      if (userNode) {
+        return {
+          label: userNode.user.username,
+          latitude: userNode.location.latitude,
+          longitude: userNode.location.longitude,
+        };
+      }
+
+      const destNode = destinations.find(
+        (destination) => destination.group_location.display_name === name
+      );
+
+      if (destNode) {
+        return {
+          label: destNode.group_location.display_name,
+          latitude: destNode.location.latitude,
+          longitude: destNode.location.longitude,
+        };
+      }
+
+      return null;
+    })
+    .filter((point): point is WorldMapPoint => point !== null);
+}
 
 export default function GroupPage() {
   const params = useParams();
@@ -385,49 +422,46 @@ export default function GroupPage() {
         return;
       }
 
-      // Resolve every path node (user or destination) into a map pin.
-      const points = path
-        .map((name) => {
-          const userNode = users.find(
-            (u) => u.user.username === name
-          );
-
-          if (userNode) {
-            return {
-              label: userNode.user.username,
-              latitude: userNode.location.latitude,
-              longitude: userNode.location.longitude,
-            };
-          }
-
-          const destNode = destinations.find(
-            (d) => d.group_location.display_name === name
-          );
-
-          if (destNode) {
-            return {
-              label: destNode.group_location.display_name,
-              latitude: destNode.location.latitude,
-              longitude: destNode.location.longitude,
-            };
-          }
-
-          return null;
-        })
-        .filter((point): point is WorldMapPoint => point !== null);
-
       resultRoutes.push({
         id: entry.destination,
+        driver: currentUsername,
         ranking: index + 1,
         destination: entry.destination,
         distance: driverRoute.distance ?? null,
         geometry: driverRoute.geometry ?? null,
-        points,
+        points: resolvePathNodes(path, users, destinations),
       });
     });
 
     return resultRoutes;
   }, [algorithm, users, destinations, currentUsername]);
+
+  // Every driver's route to every destination, used by the owner's
+  // "show all routes" toggle. The map groups these per destination so all
+  // drivers heading to the same place are drawn together.
+  const allRoutes = useMemo(() => {
+    if (!algorithm || algorithm.length === 0) {
+      return [];
+    }
+
+    const resultRoutes: WorldMapRouteInput[] = [];
+
+    algorithm.forEach((entry, index) => {
+      Object.entries(entry.routes).forEach(([driverName, driverRoute]) => {
+        resultRoutes.push({
+          id: `${entry.destination}-${driverName}`,
+          driver: driverName,
+          ranking: index + 1,
+          destination: entry.destination,
+          distance: driverRoute.distance ?? null,
+          geometry: driverRoute.geometry ?? null,
+          points: resolvePathNodes(driverRoute.path || [], users, destinations),
+        });
+      });
+    });
+
+    return resultRoutes;
+  }, [algorithm, users, destinations]);
 
   // When the current user is a passenger, find the driver (the start node of
   // the route containing them) who will pick them up.
@@ -619,7 +653,12 @@ export default function GroupPage() {
           {/* ---------------------------------- */}
 
           <section className="overflow-hidden rounded-2xl border border-gray-300">
-            <WorldMap routes={routes} passengerDriver={passengerDriver} />
+            <WorldMap
+              routes={routes}
+              allRoutes={allRoutes}
+              passengerDriver={passengerDriver}
+              isOwner={currentUserRole === "owner"}
+            />
           </section>
         </div>
 
