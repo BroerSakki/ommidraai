@@ -1,0 +1,44 @@
+Hoe ons huidige algoritme werk:
+Stap 1:
+Kry elke liewe connection tussen elke liewe node met osrm soos bv:
+┌───────┬──────┬──────┬──────┐
+│  To ➔  │  P1    │  P2    │  D1    │
+├───────┼──────┼──────┼──────┤
+│  S1     │ 4 km   │ 9 km   │15 km   │
+│  S2     │11 km   │ 5 km   │ 6 km   │
+│  P1     │ 0 km   │ 4 km   │12 km   │
+│  P2     │ 5 km   │ 0 km   │ 3 km   │
+└───────┴──────┴──────┴──────┘
+
+S1 het 1 capacity
+S2 het 2 capacity
+
+Stap 2:
+Soek vir elke liewe pad vanaf beginpunt na eindpunt, bv:
+S1 -> D1 : 15km
+S1 -> P1 -> D1 : 16km
+S1 -> P2 -> D1 : 12km
+
+S2 -> D1 : 6km
+S2 -> P1 -> D1 : 23km
+S2 -> P2 -> D1 : 7km
+S2 -> P1 -> P2 -> D1 : 18km
+
+Stap 3:
+Vir elke moontlike kombinasie vir elke destination en kry die bottleneck daarvan, bv:
+S1 Paths:			S2 Paths:
+Mask 00 & 15km			Mask 00 & 6km
+Mask 01 & 16km			Mask 01 & 23km
+Mask 10 & 12km			Mask 10 & 7km
+				Mask 11 & 18km
+
+Alle moontlike kombinasies:
+S1 (Mask 00) + S2 (Mask 11) = 11  Bottleneck: max(15, 18) = 18km
+S1 (Mask 01) + S2 (Mask 10) = 11  Bottleneck: max(16, 7) = 16km
+S1 (Mask 10) + S2 (Mask 01) = 11  Bottleneck: max(12, 23) = 23km
+
+Stap 4:
+Sorteer destinations volgens kleinste bottleneck
+D1:
+Minimized bottleneck: 16km
+Path: S1 takes P1, S2 takes P2
