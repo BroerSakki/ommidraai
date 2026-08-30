@@ -3,8 +3,11 @@ import requests
 def query_osrm_table(all_coords, source_indices, dest_indices, osrm_host="osrm:5000"):
     """
     Sends a single optimized query to the OSRM Table Service endpoint.
+
+    all_coords must be a list of (latitude, longitude) tuples. Returns the
+    distance matrix in metres for the requested source/destination indices.
     """
-    coord_str = ";".join([f"{lon},{lat}" for lon, lat in all_coords])
+    coord_str = ";".join([f"{lon},{lat}" for lat, lon in all_coords])
     sources_param = ";".join(map(str, source_indices))
     dests_param = ";".join(map(str, dest_indices))
     

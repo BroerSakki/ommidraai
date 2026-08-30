@@ -30,20 +30,20 @@ async def routing_test():
 def algorithm_test():
     # These are locations in Berlin as we already have downloaded Berlin test map data
     start_data = {
-    	'S1': (13.3888, 52.5170),
-    	'S2': (13.3910, 52.5210)
+    	'S1': (52.5170, 13.3888),
+    	'S2': (52.5210, 13.3910)
 	}
     start_capacities = {
 	    'S1': 1,
 	    'S2': 2
 	}
     passengers_data = {
-	    'P1': (13.3777, 52.5162),
-	    'P2': (13.4012, 52.5300)
+	    'P1': (52.5162, 13.3777),
+	    'P2': (52.5300, 13.4012)
 	}
     destinations_data = {
-	    'D1': (13.3424, 52.5204),
-	    'D2': (13.4100, 52.5100)
+	    'D1': (52.5204, 13.3424),
+	    'D2': (52.5100, 13.4100)
 	}
     return evaluate_destinations_with_osrm(starts_data=start_data, starting_capacities=start_capacities, passengers_data=passengers_data, destinations_data=destinations_data)
 # ---

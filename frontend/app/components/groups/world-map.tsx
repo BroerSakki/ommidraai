@@ -16,6 +16,21 @@ const DEFAULT_ZOOM = 6;
 // OSRM polylines are encoded with precision 5 by default.
 const POLYLINE_PRECISION = 5;
 
+// Formats a distance in metres as a readable kilometre string (null when no
+// valid distance is available yet).
+function formatDistance(distanceMeters: number | null | undefined): string | null {
+    if (
+        typeof distanceMeters !== "number" ||
+        !Number.isFinite(distanceMeters) ||
+        distanceMeters <= 0
+    ) {
+        return null;
+    }
+
+    const km = distanceMeters / 1000;
+    return km >= 100 ? km.toFixed(0) : km.toFixed(1);
+}
+
 type Position = [number, number];
 
 type MapNode = {
@@ -262,6 +277,7 @@ export function WorldMap({
     }
 
     const selectedRoute = routes[selectedIndex] ?? null;
+    const selectedDistance = formatDistance(selectedRoute?.distance);
 
     // The routes to draw: either just the current user's route to the
     // selected destination, or every driver's route to that destination
@@ -537,6 +553,15 @@ export function WorldMap({
                                     </option>
                                 ))}
                             </select>
+
+                            <span className="shrink-0 rounded-lg bg-[#3d3461]/10 px-3 py-2 text-sm font-semibold text-[#3d3461]">
+                                {t("worldMapTotalDistance")}:{" "}
+                                {selectedDistance !== null
+                                    ? t("worldMapDistanceValue", {
+                                          distance: selectedDistance,
+                                      })
+                                    : "—"}
+                            </span>
                         </>
                     )}
 
@@ -596,6 +621,45 @@ export function WorldMap({
                             </div>
                         </div>
                     )}
+
+                {showAllRoutes && renderList.length > 0 && (
+                    <div className="absolute right-3 top-3 z-[500] max-h-[75%] overflow-y-auto rounded-xl border border-gray-200 bg-white/95 p-3 shadow-lg">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            {t("worldMapAllRouteDistances")}
+                        </p>
+
+                        <ul className="mt-2 space-y-2">
+                            {renderList.map((route) => {
+                                const formatted = formatDistance(route.distance);
+                                const color =
+                                    driverColors.get(route.driver) ??
+                                    ROUTE_STYLE.color;
+
+                                return (
+                                    <li
+                                        key={route.id}
+                                        className="flex items-center gap-2 text-sm"
+                                    >
+                                        <span
+                                            className="h-3 w-3 shrink-0 rounded-full"
+                                            style={{ backgroundColor: color }}
+                                        />
+                                        <span className="font-medium text-gray-700">
+                                            {route.driver}
+                                        </span>
+                                        <span className="ml-auto pl-3 text-xs font-semibold text-gray-500">
+                                            {formatted !== null
+                                                ? t("worldMapDistanceValue", {
+                                                      distance: formatted,
+                                                  })
+                                                : "—"}
+                                        </span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                )}
 
                 <div
                     ref={mapContainerRef}

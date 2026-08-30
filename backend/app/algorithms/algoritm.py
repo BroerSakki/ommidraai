@@ -119,22 +119,27 @@ def evaluate_destinations_with_osrm(starts_data, starting_capacities, passengers
         if min_destination_bottleneck != float('inf'):
             # Fetch the exact driving geometry from OSRM for every assigned route
             routes_with_geometry = {}
+            destination_bottleneck = 0
             for s, route_details in best_assignment_details.items():
                 path_coords = [key_to_coord[k] for k in route_details["path"]]
+                route_distance = route_details["distance"]
                 try:
-                    geometry, _route_distance = query_osrm_route(path_coords, osrm_host)
+                    geometry, osrm_route_distance = query_osrm_route(path_coords, osrm_host)
+                    if osrm_route_distance:
+                        route_distance = osrm_route_distance
                 except Exception:
                     geometry = None
 
                 routes_with_geometry[s] = {
-                    "distance": route_details["distance"],
+                    "distance": route_distance,
                     "geometry": geometry,
                     "path": route_details["path"]
                 }
+                destination_bottleneck = max(destination_bottleneck, route_distance)
 
             ranking.append({
                 "destination": d,
-                "bottleneck": min_destination_bottleneck,
+                "bottleneck": destination_bottleneck,
                 "routes": routes_with_geometry
             })
             

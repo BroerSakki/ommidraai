@@ -2,6 +2,10 @@ from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 from app.algorithms.osrm_functions import query_osrm_table, query_osrm_route
 
+# Penalty (in metres) used when OSRM reports a point pair as unreachable, so
+# the solver skips those arcs instead of crashing on a None matrix entry.
+UNREACHABLE_PENALTY = 10 ** 9
+
 def evaluate_destinations_with_osrm(starts_data, starting_capacities, passengers_data, destinations_data, osrm_host="osrm:5000"):
     start_nodes = list(starts_data.keys())
     passengers = list(passengers_data.keys())
@@ -34,7 +38,8 @@ def evaluate_destinations_with_osrm(starts_data, starting_capacities, passengers
         def distance_callback(from_index, to_index):
             from_node = manager.IndexToNode(from_index)
             to_node = manager.IndexToNode(to_index)
-            return int(raw_matrix[from_node][to_node])
+            value = raw_matrix[from_node][to_node]
+            return int(value) if value is not None else UNREACHABLE_PENALTY
             
         transit_callback_index = routing.RegisterTransitCallback(distance_callback)
         routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
@@ -100,14 +105,17 @@ def evaluate_destinations_with_osrm(starts_data, starting_capacities, passengers
                 
                 # Fetch route distance from cumulative tracker variables
                 route_dist = solution.Value(distance_dimension.CumulVar(routing.End(vehicle_id)))
-                destination_bottleneck = max(destination_bottleneck, route_dist)
                 
                 # Extract clean coordinate maps for route polyline processing
                 path_coords = [all_coords[key_to_idx[k]] for k in path_nodes]
                 try:
-                    geometry, _ = query_osrm_route(path_coords, osrm_host)
+                    geometry, osrm_route_distance = query_osrm_route(path_coords, osrm_host)
+                    if osrm_route_distance:
+                        route_dist = osrm_route_distance
                 except Exception:
                     geometry = None
+
+                destination_bottleneck = max(destination_bottleneck, route_dist)
                     
                 routes_with_geometry[driver_key] = {
                     "distance": route_dist,

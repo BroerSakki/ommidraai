@@ -71,7 +71,9 @@ def evaluate_destinations_with_osrm(starts_data, starting_capacities, passengers
             path_coords = [key_to_coord[k] for k in final_path]
             
             try:
-                geometry, _ = query_osrm_route(path_coords, osrm_host)
+                geometry, osrm_route_distance = query_osrm_route(path_coords, osrm_host)
+                if osrm_route_distance:
+                    total_route_distance = osrm_route_distance
             except Exception:
                 geometry = None
                 
