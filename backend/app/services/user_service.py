@@ -56,44 +56,48 @@ def add_user_location(
     user_location: UserLocationCreate
 ):
     try:
-        # Check if name is used
-        # ---
         user_location_check = db.scalar(
             select(User_Location)
             .where(
-                User_Location.name == user_location.name
+                User_Location.name == user_location.name,
+                User_Location.user_id == current_user.id
             )
         )
+
         if user_location_check is not None:
             raise HTTPException(
                 status_code=400,
-                detail=f"Name \"{user_location.name}\" already in use"
+                detail=f'Name "{user_location.name}" already in use'
             )
-        # ---
 
-        # Add location
-        # ---
         location_id = locations_service.add_location(
             db=db,
             location=user_location.location
         )
+
         new_user_location = User_Location(
-            location_id = location_id,
-            user_id = current_user.id,
-            name = user_location.name,
+            location_id=location_id,
+            user_id=current_user.id,
+            name=user_location.name,
         )
+
         db.add(new_user_location)
         db.commit()
-        # ---
+        db.refresh(new_user_location)
         
+        return UserLocationResponse(
+            name=new_user_location.name,
+            latitude=user_location.location.latitude,
+            longitude=user_location.location.longitude,
+        )
+
     except SQLAlchemyError:
+        db.rollback()
+
         raise HTTPException(
             status_code=400,
             detail="User location was not added"
         )
-    finally:
-        db.refresh(new_user_location)
-    return new_user_location
 # ---
 
 # Get Default Location

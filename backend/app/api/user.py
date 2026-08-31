@@ -63,11 +63,14 @@ def get_current_user_default_location(
 
 # Add Current User Location
 # ---
-@router.post("/location/add")
+@router.post(
+    "/location/add",
+    response_model=UserLocationResponse
+)
 def add_user_location(
     user_location: UserLocationCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return user_service.add_user_location(
         db=db,
@@ -96,7 +99,7 @@ def update_user_default_location(
 
 # Remove Current User Location
 # ---
-@router.delete("/location/delete")
+@router.delete("/location/delete/{location_name}")
 def remove_user_location(
     location_name: str,
     db: Session = Depends(get_db),
