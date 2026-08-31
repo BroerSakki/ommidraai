@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import type { Map as LeafletMap, Marker as LeafletMarker, LayerGroup } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslations } from "next-intl";
+import { DeleteLocationModal } from "./delete-location-modal";
+import { SaveLocationModal } from "./save-location-modal";
 
 const DEFAULT_CENTER: [number, number] = [-25.8587, 28.1891];
 const DEFAULT_ZOOM = 12;
@@ -52,6 +54,13 @@ export function LocationMap() {
     const [defaultCords, setDefaultCords] = useState<{latitude: number; longitude: number} | null>(null);
     const [defaultName, setDefaultName] = useState<string | null>(null)
     const [updatingName, setUpdatingName] = useState<string | null>(null);
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [saveName, setSaveName] = useState("");
+    const [saveError, setSaveError] = useState("");
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
+    const [locationToDelete, setLocationToDelete] = useState<string | null>(null);
+    const [isDeletingLocation, setIsDeletingLocation] = useState(false);
 
     useEffect(() => {
         async function getDefault() {
@@ -164,20 +173,25 @@ export function LocationMap() {
         }
     }
 
-    async function handleDeleteLocation(name: string) {
+    function handleDeleteLocation(name: string) {
         if (name === defaultName) return;
 
-        const confirmed = window.confirm(
-            `Are you sure you want to delete "${name}"?`
-        );
+        setDeleteError("");
+        setLocationToDelete(name);
+        setShowDeleteModal(true);
+    }
 
-        if (!confirmed) return;
+    // Deletes a saved location, then re-fetches the saved locations so the
+    // list and the map no longer show the deleted location.
+    async function confirmDeleteLocation() {
+        if (!locationToDelete || isDeletingLocation) return;
 
+        setIsDeletingLocation(true);
         setMessage("");
 
         try {
             const response = await fetch(
-                `/api/backend/user/location/delete/${encodeURIComponent(name)}`,
+                `/api/backend/user/location/delete/${encodeURIComponent(locationToDelete)}`,
                 {
                     method: "DELETE",
                     cache: "no-store",
@@ -202,16 +216,20 @@ export function LocationMap() {
                 );
             }
 
-            setMessage(`Location "${name}" deleted.`);
+            setMessage(`Location "${locationToDelete}" deleted.`);
+            setShowDeleteModal(false);
+            setLocationToDelete(null);
             await fetchSavedLocations();
         } catch (err) {
             console.error("Failed to delete location:", err);
 
-            setMessage(
+            setDeleteError(
                 `Failed to delete location: ${
                     err instanceof Error ? err.message : tCommon("unknownError")
                 }`
             );
+        } finally {
+            setIsDeletingLocation(false);
         }
     }
 
@@ -351,19 +369,30 @@ export function LocationMap() {
         map.flyTo([latitude, longitude], 13);
     }
 
-    async function handleSave() {
+    function handleSave() {
         if (!selected) {
+            return;
+        }
+
+        setSaveError("");
+        setSaveName("");
+        setShowSaveModal(true);
+    }
+
+    // Saves the selected location under the name entered in the modal.
+    async function confirmSave() {
+        if (!selected || saving) {
+            return;
+        }
+
+        const name = saveName.trim();
+        if (!name) {
+            setSaveError(t("saveLocationNoName"));
             return;
         }
 
         setSaving(true);
         setMessage("");
-
-        const locationName = prompt("Enter a name for this location:");
-        if (!locationName || !locationName.trim()) {
-            setSaving(false);
-            return;
-        }
 
         try {
             const response = await fetch(`/api/backend/user/location/add`, {
@@ -371,7 +400,7 @@ export function LocationMap() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    name: locationName.trim(),
+                    name,
                     location: {
                         latitude: selected.latitude,
                         longitude: selected.longitude,
@@ -398,10 +427,11 @@ export function LocationMap() {
             }
 
             setMessage(t("locationSaved"));
-            setMessage("Location saved.");
+            setSaveName("");
+            setShowSaveModal(false);
             await fetchSavedLocations();
         } catch (err) {
-            setMessage(
+            setSaveError(
                 t("saveFailed", {
                     error:
                         err instanceof Error ? err.message : tCommon("unknownError"),
@@ -616,6 +646,32 @@ export function LocationMap() {
                 
                 {message && <p className="mt-2 text-sm text-[#3d3461]/70">{message}</p>}
             </section>
+
+            {showSaveModal && (
+                <SaveLocationModal
+                    isOpen={showSaveModal}
+                    name={saveName}
+                    saving={saving}
+                    error={saveError}
+                    onNameChange={setSaveName}
+                    onClose={() => setShowSaveModal(false)}
+                    onSave={confirmSave}
+                />
+            )}
+
+            {showDeleteModal && locationToDelete && (
+                <DeleteLocationModal
+                    isOpen={showDeleteModal}
+                    locationName={locationToDelete}
+                    isDeleting={isDeletingLocation}
+                    error={deleteError}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setLocationToDelete(null);
+                    }}
+                    onConfirm={confirmDeleteLocation}
+                />
+            )}
         </div>
     );
 }

@@ -204,6 +204,13 @@
     "savedLocations":"Gestoorde liggings",
     "defaultUpdateError": "Fout ondergaan",
     "defaultUpdated": "Verstek ligging opgedateer",
-    "default": "Verstek Ligging"
+    "default": "Verstek Ligging",
+    "saveLocationTitle": "Stoor ligging",
+    "saveLocationDescription": "Voer 'n naam vir die gekose ligging in.",
+    "saveLocationNoName": "Voer asseblief 'n naam vir die ligging in.",
+    "locationName": "Pleknaam",
+    "locationNamePlaceholder": "bv. Tuis, Skool",
+    "deleteLocationTitle": "Verwyder ligging?",
+    "deleteLocationDescription": "Is jy seker jy wil \"{location}\" verwyder?"
   }
 }
