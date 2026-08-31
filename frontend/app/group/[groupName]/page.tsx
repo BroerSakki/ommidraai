@@ -8,6 +8,7 @@ import { DeleteGroupModal } from "@/app/components/groups/delete-group-modal";
 import { DeleteLocationModal } from "@/app/components/groups/delete-location-modal";
 import { AddLocationModal } from "@/app/components/groups/add-location-modal";
 import { InviteModal } from "@/app/components/groups/invite-modal";
+import { UpdateUserPropertiesModal } from "@/app/components/groups/update-user-properties-modal";
 import { WorldMap } from "@/app/components/groups/world-map";
 import { TrashIcon } from "lucide-react";
 
@@ -152,6 +153,8 @@ export default function GroupPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAddLocationModal, setShowAddLocationModal] = useState(false);
+  const [showUserPropertiesModal, setShowUserPropertiesModal] = useState(false);
+  const [isUpdatingUserProperties, setIsUpdatingUserProperties] = useState(false);
   const [showDeleteLocationModal, setShowDeleteLocationModal] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<string | null>(null);
   const [isDeletingLocation, setIsDeletingLocation] = useState(false);
@@ -402,6 +405,36 @@ export default function GroupPage() {
       alert(
         err instanceof Error ? err.message : tCommon("somethingWentWrong")
       );
+    }
+  }
+
+  async function updateUserProperties(
+    carCapacity: number,
+    isPassenger: boolean
+  ) {
+    if (!groupId || isUpdatingUserProperties) return;
+
+    setIsUpdatingUserProperties(true);
+
+    try {
+      const query = new URLSearchParams({
+        car_capacity: String(carCapacity),
+        is_passenger: String(isPassenger),
+      });
+      const response = await fetch(
+        `/api/backend/groups/${groupId}/user/properties?${query.toString()}`,
+        { method: "PUT" }
+      );
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.detail || tCommon("somethingWentWrong"));
+      }
+
+      setShowUserPropertiesModal(false);
+      await loadGroupData(selectedAlgorithm);
+    } finally {
+      setIsUpdatingUserProperties(false);
     }
   }
 
@@ -901,6 +934,15 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() => setShowInviteModal(true)}
+                  onClick={() => setShowUserPropertiesModal(true)}
+                  className="rounded-lg bg-[#3d3461] px-5 py-3 font-semibold text-white shadow transition hover:bg-[#30294d]"
+                >
+                  {t("updateUserProperties")}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowInviteModal(true)}
                   className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("invite")}
@@ -917,7 +959,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModal("kick")}
-                  className="rounded-lg bg-orange-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("kick")}
                 </button>
@@ -925,7 +967,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={leaveGroup}
-                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("leave")}
                 </button>
@@ -941,7 +983,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModal("kick")}
-                  className="rounded-lg bg-orange-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("kick")}
                 </button>
@@ -950,7 +992,7 @@ export default function GroupPage() {
                   type="button"
                   onClick={() => setShowDeleteModal(true)}
                   disabled={isDeleting}
-                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {t("deleteGroup")}
                 </button>
@@ -996,6 +1038,18 @@ export default function GroupPage() {
         isDeleting={isDeleting}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={deleteGroup}
+      />
+
+      <UpdateUserPropertiesModal
+        isOpen={showUserPropertiesModal}
+        carCapacity={
+          users.find((user) => user.user.username === currentUsername)
+            ?.user_group.car_capacity ?? 0
+        }
+        isPassenger={isCurrentUserPassenger}
+        isSaving={isUpdatingUserProperties}
+        onClose={() => setShowUserPropertiesModal(false)}
+        onSave={updateUserProperties}
       />
 
       {/* ====================================== */}
