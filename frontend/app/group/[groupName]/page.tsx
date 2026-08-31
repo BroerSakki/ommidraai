@@ -12,7 +12,7 @@ import { UpdateUserPropertiesModal } from "@/app/components/groups/update-user-p
 import { WorldMap } from "@/app/components/groups/world-map";
 import { TrashIcon } from "lucide-react";
 
-type Role = "owner" | "admin" | "member";
+type Role = "owner" | "admin" | "member" | "guest";
 
 type GroupMember = {
   name: string;
@@ -26,7 +26,7 @@ type ModalType =
 
 type ApiUser = {
   user: { username: string; email: string };
-  user_group: { is_passenger: boolean; car_capacity: number };
+  user_group: { is_passenger: boolean; car_capacity: number, role: Role };
   location: { latitude: number; longitude: number };
 };
 
@@ -193,7 +193,7 @@ export default function GroupPage() {
 
       const apiMembers: GroupMember[] = groupData.users.map((u) => ({
         name: u.user.username,
-        role: u.user.username === username ? currentUserRole : "member",
+        role: u.user_group.role,
       }));
 
       setMembers(apiMembers);
@@ -487,6 +487,10 @@ export default function GroupPage() {
     (member) => member.role === "member"
   );
 
+  const guestMembers = members.filter(
+    (member) => member.role === "guest"
+  );
+
   // Whether the current user is a passenger who will be picked up by a driver.
   const isCurrentUserPassenger =
     users.find((u) => u.user.username === currentUsername)?.user_group
@@ -693,7 +697,7 @@ export default function GroupPage() {
                 {t("locations")}
               </h2>
 
-              {currentUserRole !== "member" && (
+              {currentUserRole !== "guest" && (
                 <button
                   type="button"
                   onClick={() =>
@@ -873,7 +877,7 @@ export default function GroupPage() {
           {/* MEMBERS */}
           {/* ---------------------------------- */}
 
-          <div>
+          <div className="mb-6">
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-600">
               {t("members")}
             </h3>
@@ -903,6 +907,41 @@ export default function GroupPage() {
               )}
             </div>
           </div>
+
+          {/* ---------------------------------- */}
+          {/* GUESTS */}
+          {/* ---------------------------------- */}
+
+          <div>
+            <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-600">
+              {t("guests")}
+            </h3>
+
+            <div className="space-y-2">
+              {guestMembers.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  {t("noGuests")}
+                </p>
+              ) : (
+                guestMembers.map(
+                  (member) => (
+                    <div
+                      key={member.name}
+                      className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4"
+                    >
+                      <span className="font-semibold text-gray-900">
+                        {member.name}
+                      </span>
+
+                      <span className="rounded-full bg-gray-300 px-3 py-1 text-xs font-bold text-gray-700">
+                        {t("guestBadge")}
+                      </span>
+                    </div>
+                  )
+                )
+              )}
+            </div>
+          </div>
         </section>
 
         {/* ====================================== */}
@@ -918,7 +957,7 @@ export default function GroupPage() {
             onClick={() => router.back()}
             className="rounded-lg bg-gray-600 px-5 py-3 font-semibold text-white shadow transition hover:bg-gray-700"
           >
-                        ← {tCommon("back")}
+            ← {tCommon("back")}
           </button>
 
           {/* RIGHT SIDE ACTIONS */}
@@ -929,11 +968,10 @@ export default function GroupPage() {
             {/* MEMBER */}
             {/* ============================== */}
 
-            {(currentUserRole === "owner" || currentUserRole === "admin") && (
+            {(currentUserRole === "guest" || currentUserRole === "member" || currentUserRole === "admin" || currentUserRole === "owner") && (
               <>
                 <button
                   type="button"
-                  onClick={() => setShowInviteModal(true)}
                   onClick={() => setShowUserPropertiesModal(true)}
                   className="rounded-lg bg-[#3d3461] px-5 py-3 font-semibold text-white shadow transition hover:bg-[#30294d]"
                 >
@@ -942,10 +980,10 @@ export default function GroupPage() {
 
                 <button
                   type="button"
-                  onClick={() => setShowInviteModal(true)}
-                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                  onClick={leaveGroup}
+                  className="rounded-lg bg-[#3d3461] px-5 py-3 font-semibold text-white shadow transition hover:bg-[#30294d]"
                 >
-                  {tCommon("invite")}
+                  {tCommon("leave")}
                 </button>
               </>
             )}
@@ -954,22 +992,22 @@ export default function GroupPage() {
             {/* ADMIN */}
             {/* ============================== */}
 
-            {currentUserRole === "admin" && (
+            {(currentUserRole === "admin" || currentUserRole === "owner") && (
               <>
                 <button
                   type="button"
-                  onClick={() => setActiveModal("kick")}
+                  onClick={() => setShowInviteModal(true)}
                   className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
-                  {tCommon("kick")}
+                  {tCommon("invite")}
                 </button>
 
                 <button
                   type="button"
-                  onClick={leaveGroup}
-                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                  onClick={() => setActiveModal("kick")}
+                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
                 >
-                  {tCommon("leave")}
+                  {tCommon("kick")}
                 </button>
               </>
             )}
@@ -982,17 +1020,9 @@ export default function GroupPage() {
               <>
                 <button
                   type="button"
-                  onClick={() => setActiveModal("kick")}
-                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
-                >
-                  {tCommon("kick")}
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setShowDeleteModal(true)}
                   disabled={isDeleting}
-                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
                 >
                   {t("deleteGroup")}
                 </button>

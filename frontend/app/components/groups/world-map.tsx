@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as LeafletMap, LatLngBounds, LayerGroup } from "leaflet";
 import polyline from "@mapbox/polyline";
 import "leaflet/dist/leaflet.css";
+import "leaflet-ant-path";
 import { useTranslations } from "next-intl";
-import ArrowIcon from "./ui/Arrow";
 import { renderToString } from "react-dom/server";
 import DriverIcon from "./ui/Driver";
 import LocationIcon from "./ui/Location";
@@ -46,7 +46,7 @@ const ROUTE_STYLE = {
 
 // One colour per leg of the journey. Because every leg is drawn in its own
 // colour, a road that is travelled more than once appears as distinct bands
-// (and arrow sets) instead of a single overlapping line.
+// instead of a single overlapping line.
 const LEG_COLORS = [
 	"#10b981",
     "#3b82f6",
@@ -69,29 +69,6 @@ const DRIVER_COLORS = [
     "#ec4899",
     "#84cc16",
 ];
-
-// Bearing between two points in degrees (0 = north, clockwise), used to
-// orient each direction arrow.
-function bearingDeg(
-    lat1: number,
-    lng1: number,
-    lat2: number,
-    lng2: number
-): number {
-    const toRad = (deg: number): number => (deg * Math.PI) / 180;
-    const toDeg = (rad: number): number => (rad * 180) / Math.PI;
-
-    const phi1 = toRad(lat1);
-    const phi2 = toRad(lat2);
-    const dLng = toRad(lng2 - lng1);
-
-    const y = Math.sin(dLng) * Math.cos(phi2);
-    const x =
-        Math.cos(phi1) * Math.sin(phi2) -
-        Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLng);
-
-    return (toDeg(Math.atan2(y, x)) + 360) % 360;
-}
 
 function squaredDistance(
     position: Position,
@@ -189,35 +166,49 @@ function buildLegs(positions: Position[], points: MapNode[]): Position[][] {
     return legs;
 }
 
-// Adds arrowheads along a single leg to indicate the direction of travel.
-function addArrows(
+type RouteDisplayMode = "antpath" | "polyline";
+
+function addRoutePath(
     L: LeafletModule,
-    leg: Position[],
+    layer: LayerGroup,
+    positions: Position[],
     color: string,
-    layer: LayerGroup
+    routeMode: RouteDisplayMode,
+    options: { weight: number; opacity: number }
 ): void {
-    if (leg.length < 2) {
+    if (positions.length < 2) {
         return;
     }
 
-    // Aim for roughly three arrows along the leg, regardless of its length.
-    const step = Math.max(1, Math.floor(leg.length / 3));
+    const sharedOptions = {
+        color,
+        weight: options.weight,
+        opacity: options.opacity,
+    };
 
-    for (let i = step; i < leg.length; i += step) {
-        const [lat1, lng1] = leg[i - 1];
-        const [lat2, lng2] = leg[i];
-        const rotation = bearingDeg(lat1, lng1, lat2, lng2);
+    if (routeMode === "antpath") {
+        const antPathFactory = (L as typeof L & {
+            polyline?: {
+                antPath?: (
+                    points: Position[],
+                    config: Record<string, unknown>
+                ) => { addTo: (target: LayerGroup) => unknown };
+            };
+        }).polyline?.antPath;
 
-        L.marker([lat2, lng2], {
-            icon: L.divIcon({
-                className: "",
-                html: renderToString(<ArrowIcon rotation={rotation} color={color} className="w-5 h-5"/>),
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
-            }),
-            interactive: false,
-        }).addTo(layer);
+        if (antPathFactory) {
+            antPathFactory(positions, {
+                ...sharedOptions,
+                pulseColor: "#ffffff",
+                dashArray: [10, 20],
+                delay: 600,
+                reverse: false,
+            }).addTo(layer);
+            return;
+        }
     }
+
+    L.polyline(positions, sharedOptions).addTo(layer);
 }
 
 type MapPoint = {
@@ -261,6 +252,8 @@ export function WorldMap({
     const [prevRoutes, setPrevRoutes] = useState(routes);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [showAllRoutes, setShowAllRoutes] = useState(false);
+    const [routeDisplayMode, setRouteDisplayMode] =
+        useState<RouteDisplayMode>("antpath");
     const t = useTranslations("group");
 
     // A passenger has no route of their own to draw, so show a notice instead.
@@ -455,40 +448,39 @@ export function WorldMap({
                           : ([] as Position[]);
 
                 if (drawable.length > 1) {
-                    L.polyline(drawable, {
-                        color,
+                    addRoutePath(L, layer, drawable, color, routeDisplayMode, {
                         weight: 5,
                         opacity: 0.9,
-                    }).addTo(layer);
-
-                    addArrows(L, drawable, color, layer);
+                    });
                 }
             } else {
                 // Single-user mode: a faint underlay of the whole journey
                 // keeps overall continuity.
                 if (positions.length > 0) {
-                    L.polyline(positions, {
-                        color: ROUTE_STYLE.color,
-                        weight: 6,
-                        opacity: 0.25,
-                    }).addTo(layer);
+                    addRoutePath(
+                        L,
+                        layer,
+                        positions,
+                        ROUTE_STYLE.color,
+                        routeDisplayMode,
+                        {
+                            weight: 6,
+                            opacity: 0.25,
+                        }
+                    );
                 }
 
                 // Draw each leg in its own colour (so a road travelled more
-                // than once appears as distinct bands) and add arrows showing
-                // the direction of travel.
+                // than once appears as distinct bands).
                 const legs = buildLegs(positions, points);
 
                 legs.forEach((leg, index) => {
                     const color = LEG_COLORS[index % LEG_COLORS.length];
 
-                    L.polyline(leg, {
-                        color,
+                    addRoutePath(L, layer, leg, color, routeDisplayMode, {
                         weight: 5,
                         opacity: 0.9,
-                    }).addTo(layer);
-
-                    addArrows(L, leg, color, layer);
+                    });
                 });
             }
 
@@ -524,12 +516,12 @@ export function WorldMap({
         if (combinedBounds) {
             mapRef.current.fitBounds(combinedBounds, { padding: [40, 40] });
         }
-    }, [ready, renderList, decodedByRoute, driverColors, showAllRoutes]);
+    }, [ready, renderList, decodedByRoute, driverColors, showAllRoutes, routeDisplayMode]);
 
     return (
-        <div className="relative flex h-[350px] w-full flex-col overflow-hidden rounded-2xl border border-gray-300">
+        <div className="relative flex h-[350px] w-full flex-col overflow-hidden border border-gray-300">
             {(routes.length > 0 || isOwner) && (
-                <div className="relative z-[500] flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2">
+                <div className="relative z-[500] flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2 overflow-auto">
                     {routes.length > 0 && (
                         <>
                             <label
@@ -565,13 +557,36 @@ export function WorldMap({
                         </>
                     )}
 
+                    {routes.length > 0 && (
+                        <div className="ml-auto flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+                            {(["antpath", "polyline"] as const).map((mode) => {
+                                const isActive = routeDisplayMode === mode;
+
+                                return (
+                                    <button
+                                        key={mode}
+                                        type="button"
+                                        onClick={() => setRouteDisplayMode(mode)}
+                                        className={`rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+                                            isActive
+                                                ? "bg-[#3d3461] text-white"
+                                                : "text-gray-600 hover:bg-white"
+                                        }`}
+                                    >
+                                        {mode === "antpath" ? t("worldMapAntPath") : t("worldMapPolyline")}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
                     {isOwner && (
                         <button
                             type="button"
                             role="switch"
                             aria-checked={showAllRoutes}
                             onClick={() => setShowAllRoutes((value) => !value)}
-                            className="ml-auto flex shrink-0 items-center gap-2 text-xs font-semibold text-gray-600"
+                            className="flex shrink-0 items-center gap-2 text-xs font-semibold text-gray-600"
                         >
                             <span
                                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
