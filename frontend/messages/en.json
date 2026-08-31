@@ -204,6 +204,13 @@
     "savedLocations": "Saved Locations",
     "defaultUpdateError": "Error updating default location",
     "defaultUpdated": "Updated default location",
-    "default": "Default Location"
+    "default": "Default Location",
+    "saveLocationTitle": "Save location",
+    "saveLocationDescription": "Enter a name for the selected location.",
+    "saveLocationNoName": "Please enter a name for the location.",
+    "locationName": "Location name",
+    "locationNamePlaceholder": "e.g. Home, School",
+    "deleteLocationTitle": "Delete location?",
+    "deleteLocationDescription": "Are you sure you want to delete \"{location}\"?"
   }
 }

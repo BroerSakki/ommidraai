@@ -295,7 +295,7 @@ export function AddLocationModal({
                             type="button"
                             onClick={handleSearch}
                             disabled={searching || !query.trim()}
-                            className="rounded bg-black px-5 py-2 text-sm text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="rounded bg-[#3d3461] px-5 py-2 text-sm text-white transition hover:bg-[#3d3461]/80 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             {searching
                                 ? tCommon("searching")

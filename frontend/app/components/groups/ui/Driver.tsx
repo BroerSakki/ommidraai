@@ -19,7 +19,7 @@ export default function DriverIcon({
       fill="currentColor"
       xmlns="http://w3.org"
       stroke="#ffffff"
-      strokeWidth="3"
+      strokeWidth="0"
       className={className}
       style={{
         transform: `rotate(${rotation}deg)`,

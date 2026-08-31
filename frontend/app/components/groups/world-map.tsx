@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Map as LeafletMap, LatLngBounds, LayerGroup } from "leaflet";
+import type { Map as LeafletMap, LatLngBounds, LayerGroup, PointExpression } from "leaflet";
 import polyline from "@mapbox/polyline";
 import "leaflet/dist/leaflet.css";
 import "leaflet-ant-path";
@@ -490,17 +490,21 @@ export function WorldMap({
                 const isStart = index === 0;
                 const isEnd = index === points.length - 1;
                 const markerHtml = isStart
-                    ? renderToString(<DriverIcon color={driverIconColor}/>)
+                    ? renderToString(<DriverIcon color={driverIconColor} className="w-14 h-14"/>)
                     : isEnd
                       ? renderToString(<LocationIcon color="#e74c3c"/>)
                       : renderToString(<LocationIcon color="#f59e0b"/>);
+
+                const anchor: PointExpression = isStart
+                    ? [26.25, 52.5]
+                    : [15, 30];
 
                 L.marker([point.latitude, point.longitude], {
                     icon: L.divIcon({
                         html: markerHtml,
                         className: "",
                         iconSize: [30, 30],
-                        iconAnchor: [15, 30],
+                        iconAnchor: anchor,
                     }),
                     title: point.label,
                 }).addTo(layer);
