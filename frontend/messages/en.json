@@ -110,7 +110,19 @@
     "inviteFriends": "Invite Friends",
     "avatarAlt": "Profile",
     "clickToEnterUsername": "Click to enter username",
-    "savedLocations": "Saved Locations"
+    "savedLocations": "Saved Locations",
+    "overviewTab": "Overview",
+    "notificationsTab": "Notifications",
+    "noNotifications": "No notifications.",
+    "notificationsLoading": "Loading notifications…",
+    "notificationsLoadFailed": "Failed to load notifications.",
+    "notificationsAcceptFailed": "Failed to accept the invite.",
+    "notificationsDeclineFailed": "Failed to decline the invite.",
+    "inviteNotificationTitle": "You have been invited to {groupName}",
+    "inviteNotificationSubtitle": "Invited by {username}",
+    "acceptInvite": "Accept",
+    "declineInvite": "Decline",
+    "unknownGroup": "a group"
   },
   "group": {
     "missingGroupId": "Group ID is missing. Please navigate from the home page.",

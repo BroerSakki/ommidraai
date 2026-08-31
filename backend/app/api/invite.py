@@ -39,6 +39,19 @@ def get_user_invites(
 	)
 # ---
 
+# Get User Invites (no trailing slash required)
+# ---
+@router.get("", include_in_schema=False)
+def get_user_invites_no_slash(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return invite_service.get_current_user_invites(
+        db=db,
+        current_user=current_user
+	)
+# ---
+
 # Get Pending Invites
 # ---
 @router.get("/pending")
@@ -61,6 +74,21 @@ def accept_invite(
     current_user: User = Depends(get_current_user),
 ):
     return invite_service.accept_invite(
+        db=db,
+        current_user=current_user,
+        group_id=group_id,
+    )
+# ---
+
+# Decline Invite
+# ---
+@router.post("/decline")
+def decline_invite(
+    group_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return invite_service.decline_invite(
         db=db,
         current_user=current_user,
         group_id=group_id,
