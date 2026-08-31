@@ -195,6 +195,10 @@
     "selectHint": "Soek hierbo of klik op die kaart om 'n plek te kies.",
     "selectedCoords": "Gekies: {latitude}, {longitude}",
     "locationSaved": "Die plek is gestoor.",
-    "saveFailed": "Stoor het misluk: {error}"
+    "saveFailed": "Stoor het misluk: {error}",
+    "savedLocations":"Gestoorde liggings",
+    "defaultUpdateError": "Fout ondergaan",
+    "defaultUpdated": "Verstek ligging opgedateer",
+    "default": "Verstek Ligging"
   }
 }
