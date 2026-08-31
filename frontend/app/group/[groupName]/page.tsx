@@ -7,6 +7,8 @@ import { AddGroupModal } from "@/app/components/homepage/model/add-model";
 import { DeleteGroupModal } from "@/app/components/groups/delete-group-modal";
 import { DeleteLocationModal } from "@/app/components/groups/delete-location-modal";
 import { AddLocationModal } from "@/app/components/groups/add-location-modal";
+import { InviteModal } from "@/app/components/groups/invite-modal";
+import { UpdateUserPropertiesModal } from "@/app/components/groups/update-user-properties-modal";
 import { WorldMap } from "@/app/components/groups/world-map";
 import { TrashIcon } from "lucide-react";
 
@@ -18,7 +20,6 @@ type GroupMember = {
 };
 
 type ModalType =
-  | "invite"
   | "kick"
   | "new-owner"
   | null;
@@ -148,9 +149,12 @@ export default function GroupPage() {
   );
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAddLocationModal, setShowAddLocationModal] = useState(false);
+  const [showUserPropertiesModal, setShowUserPropertiesModal] = useState(false);
+  const [isUpdatingUserProperties, setIsUpdatingUserProperties] = useState(false);
   const [showDeleteLocationModal, setShowDeleteLocationModal] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<string | null>(null);
   const [isDeletingLocation, setIsDeletingLocation] = useState(false);
@@ -248,35 +252,6 @@ export default function GroupPage() {
       cancelled = true;
     };
   }, [groupId, loadGroupData]);
-
-  function inviteMember(name: string) {
-    const trimmedName = name.trim();
-
-    if (!trimmedName) {
-      return;
-    }
-
-    const alreadyExists = members.some(
-      (member) =>
-        member.name.toLowerCase() ===
-        trimmedName.toLowerCase()
-    );
-
-    if (alreadyExists) {
-      alert(t("memberAlreadyExists"));
-      return;
-    }
-
-    setMembers((prev) => [
-      ...prev,
-      {
-        name: trimmedName,
-        role: "member",
-      },
-    ]);
-
-    setActiveModal(null);
-  }
 
   function kickMember(name: string) {
     const trimmedName = name.trim();
@@ -430,6 +405,36 @@ export default function GroupPage() {
       alert(
         err instanceof Error ? err.message : tCommon("somethingWentWrong")
       );
+    }
+  }
+
+  async function updateUserProperties(
+    carCapacity: number,
+    isPassenger: boolean
+  ) {
+    if (!groupId || isUpdatingUserProperties) return;
+
+    setIsUpdatingUserProperties(true);
+
+    try {
+      const query = new URLSearchParams({
+        car_capacity: String(carCapacity),
+        is_passenger: String(isPassenger),
+      });
+      const response = await fetch(
+        `/api/backend/groups/${groupId}/user/properties?${query.toString()}`,
+        { method: "PUT" }
+      );
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.detail || tCommon("somethingWentWrong"));
+      }
+
+      setShowUserPropertiesModal(false);
+      await loadGroupData(selectedAlgorithm);
+    } finally {
+      setIsUpdatingUserProperties(false);
     }
   }
 
@@ -588,15 +593,6 @@ export default function GroupPage() {
   }, [algorithm, currentUsername, isCurrentUserPassenger]);
 
   const modalSettings = {
-    invite: {
-      title: t("inviteMemberTitle"),
-      description:
-        t("inviteMemberDescription"),
-      label: t("memberName"),
-      placeholder: t("memberNamePlaceholder"),
-      confirmText: tCommon("invite"),
-    },
-
     kick: {
       title: t("kickMemberTitle"),
       description:
@@ -617,11 +613,6 @@ export default function GroupPage() {
   };
 
   function handleModalCreate(value: string) {
-    if (activeModal === "invite") {
-      inviteMember(value);
-      return;
-    }
-
     if (activeModal === "kick") {
       kickMember(value);
       return;
@@ -938,22 +929,23 @@ export default function GroupPage() {
             {/* MEMBER */}
             {/* ============================== */}
 
-            {currentUserRole === "member" && (
+            {(currentUserRole === "owner" || currentUserRole === "admin") && (
               <>
                 <button
                   type="button"
-                  onClick={() => setActiveModal("invite")}
-                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
+                  onClick={() => setShowInviteModal(true)}
+                  onClick={() => setShowUserPropertiesModal(true)}
+                  className="rounded-lg bg-[#3d3461] px-5 py-3 font-semibold text-white shadow transition hover:bg-[#30294d]"
                 >
-                  {tCommon("invite")}
+                  {t("updateUserProperties")}
                 </button>
 
                 <button
                   type="button"
-                  onClick={leaveGroup}
-                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  onClick={() => setShowInviteModal(true)}
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
-                  {tCommon("leave")}
+                  {tCommon("invite")}
                 </button>
               </>
             )}
@@ -966,16 +958,8 @@ export default function GroupPage() {
               <>
                 <button
                   type="button"
-                  onClick={() => setActiveModal("invite")}
-                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
-                >
-                  {tCommon("invite")}
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setActiveModal("kick")}
-                  className="rounded-lg bg-orange-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("kick")}
                 </button>
@@ -983,7 +967,7 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={leaveGroup}
-                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("leave")}
                 </button>
@@ -998,16 +982,8 @@ export default function GroupPage() {
               <>
                 <button
                   type="button"
-                  onClick={() => setActiveModal("invite")}
-                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
-                >
-                  {tCommon("invite")}
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setActiveModal("kick")}
-                  className="rounded-lg bg-orange-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-orange-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {tCommon("kick")}
                 </button>
@@ -1016,7 +992,7 @@ export default function GroupPage() {
                   type="button"
                   onClick={() => setShowDeleteModal(true)}
                   disabled={isDeleting}
-                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {t("deleteGroup")}
                 </button>
@@ -1043,6 +1019,15 @@ export default function GroupPage() {
         />
       )}
 
+      {groupId && (currentUserRole === "owner" || currentUserRole === "admin") && (
+        <InviteModal
+          isOpen={showInviteModal}
+          groupId={groupId}
+          roles={currentUserRole === "owner" ? ["admin", "member", "guest"] : ["member", "guest"]}
+          onClose={() => setShowInviteModal(false)}
+        />
+      )}
+
       {/* ====================================== */}
       {/* DELETE GROUP CONFIRM MODAL */}
       {/* ====================================== */}
@@ -1053,6 +1038,18 @@ export default function GroupPage() {
         isDeleting={isDeleting}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={deleteGroup}
+      />
+
+      <UpdateUserPropertiesModal
+        isOpen={showUserPropertiesModal}
+        carCapacity={
+          users.find((user) => user.user.username === currentUsername)
+            ?.user_group.car_capacity ?? 0
+        }
+        isPassenger={isCurrentUserPassenger}
+        isSaving={isUpdatingUserProperties}
+        onClose={() => setShowUserPropertiesModal(false)}
+        onSave={updateUserProperties}
       />
 
       {/* ====================================== */}
