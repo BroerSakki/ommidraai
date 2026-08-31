@@ -131,6 +131,16 @@ Then add the map to docker-compose.yml like:
       - ./osrm/processed:/osrm/processed:ro
 ```
 
+Or merge the map data like:
+```bash
+  osmium merge berlin-latest.osm.pbf south-africa-latest.osm pbf -o combined-latest.osm.pbf
+```
+Then change the command section in docker-compose.yml to this:
+```yaml
+command: >
+  sh -lc "cd /osrm/processed && osrm-routed --algorithm mld combined-latest"
+```
+
 ### Windows
 Run this command from the project root to download the map data:
 ```powershell
@@ -147,4 +157,14 @@ Then add the map to docker-compose.yml like:
       sh -lc "cd /osrm/processed && osrm-routed --algorithm mld south-africa-latest"
     volumes:
       - ./osrm/processed:/osrm/processed:ro
+```
+
+Or merge the map data like:
+```bash
+  osmium merge berlin-latest.osm.pbf south-africa-latest.osm pbf -o combined-latest.osm.pbf
+```
+Then change the command section in docker-compose.yml to this:
+```yaml
+command: >
+  sh -lc "cd /osrm/processed && osrm-routed --algorithm mld combined-latest"
 ```
