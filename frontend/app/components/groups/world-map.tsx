@@ -519,9 +519,9 @@ export function WorldMap({
     }, [ready, renderList, decodedByRoute, driverColors, showAllRoutes, routeDisplayMode]);
 
     return (
-        <div className="relative flex h-[350px] w-full flex-col overflow-hidden rounded-2xl border border-gray-300">
+        <div className="relative flex h-[350px] w-full flex-col overflow-hidden border border-gray-300">
             {(routes.length > 0 || isOwner) && (
-                <div className="relative z-[500] flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2">
+                <div className="relative z-[500] flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2 overflow-auto">
                     {routes.length > 0 && (
                         <>
                             <label
