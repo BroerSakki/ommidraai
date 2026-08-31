@@ -1014,14 +1014,6 @@ export default function GroupPage() {
 
                 <button
                   type="button"
-                  onClick={leaveGroup}
-                  className="rounded-lg bg-yellow-500/80 px-5 py-3 font-semibold text-black shadow transition hover:bg-yellow-600"
-                >
-                  {tCommon("leave")}
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setShowDeleteModal(true)}
                   disabled={isDeleting}
                   className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
