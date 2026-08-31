@@ -6,6 +6,7 @@ from fastapi import (
 )
 from typing import List
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 # ---
 
 # Import Local Libraries
@@ -47,6 +48,19 @@ def get_current_user_locations(
     )
 # ---
 
+# Get Current User Default Location
+# ---
+@router.get("/location/default")
+def get_current_user_default_location(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return user_service.get_default_user_location(
+        db=db,
+        default_location_id=current_user.default_location_id,
+    )
+# ---
+
 # Add Current User Location
 # ---
 @router.post("/location/add")
@@ -64,16 +78,19 @@ def add_user_location(
 
 # Edit User Location
 # ---
+class UpdateLocationRequest(BaseModel):
+    name: str
+
 @router.put("/location/edit")
 def update_user_default_location(
-    name: str,
+    payload: UpdateLocationRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     return user_service.update_user_default_location(
         db=db,
         current_user=current_user,
-        name=name,
+        name=payload.name,
     )
 # ---
 

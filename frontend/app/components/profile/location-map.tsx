@@ -49,6 +49,25 @@ export function LocationMap() {
     const tCommon = useTranslations("common");
 
     const [savedLocations, setSavedLocations] = useState<SavedLocation[]>([]);
+    const [defaultCords, setDefaultCords] = useState<{latitude: number; longitude: number} | null>(null);
+    const [defaultName, setDefaultName] = useState<string | null>(null)
+    const [updatingName, setUpdatingName] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function getDefault() {
+            try {
+                const response = await fetch("/api/backend/user/location/default");
+                if (!response.ok) throw new Error(`Failed to fetch user (status ${response.status})`);
+                const data = await response.json();
+                setDefaultCords({ longitude: data.longitude, latitude: data.latitude });
+                setDefaultName(data.name);
+            } catch (err) {
+                console.error("Failed to fetch default location:", err);
+            }
+        }
+
+        getDefault();
+    }, [savedLocations]);
 
     useEffect(() => {
         let cancelled = false;
@@ -111,6 +130,33 @@ export function LocationMap() {
             setSavedLocations(data);
         } catch (err) {
             console.error("Failed to fetch saved locations:", err);
+        }
+    }
+
+    async function handleSetDefault(name: string) {
+        if (name === defaultName || updatingName) return;
+        console.log(`${name} =====================================================================================`)
+        const previous = defaultName;
+        setDefaultName(name);
+        setUpdatingName(name);
+        setMessage("");
+
+        try {
+            const response = await fetch(`/api/backend/user/location/edit`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name }),
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to update default location (status ${response.status})`);
+            }
+            setMessage(t("defaultUpdated", { name }));
+        } catch (err) {
+            console.error("Failed to update default location:", err);
+            setDefaultName(previous);
+            setMessage(t("defaultUpdateError"));
+        } finally {
+            setUpdatingName(null);
         }
     }
 
@@ -342,20 +388,65 @@ export function LocationMap() {
                 </button>
             </div>
 
-            {savedLocations.length > 0 && (
-                <div className="mt-4">
-                    <p className="text-sm font-medium text-[#3d3461] mb-2">Saved Locations</p>
-                    <ul className="space-y-1">
-                        {savedLocations.map((loc) => (
-                            <li key={loc.name} className="text-sm text-[#3d3461]">
-                                {loc.name} ({loc.latitude.toFixed(6)}, {loc.longitude.toFixed(6)})
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            <section className="mt-6">
+                <h3 className="text-base font-semibold text-[#3d3461]">{t("savedLocations")}</h3>
 
-            {message && <p className="mt-2 text-sm font-medium text-[#3d3461]">{message}</p>}
+                <ul className="mt-3 divide-y divide-[#b6cfc6]/60">
+                    {savedLocations.map((loc) => {
+                        const isDefault = loc.name === defaultName
+                        const isUpdating = loc.name === updatingName;
+                    
+                        return (
+                            <li key={loc.name}>
+                                <button
+                                    type="button"
+                                    onClick={() => handleSetDefault(loc.name)}
+                                    disabled={isUpdating}
+                                    aria-pressed={isDefault}
+                                    className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left transition-colors hover:bg-white/50 disabled:cursor-wait focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3d3461]"
+                                >
+                                    <span className="shrink-0">
+                                        {isUpdating ? (
+                                            <svg className="h-5 w-5 animate-spin text-[#3d3461]/50" viewBox="0 0 24 24" fill="none">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z" />
+                                            </svg>
+                                        ) : (
+                                            <svg
+                                                className={isDefault ? "h-5 w-5 text-[#3d3461]" : "h-5 w-5 text-[#b6cfc6]"}
+                                                viewBox="0 0 24 24"
+                                                fill={isDefault ? "currentColor" : "none"}
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M12 21s-7-6.1-7-11.2A7 7 0 0112 2a7 7 0 017 7.8C19 14.9 12 21 12 21z"
+                                                />
+                                                <circle cx="12" cy="9.5" r="2.5" />
+                                            </svg>
+                                        )}
+                                    </span>
+                                    
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block truncate text-sm font-medium text-[#3d3461]">{loc.name}</span>
+                                        <span className="block truncate text-xs text-[#3d3461]/60">
+                                            {loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}
+                                        </span>
+                                    </span>
+                                    
+                                    {isDefault && (
+                                        <span className="shrink-0 text-xs font-medium text-[#3d3461]">{t("default")}</span>
+                                    )}
+                                </button>
+                            </li>
+                        );
+                    })}
+                </ul>
+                
+                {message && <p className="mt-2 text-sm text-[#3d3461]/70">{message}</p>}
+            </section>
         </div>
     );
 }

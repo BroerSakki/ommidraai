@@ -96,6 +96,33 @@ def add_user_location(
     return new_user_location
 # ---
 
+# Get Default Location
+# ---
+def get_default_user_location(
+    db: Session,
+    default_location_id: int,
+):
+    try:
+        user_location: User_Location = db.scalar(
+            select(User_Location)
+            .where(
+                User_Location.location_id == default_location_id,
+            )
+        )
+        if user_location is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Location not found",
+            )
+
+        return user_location
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=400,
+            detail="Default location not returned",
+        )
+# ---
+
 # User By Name
 # ---
 def get_user_by_name(
