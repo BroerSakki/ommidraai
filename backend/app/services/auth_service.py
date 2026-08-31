@@ -29,6 +29,11 @@ from app.schemas.user import UserCreate, UserUpdate
 from app.services.database.users_table import change_username
 # ---
 
+# Import Models
+# ---
+from app.models.user_location import User_Location
+# ---
+
 # Register Service
 # ---
 def register(
@@ -36,10 +41,15 @@ def register(
     user: UserCreate,
     location: LocationCreate
 ) -> User:
+
     try:
-        default_location_id = add_location(db=db, location=location)
+        default_location_id = add_location(
+            db=db,
+            location=location
+        )
 
         hashed = hash_password(user.password)
+
         new_user = User(
             username=user.username,
             email=user.email,
@@ -48,16 +58,27 @@ def register(
         )
 
         db.add(new_user)
+        db.flush()
+
+        new_user_location = User_Location(
+            name="Default",
+            user_id=new_user.id,
+            location_id=new_user.default_location_id,
+        )
+
+        db.add(new_user_location)
+
         db.commit()
+        db.refresh(new_user)
+
+        return new_user
+
     except IntegrityError:
         db.rollback()
         raise HTTPException(
             status_code=400,
             detail="Email already in use",
         )
-    finally:
-        db.refresh(new_user)
-    return new_user
 # ---
 
 # Login
