@@ -110,7 +110,19 @@
     "inviteFriends": "Nooi vriende",
     "avatarAlt": "Profiel",
     "clickToEnterUsername": "Klik om jou gebruikersnaam in te voer",
-    "savedLocations": "Gestoorde liggings"
+    "savedLocations": "Gestoorde liggings",
+    "overviewTab": "Oorsig",
+    "notificationsTab": "Kennisgewings",
+    "noNotifications": "Geen kennisgewings nie.",
+    "notificationsLoading": "Besig om kennisgewings te laai…",
+    "notificationsLoadFailed": "Kon nie kennisgewings laai nie.",
+    "notificationsAcceptFailed": "Kon nie die uitnodiging aanvaar nie.",
+    "notificationsDeclineFailed": "Kon nie die uitnodiging weier nie.",
+    "inviteNotificationTitle": "Jy is na {groupName} genooi",
+    "inviteNotificationSubtitle": "Genooi deur {username}",
+    "acceptInvite": "Aanvaar",
+    "declineInvite": "Weier",
+    "unknownGroup": "'n groep"
   },
   "group": {
     "missingGroupId": "Groep-ID ontbreek. Gaan asseblief vanaf die tuisblad na 'n groep.",

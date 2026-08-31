@@ -15,6 +15,7 @@ from app.schemas import invite
 # Import Models
 # ---
 from app.models.user import User
+from app.models.group import Group
 from app.models.invite import Invite
 from app.models.user_group import User_Group
 # ---
@@ -122,14 +123,45 @@ def create_invite(
 def get_current_user_invites(
     db: Session,
     current_user: User,
-): 
-    # Go get from user_group all group_ids that current user_id is in
-    return db.scalars(
+):
+    invites = db.scalars(
         select(Invite)
         .where(
             Invite.user_id == current_user.id
         )
     ).all()
+
+    origin_ids = {invite.origin_id for invite in invites}
+    group_ids = {invite.group_id for invite in invites}
+
+    origins = {
+        user.id: user
+        for user in db.scalars(
+            select(User).where(User.id.in_(origin_ids))
+        )
+    } if origin_ids else {}
+
+    groups = {
+        group.id: group
+        for group in db.scalars(
+            select(Group).where(Group.id.in_(group_ids))
+        )
+    } if group_ids else {}
+
+    result = []
+    for invite in invites:
+        origin = origins.get(invite.origin_id)
+        group = groups.get(invite.group_id)
+        result.append({
+            "user_id": invite.user_id,
+            "origin_id": invite.origin_id,
+            "group_id": invite.group_id,
+            "role": invite.role,
+            "group_name": group.name if group else None,
+            "origin_username": origin.username if origin else None,
+        })
+
+    return result
 # ---
 
 # See Pending Invites
