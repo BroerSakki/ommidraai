@@ -335,7 +335,7 @@ def get_group_data(
         "users": [
             {
                 "user": {"username": u.username, "email": u.email},
-                "user_group": {"is_passenger": ug.is_passenger, "car_capacity": ug.car_capacity},
+                "user_group": {"is_passenger": ug.is_passenger, "car_capacity": ug.car_capacity, "role": ug.role},
                 "location": {"latitude": loc.latitude, "longitude": loc.longitude}
             }
             for u, ug, loc in users_data
