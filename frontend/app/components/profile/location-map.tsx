@@ -425,7 +425,7 @@ export function LocationMap() {
                 <button
                     type="submit"
                     disabled={searching || !query.trim()}
-                    className="rounded bg-black px-5 py-2 text-sm text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded bg-[#3d3461] px-5 py-2 text-sm text-white transition hover:bg-[#3d3461]/80 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     {searching ? tCommon("searching") : tCommon("search")}
                 </button>
@@ -478,7 +478,7 @@ export function LocationMap() {
                 <button
                     onClick={handleSave}
                     disabled={!selected || saving}
-                    className="ml-auto rounded bg-black px-8 py-3 text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="ml-auto rounded bg-[#3d3461] px-8 py-3 text-white transition hover:bg-[#3d3461]/80 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     {saving ? tCommon("saving") : tCommon("save")}
                 </button>
