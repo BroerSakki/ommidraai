@@ -10,19 +10,19 @@ from app.database import Base
 class User_Location(Base):
     __tablename__ = "user_locations"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False
+        primary_key=True,
+        nullable=False,
     )
+
     location_id: Mapped[int] = mapped_column(
         ForeignKey("locations.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
     )
+
     name: Mapped[str] = mapped_column(
-        unique=True,
-        nullable=False
+        primary_key=True,
+        nullable=False,
     )
 # ---
