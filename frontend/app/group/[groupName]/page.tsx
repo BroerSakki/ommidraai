@@ -746,7 +746,7 @@ export default function GroupPage() {
           {/* ---------------------------------- */}
 
           <section className="overflow-hidden rounded-2xl border border-gray-300">
-            {currentUserRole === "owner" && availableAlgorithms.length > 0 && (
+            {availableAlgorithms.length > 0 && (
               <div className="flex items-center justify-end gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3">
                 <label
                   htmlFor="algorithm-select"
@@ -776,7 +776,7 @@ export default function GroupPage() {
                 routes={routes}
                 allRoutes={allRoutes}
                 passengerDriver={passengerDriver}
-                isOwner={currentUserRole === "owner"}
+                isAdmin={currentUserRole === "owner" || currentUserRole === "admin"}
               />
 
               {isAlgorithmLoading && (
