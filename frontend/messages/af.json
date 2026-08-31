@@ -129,6 +129,8 @@
     "worldMapTotalDistance": "Totale afstand",
     "worldMapDistanceValue": "{distance} km",
     "worldMapAllRouteDistances": "Roete-afstande",
+    "worldMapAntPath": "Stippelyn",
+    "worldMapPolyline": "Solidielyn",
     "algorithm": "Algoritme",
     "algorithmLoading": "Besig om algoritme te wissel…",
     "guests": "Gaste",

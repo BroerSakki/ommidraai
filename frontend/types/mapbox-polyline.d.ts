@@ -38,3 +38,30 @@ declare module "@mapbox/polyline" {
 
   export default polyline;
 }
+
+declare module "leaflet-ant-path" {
+  interface AntPathOptions {
+    color?: string;
+    weight?: number;
+    opacity?: number;
+    pulseColor?: string;
+    dashArray?: number[];
+    delay?: number;
+    reverse?: boolean;
+    [key: string]: unknown;
+  }
+
+  type AntPathLayer = {
+    addTo: (map: unknown) => AntPathLayer;
+  };
+
+  export class AntPath {
+    constructor(latlngs: [number, number][], options?: AntPathOptions);
+    addTo: (map: unknown) => AntPath;
+  }
+
+  export function antPath(
+    latlngs: [number, number][],
+    options?: AntPathOptions
+  ): AntPathLayer;
+}

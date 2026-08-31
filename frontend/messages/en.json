@@ -129,6 +129,8 @@
     "worldMapTotalDistance": "Total distance",
     "worldMapDistanceValue": "{distance} km",
     "worldMapAllRouteDistances": "Route distances",
+    "worldMapAntPath": "AntPath",
+    "worldMapPolyline": "PolyLine",
     "algorithm": "Algorithm",
     "algorithmLoading": "Switching algorithm…",
     "guests": "Guests",
