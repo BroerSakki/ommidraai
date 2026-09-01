@@ -11,7 +11,8 @@ cd ommidraai
 ```
 2. Set up docker and git
 ```bash
-chmod +x ./setup-docker.sh
+chmod +x ./scripts/setup-docker.sh
+./scripts/setup-docker.sh
 ```
 3. Log out, then back in, or reboot
 
