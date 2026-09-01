@@ -161,14 +161,14 @@ def add_location(
 # ---
 @router.post("/{group_id}/leave")
 def leave_group(
-    group_name: str,
+    group_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return group_service.leave_user_group(
+    return group_service.leave_user_group_by_id(
         db=db,
         current_user=current_user,
-        group_name=group_name,
+        group_id=group_id,
     )
 # ---
 
@@ -239,5 +239,22 @@ def delete_group(
         db=db,
         current_user=current_user,
         group_name=group_name,
+    )
+# ---
+
+# Kick User from Group
+# ---
+@router.delete("/{group_id}/user/{username}")
+def kick_user_from_group(
+    group_id: int,
+    username: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return group_service.remove_group_user(
+        db=db,
+        current_user=current_user,
+        group_id=group_id,
+        username=username,
     )
 # ---

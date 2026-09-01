@@ -164,6 +164,8 @@ export default function GroupPage() {
     ApiAlgorithmOption[]
   >([]);
   const [isAlgorithmLoading, setIsAlgorithmLoading] = useState(false);
+  const [isKicking, setIsKicking] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   // Loads the current user and the full group dataset (users, destinations,
   // routing output). Throws on failure so each caller can decide how to surface
@@ -253,7 +255,7 @@ export default function GroupPage() {
     };
   }, [groupId, loadGroupData]);
 
-  function kickMember(name: string) {
+  async function kickMember(name: string) {
     const trimmedName = name.trim();
 
     if (!trimmedName) {
@@ -276,15 +278,41 @@ export default function GroupPage() {
       return;
     }
 
-    setMembers((prev) =>
-      prev.filter(
-        (item) =>
-          item.name.toLowerCase() !==
-          trimmedName.toLowerCase()
-      )
-    );
+    if (!groupId || isKicking) return;
 
-    setActiveModal(null);
+    setIsKicking(true);
+
+    try {
+      const response = await fetch(
+        `/api/backend/groups/${groupId}/user/${encodeURIComponent(trimmedName)}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(
+          data?.detail || tCommon("somethingWentWrong")
+        );
+      }
+
+      setMembers((prev) =>
+        prev.filter(
+          (item) =>
+            item.name.toLowerCase() !==
+            trimmedName.toLowerCase()
+        )
+      );
+
+      setActiveModal(null);
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : tCommon("somethingWentWrong")
+      );
+    } finally {
+      setIsKicking(false);
+    }
   }
 
   function transferOwnership(newOwnerName: string) {
@@ -334,13 +362,39 @@ export default function GroupPage() {
     setActiveModal(null);
   }
 
-  function leaveGroup() {
+  async function leaveGroup() {
     if (currentUserRole === "owner") {
       setActiveModal("new-owner");
       return;
     }
 
-    router.back();
+    if (!groupId || isLeaving) return;
+
+    setIsLeaving(true);
+
+    try {
+      const response = await fetch(
+        `/api/backend/groups/${groupId}/leave`,
+        { method: "POST" }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(
+          data?.detail || tCommon("somethingWentWrong")
+        );
+      }
+
+      router.push("/");
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : tCommon("somethingWentWrong")
+      );
+    } finally {
+      setIsLeaving(false);
+    }
   }
 
   async function deleteGroup() {
@@ -981,7 +1035,8 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={leaveGroup}
-                  className="rounded-lg bg-[#3d3461] px-5 py-3 font-semibold text-white shadow transition hover:bg-[#30294d]"
+                  disabled={isLeaving}
+                  className="rounded-lg bg-[#3d3461] px-5 py-3 font-semibold text-white shadow transition hover:bg-[#30294d] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {tCommon("leave")}
                 </button>
@@ -1005,7 +1060,8 @@ export default function GroupPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModal("kick")}
-                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  disabled={isKicking}
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {tCommon("kick")}
                 </button>
@@ -1022,7 +1078,7 @@ export default function GroupPage() {
                   type="button"
                   onClick={() => setShowDeleteModal(true)}
                   disabled={isDeleting}
-                  className="rounded-lg bg-red-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-red-700"
+                  className="rounded-lg bg-green-600/80 px-5 py-3 font-semibold text-white shadow transition hover:bg-green-700"
                 >
                   {t("deleteGroup")}
                 </button>
