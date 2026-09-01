@@ -580,7 +580,7 @@ def remove_group_user(
         )
 
     try:
-        db.delete(user)
+        db.delete(target_user_group)
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -696,6 +696,56 @@ def leave_user_group(
             detail="Could not leave group",
         )
     return f"Left group '{group_name}'"
+# ---
+
+# Leave User Group by ID
+# ---
+def leave_user_group_by_id(
+    db: Session,
+    current_user: User,
+    group_id: int,
+):
+    user_group: User_Group = db.scalar(
+        select(User_Group)
+        .where(
+            User_Group.group_id == group_id,
+            User_Group.user_id == current_user.id,
+        )
+    )
+    
+    if user_group is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found in group",
+        )
+    
+    try:
+        group_name = ""
+        group: Group = db.scalar(
+            select(Group)
+            .where(Group.id == group_id)
+        )
+        if group:
+            group_name = group.name
+            
+        db.delete(user_group)
+        db.commit()
+        
+        # Check if group is now empty and delete it if so
+        if get_user_group_members(
+            db=db,
+            group_id=group_id,
+        ) is None:
+            if group:
+                db.delete(group)
+                db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Could not leave group",
+        )
+    return f"Left group '{group_name}'" if group_name else "Left group"
 # ---
 
 def update_user_group_data(
