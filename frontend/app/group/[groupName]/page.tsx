@@ -315,7 +315,7 @@ export default function GroupPage() {
     }
   }
 
-  function transferOwnership(newOwnerName: string) {
+  async function transferOwnership(newOwnerName: string) {
     const trimmedName = newOwnerName.trim();
 
     if (!trimmedName) {
@@ -336,30 +336,45 @@ export default function GroupPage() {
       return;
     }
 
-    setMembers((prev) =>
-      prev.map((member) => {
-        if (member.role === "owner") {
-          return {
-            ...member,
-            role: "admin",
-          };
-        }
+    setIsLeaving(true);
 
-        if (
-          member.name.toLowerCase() ===
-          admin.name.toLowerCase()
-        ) {
-          return {
-            ...member,
-            role: "owner",
-          };
-        }
+    try {
+      // Step 1: Update the new owner's role to "owner" via backend API
+      const roleUpdateResponse = await fetch(
+        `/api/backend/groups/${encodeURIComponent(groupName)}/user/${encodeURIComponent(admin.name)}/role?role=owner`,
+        { method: "PUT" }
+      );
 
-        return member;
-      })
-    );
+      if (!roleUpdateResponse.ok) {
+        const data = await roleUpdateResponse.json().catch(() => null);
+        throw new Error(
+          data?.detail || tCommon("somethingWentWrong")
+        );
+      }
 
-    setActiveModal(null);
+      // Step 2: Leave the group (remove current user who was the owner)
+      const leaveResponse = await fetch(
+        `/api/backend/groups/${groupId}/leave`,
+        { method: "POST" }
+      );
+
+      if (!leaveResponse.ok) {
+        const data = await leaveResponse.json().catch(() => null);
+        throw new Error(
+          data?.detail || tCommon("somethingWentWrong")
+        );
+      }
+
+      // Step 3: Redirect to home page
+      router.push("/");
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : tCommon("somethingWentWrong")
+      );
+      setIsLeaving(false);
+    }
   }
 
   async function leaveGroup() {
