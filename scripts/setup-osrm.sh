@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# For manual downloading only
+
 # Print usage instructions
 usage() {
   echo "Usage: $0 [options] <openstreetmap-extract-url>" >&2

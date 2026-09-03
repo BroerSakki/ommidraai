@@ -220,3 +220,7 @@ __marimo__/
 
 # LibreOfficeImpress
 .odp#
+
+# OSRM map data and build artifacts
+osrm/data/
+osrm/processed/

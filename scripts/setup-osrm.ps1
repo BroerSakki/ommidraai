@@ -1,3 +1,4 @@
+# For manual downloading only
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Url,
